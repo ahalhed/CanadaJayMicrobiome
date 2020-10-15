@@ -16,6 +16,7 @@ theme_set(theme_bw())
 gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         # will eventually need to remove 2 once all samples are there
                          metadata = "input/jay-met2.tsv")
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
@@ -35,7 +36,7 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:19, 28:33) %>%
 # Corresponds to figure 3-1 from proposal. 
 
 # plot PC1/PC2 by territory
-pdf("CanadaJayMicrobiome/plots/H1pc.pdf")
+pdf("CanadaJayMicrobiome/plots/H1pc.pdf", width = 20)
 ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = JayID)) + 
   geom_point() + geom_line() + # points are samples
   facet_grid(~Territory) + labs(shape = "Collection Year")

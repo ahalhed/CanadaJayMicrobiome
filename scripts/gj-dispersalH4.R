@@ -17,6 +17,7 @@ theme_set(theme_bw())
 gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         # will eventually need to remove 2 once all samples are there
                          metadata = "input/jay-met2.tsv")
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
@@ -51,5 +52,5 @@ ordiDF <- gj_meta %>% select(1:5, 7:19, 28:33) %>%
 ## Make an ordination plot
 pdf("CanadaJayMicrobiome/plots/H4DistanceFromOrigin.pdf")
 ggplot(ordiDF, aes(x = PC1, y = PC2, color = DistanceFromOrigin, size = AgeAtCollection)) +
-  geom_point()
+  geom_point() + labs(size = "Age at Collection", shape = "Distance from Origin (m)")
 dev.off()

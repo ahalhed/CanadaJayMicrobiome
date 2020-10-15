@@ -34,6 +34,9 @@ rownames(oriDist) <- rownames(gj_meta)
 colnames(oriDist) <- rownames(gj_meta)
 # retain only calculation of distance between origin and same sample location
 oriDistCol <- oriDist %>% rownames_to_column(var = "SampleID") %>%
+  # drop G6, because it is the blank (not needed)
+  .[ which(.$SampleID != "G6"), ] %>%
+  # pivot to longer (proper formatting for plotting), keep only same sample distances
   pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
   .[which(.$SampleID == .$SampleID2),] %>% select(-SampleID2)
 
@@ -45,7 +48,7 @@ ordiDF <- gj_meta %>% select(1:5, 7:19, 28:33) %>%
   full_join(ordiAitchison$data$Vectors) %>% full_join(oriDistCol)
 
 ## Make an ordination plot
-pdf("CanadaJayMicrobiome/plots/DistanceFromOrigin.pdf")
+pdf("CanadaJayMicrobiome/plots/H4DistanceFromOrigin.pdf")
 ggplot(ordiDF, aes(x = PC1, y = PC2, color = DistanceFromOrigin, size = AgeAtCollection)) +
   geom_point()
 dev.off()

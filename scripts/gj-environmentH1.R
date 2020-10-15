@@ -1,3 +1,6 @@
+# for Hypothesis 1 - related to environmental/spatial differences
+# to load R on interactive graham
+# module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 #if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
 #devtools::install_github("jbisanz/qiime2R")
@@ -12,7 +15,7 @@ theme_set(theme_bw())
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
                          tree = "trees/rooted-tree.qza", 
-                         taxonomy = "taxonomy/silva-taxonomy.qza",
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met2.tsv")
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")

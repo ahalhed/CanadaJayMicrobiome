@@ -37,11 +37,10 @@ comm_obj <- function(XY, c) {
   return(comm)
 }
 # subset full metadata by season (placed inside for loop)
-met_filter <- function(meta, season, year) {
+met_filter <- function(meta, season) {
   # meta is the full metadata table
   met <- rownames_to_column(meta, var = "SampleID")
   df1 <- subset(met, CollectionSeason == season) %>%
-    subset(CollectionYear == year) %>%
     # may need to fiddle with the env data been uses
     select(1, 4, 5, 16) # make sure this is dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
@@ -90,45 +89,38 @@ OTU_rare <- select(as.data.frame(OTUclr), -one_of(cOTU$Feature.ID))
 print("Accessing the metadata by season/year")
 # loop to create individual season data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
-  # filtering out the year (2016) that only has one observation
-  for (Year in unique((gj_meta %>% group_by(CollectionYear) %>% filter(n()>1)))$CollectionYear) {
-    met <- met_filter(gj_meta, SeaSon, Year)
-    assign(paste0("sea",SeaSon,Year),met)
+    met <- met_filter(gj_meta, SeaSon)
+    assign(paste0("sea",SeaSon),met)
     rm(met)
-  }
 }
 # clean up from loop (don't need blanks in list)
-rm(seaBLANK2017, seaBLANK2018, SeaSon, Year)
+rm(seaBLANK, SeaSon)
 # make a list of the season data frames generated from the loop
 sea_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("sea", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(seaFall2017, seaFall2018)
+rm(seaFall)
 
 print("Accessing the XY metadata by season/year")
 # loop to create individual season/year data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
-  # filtering out the year (2016) that only has one observation
-  for (Year in unique((gj_meta %>% group_by(CollectionYear) %>% filter(n()>1)))$CollectionYear) {
     met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
       rename("Latitude"="YsampDD", "Longitude"="XsampDD")
     df1 <- subset(met, CollectionSeason == SeaSon) %>%
-      subset(CollectionYear == Year) %>%
       select("SampleID", "Longitude", "Latitude") #dplyr select
     df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-    assign(paste0("xy",SeaSon,Year),df2)
+    assign(paste0("xy",SeaSon),df2)
     rm(met, df1, df2)
-  }
 }
-# we aren't interested in the blanks, so we will remove those (clean up)
-rm(xyBLANK2017, xyBLANK2018, SeaSon, Year)
+# we aren't interested in the blanks, so we will remove that (clean up)
+rm(xyBLANK, SeaSon)
 # make a list of the xy data frames generated from the loop
 XY_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("xy", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(xyFall2017,xyFall2018)
+rm(xyFall)
 
 print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters
@@ -212,6 +204,7 @@ step.env # an rda model, with the final model predictor variables
 print("Summary of environmental selection process - core OTUs")
 lapply(step.env, function(x) x$anova)
 print("ANOVA on full environmental selection - core OTUs")
+
 lapply(step.env, anova)
 
 # save plot
@@ -242,8 +235,8 @@ pdf(file = "CanadaJayMicrobiome/plots/core_step_space.pdf")
 lapply(step.space, plot)
 dev.off()
 
-print("Partition Bray-Curtis dissimilarities - core OTUs")
-vdist <- lapply(commCore, vegdist)
+print("Partition Aitchison dissimilarities - core OTUs")
+vdist <- lapply(commCore, dist) # euclidean on clr = aitchison
 pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd
@@ -339,7 +332,7 @@ lapply(step.space, plot)
 dev.off()
 
 print("Partition Bray-Curtis dissimilarities - rare OTUs")
-vdist <- lapply(commRare, vegdist)
+vdist <- lapply(commRare, dist) # eclidean dist on clr = aitchison
 pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd
@@ -357,7 +350,7 @@ vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list,
                        SIMPLIFY = FALSE)
 vp_mod1_list
 # plot the partitioning
-pdf(file = "CanadaJayMicrobiome/plots/AG2008_vp_mod1M.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/vp_mod1M.pdf")
 # make plot
 # plotted in numerical order by month
 lapply(vp_mod1_list, plot)
@@ -408,7 +401,7 @@ print("ANOVA on full environmental selection - all OTUs")
 lapply(step.env, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/AG2008_step_envM.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/step_envM.pdf")
 # make plot
 lapply(step.env, plot)
 dev.off()
@@ -431,13 +424,13 @@ print("ANOVA on full spatial selection - all OTU")
 lapply(step.space, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/AG2008_step_spaceM.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/step_spaceM.pdf")
 # make plot
 lapply(step.space, plot)
 dev.off()
 
 print("Partition Bray-Curtis dissimilarities - all OTUs")
-vdist <- lapply(commFull, vegdist)
+vdist <- lapply(commFull, dist) # euclidean dist on clr = aitchison
 pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd

@@ -11,6 +11,7 @@ library(vegan)
 library(zCompositions)
 # devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
 library(CoDaSeq)
+library(geosphere) # using to compute greater circle distance
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -18,10 +19,12 @@ theme_set(theme_bw())
 print("Initiate functions for analysis")
 # maximum distance
 max_dist <- function(dm) {
+  # dm is a distance matrix containing the distances between
+  # sampling locations
   df1 <- as.data.frame(as.matrix(dm))
-  # message: `summarise_each_()` is deprecated as of dplyr 0.7.0. (use across)
-  summ <- summarise_each(df1, ~ max(df1, na.rm=TRUE))
-  m <- apply(summ, 1, max)
+  # find max in each column
+  summ <-  df1 %>% summarise_if(is.numeric, ~ max(., na.rm=TRUE))
+  m <- max(summ)
   return(m)
 }
 # community object
@@ -32,6 +35,21 @@ comm_obj <- function(XY, c) {
     subset(., rownames(.) %in% rownames(XY)) %>%
     .[ , colSums(.)>0 ]
   return(comm)
+}
+# subset full metadata by season (placed inside for loop)
+met_filter <- function(meta, season, year) {
+  # meta is the full metadata table
+  met <- rownames_to_column(meta, var = "SampleID")
+  df1 <- subset(met, CollectionSeason == season) %>%
+    subset(CollectionYear == year) %>%
+    # may need to fiddle with the env data been uses
+    select(1, 4, 5, 16) # make sure this is dplyr select
+  df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
+  # replace NAs with blanks (so as to retain the columns)
+  df3 <- df2 %>% mutate_all(~replace(., is.na(.), ''))
+  # select columns with more than one level
+  df4 <- df3[sapply(df3, function(x) length(unique(x))>1)]
+  return(df4)
 }
 
 # get the data
@@ -72,52 +90,53 @@ OTU_rare <- select(as.data.frame(OTUclr), -one_of(cOTU$Feature.ID))
 print("Accessing the metadata by season/year")
 # loop to create individual season data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
-  for (Year in unique(gj_meta$CollectionYear)) {
-    met <- rownames_to_column(gj_meta, var = "SampleID")
-    df1 <- subset(met, CollectionSeason == SeaSon) %>%
-      subset(CollectionYear == Year) %>%
-      select(1, 3:6, 8:10, 13:20, 29:34) # make sure this is dplyr select
-    df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-    assign(paste0("sea",SeaSon,Year),df2)
-    rm(met, df1, df2)
+  # filtering out the year (2016) that only has one observation
+  for (Year in unique((gj_meta %>% group_by(CollectionYear) %>% filter(n()>1)))$CollectionYear) {
+    met <- met_filter(gj_meta, SeaSon, Year)
+    assign(paste0("sea",SeaSon,Year),met)
+    rm(met)
   }
 }
 # clean up from loop (don't need blanks in list)
-rm(seaBLANK2016, seaBLANK2017, seaBLANK2018, SeaSon, Year)
+rm(seaBLANK2017, seaBLANK2018, SeaSon, Year)
 # make a list of the season data frames generated from the loop
 sea_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("sea", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(seaFall2016, seaFall2017, seaFall2018)
+rm(seaFall2017, seaFall2018)
 
 print("Accessing the XY metadata by season/year")
-# loop to create individual month data frames
+# loop to create individual season/year data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
-  for (Year in unique(gj_meta$CollectionYear)) {
+  # filtering out the year (2016) that only has one observation
+  for (Year in unique((gj_meta %>% group_by(CollectionYear) %>% filter(n()>1)))$CollectionYear) {
     met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
       rename("Latitude"="YsampDD", "Longitude"="XsampDD")
     df1 <- subset(met, CollectionSeason == SeaSon) %>%
       subset(CollectionYear == Year) %>%
-      select("SampleID", "Latitude", "Longitude") #dplyr select
+      select("SampleID", "Longitude", "Latitude") #dplyr select
     df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
     assign(paste0("xy",SeaSon,Year),df2)
     rm(met, df1, df2)
   }
 }
 # we aren't interested in the blanks, so we will remove those (clean up)
-rm(xyBLANK2016, xyBLANK2017, xyBLANK2018, SeaSon, Year)
+rm(xyBLANK2017, xyBLANK2018, SeaSon, Year)
 # make a list of the xy data frames generated from the loop
 XY_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("xy", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(xyFall2016,xyFall2017,xyFall2018)
+rm(xyFall2017,xyFall2018)
 
-print("Computing Euclidean Distances")
-dist_list <- lapply(XY_list, dist)
-print("Maximum Euclidean Distance by Month")
+print("Computing Haversine Distances")
+# using Haversine distance to get distance between sampling locations in meters
+# reasonable alternative to doing euclidean distances
+dist_list <- lapply(XY_list, function(x) distm(x, x, fun = distHaversine))
+print("Maximum Distance (m) by Collection Season/Year")
 lapply(dist_list, max_dist)
+
 
 ## community objects
 # subset the samples from the core microbiome
@@ -131,3 +150,302 @@ print("Removing pobjects that are no longer needed")
 rm(gj_meta, cOTU, OTUclr, gj_ps, OTU_core, OTU_rare)
 # leaving functions, just in case
 
+## Analysis time!
+# unweighted PCNM
+print("Unweighted PCNM - for use with all OTU tables")
+pcnm_list <- lapply(dist_list, pcnm)
+# need to sort out how to generalize printing  label with the vectors
+for (month in pcnm_list) {
+  print(month$vectors)
+}
+print("Acessing PCNM scores")
+scores_list <- lapply(pcnm_list, scores)
+
+# core OTUs
+print("Analysis for Core OTUs")
+print("Variance partitioning - Core OTUs")
+# for some reason 2016 is the second option in sea_list, so dropping that
+vp_mod1_list <- mapply(varpart, commCore, scores_list, data=sea_list,
+                       MoreArgs = list(~.),
+                       SIMPLIFY = FALSE)
+
+# plot the partitioning
+pdf(file = "CanadaJayMicrobiome/plots/core_vp_mod1.pdf")
+# make plot
+# plotted in numerical order by month
+lapply(vp_mod1_list, plot)
+dev.off()
+#remove vp object, to repeat with new OTU table
+rm(vp_mod1_list)
+
+# test with RDA
+print("Testing with RDA (full model) - core OTUS")
+# create a tiny anonymous function to include formula syntax in call
+abFrac <- mapply(function(x,data) rda(x~., data), 
+                 commCore, sea_list, SIMPLIFY=FALSE)
+abFrac # Full model
+lapply(abFrac, anova, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+lapply(abFrac, RsquareAdj)
+
+# Test fraction [a] using partial RDA:
+print("Testing with partial RDA (fraction [a]) - core OTUS")
+# create a tiny anonymous function to include formula syntax in call
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
+                commCore, pcnm_list, sea_list, SIMPLIFY=FALSE)
+aFrac
+lapply(aFrac, anova, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+lapply(aFrac, RsquareAdj)
+
+# forward selection for parsimonious model
+print("Forward selection for parsimonious model - core OTUs")
+# env variables
+print("Environmental variables - core OTUs")
+# create a tiny anonymous function to include formula syntax in call
+abFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commCore, sea_list, SIMPLIFY=FALSE) # Reduced model
+step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                   abFrac0, abFrac, SIMPLIFY=FALSE)
+step.env # an rda model, with the final model predictor variables
+
+print("Summary of environmental selection process - core OTUs")
+lapply(step.env, function(x) x$anova)
+print("ANOVA on full environmental selection - core OTUs")
+lapply(step.env, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/core_step_env.pdf")
+# make plot
+lapply(step.env, plot)
+dev.off()
+
+# spatial variables
+print("Spatial variables - core OTU")
+pcnm_df <- lapply(pcnm_list, function(x) as.data.frame(scores(x)))
+bcFrac <- mapply(function(x,data) rda(x~., data), 
+                 commCore, pcnm_df, SIMPLIFY=FALSE) # Full model
+bcFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commCore, pcnm_df, SIMPLIFY=FALSE) # Reduced model
+step.space <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                     bcFrac0, bcFrac, SIMPLIFY=FALSE)
+step.space
+
+print("Summary of spatial selection process - core OTU")
+lapply(step.space, function(x) x$anova)
+print("ANOVA on full spatial selection - core OTU")
+lapply(step.space, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/core_step_space.pdf")
+# make plot
+lapply(step.space, plot)
+dev.off()
+
+print("Partition Bray-Curtis dissimilarities - core OTUs")
+vdist <- lapply(commCore, vegdist)
+pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
+               vdist, scores_list, sea_list, SIMPLIFY=FALSE)
+pbcd
+
+#cleanup
+# remove objects to be replaced/no longer needed
+rm(vdist,pbcd, commCore)
+rm(abFrac, aFrac,abFrac0, step.env, pcnm_df, bcFrac, bcFrac0, step.space)
+
+
+# Rare OTUs
+print("Analysis for Rare OTUs")
+print("Variance partitioning - Rare OTUs")
+vp_mod1_list <- mapply(varpart, commRare, scores_list, data=sea_list, 
+                       MoreArgs = list(~.),
+                       SIMPLIFY = FALSE)
+vp_mod1_list
+# plot the partitioning
+pdf(file = "CanadaJayMicrobiome/plots/rare_vp_mod1.pdf")
+# make plot
+# plotted in numerical order by month
+lapply(vp_mod1_list, plot)
+dev.off()
+#remove vp object, to repeat with new OTU table
+rm(vp_mod1_list)
+
+# test with RDA
+print("Testing with RDA (full model) - rare OTUS")
+# create a tiny anonymous function to include formula syntax in call
+abFrac <- mapply(function(x,data) rda(x~., data), 
+                 commRare, sea_list, SIMPLIFY=FALSE)
+abFrac # Full model
+# anova
+lapply(abFrac, anova, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+lapply(abFrac, RsquareAdj)
+
+# Test fraction [a] using partial RDA:
+print("Testing with partial RDA (fraction [a]) - rare OTUS")
+# create a tiny anonymous function to include formula syntax in call
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
+                commRare, pcnm_list, sea_list, SIMPLIFY=FALSE)
+aFrac
+# anova
+lapply(aFrac, anova, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+lapply(aFrac, RsquareAdj)
+
+# forward selection for parsimonious model
+print("Forward selection for parsimonious model - rare OTUs")
+# env variables
+print("Environmental variables - rare OTUs")
+# create a tiny anonymous function to include formula syntax in call
+abFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commRare, sea_list, SIMPLIFY=FALSE) # Reduced model
+
+step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                   abFrac0, abFrac, SIMPLIFY=FALSE)
+step.env # an rda model, with the final model predictor variables
+
+print("Summary of environmental selection process - rare OTUs")
+lapply(step.env, function(x) x$anova)
+print("ANOVA on full environmental selection - rare OTUs")
+lapply(step.env, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/rare_step_env.pdf")
+# make plot
+lapply(step.env, plot)
+dev.off()
+
+# spatial variables
+print("Spatial variables - rare OTU")
+pcnm_df <- lapply(pcnm_list, function(x) as.data.frame(scores(x)))
+bcFrac <- mapply(function(x,data) rda(x~., data), 
+                 commRare, pcnm_df, SIMPLIFY=FALSE) # Full model
+bcFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commRare, pcnm_df, SIMPLIFY=FALSE) # Reduced model
+step.space <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                     bcFrac0, bcFrac, SIMPLIFY=FALSE)
+step.space
+
+# summary of selection process
+print("Summary of spatial selection process - rare OTU")
+lapply(step.space, function(x) x$anova)
+print("ANOVA on full spatial selection - rare OTU")
+lapply(step.space, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/rare_step_space.pdf")
+# make plot
+lapply(step.space, plot)
+dev.off()
+
+print("Partition Bray-Curtis dissimilarities - rare OTUs")
+vdist <- lapply(commRare, vegdist)
+pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
+               vdist, scores_list, sea_list, SIMPLIFY=FALSE)
+pbcd
+
+#cleanup
+# remove objects to be replaced
+rm(vdist, pbcd, commRare)
+rm(abFrac, aFrac,abFrac0, step.env, pcnm_df, bcFrac, bcFrac0, step.space)
+
+# analysis for all OTUs
+print("Analysis for All OTUs")
+print("Variance partitioning - All OTUs")
+vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list, 
+                       MoreArgs = list(~.),
+                       SIMPLIFY = FALSE)
+vp_mod1_list
+# plot the partitioning
+pdf(file = "CanadaJayMicrobiome/plots/AG2008_vp_mod1M.pdf")
+# make plot
+# plotted in numerical order by month
+lapply(vp_mod1_list, plot)
+dev.off()
+#remove vp object, done with it now
+rm(vp_mod1_list)
+
+# test with RDA
+print("Testing with RDA (full model) - all OTUS")
+# create a tiny anonymous function to include formula syntax in call
+abFrac <- mapply(function(x,data) rda(x~., data), 
+                 commFull, sea_list, SIMPLIFY=FALSE)
+
+abFrac # Full model
+
+lapply(abFrac, anova, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+lapply(abFrac, RsquareAdj)
+
+# Test fraction [a] using partial RDA:
+print("Testing with partial RDA (fraction [a]) - all OTUS")
+# create a tiny anonymous function to include formula syntax in call
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
+                commFull, pcnm_list, sea_list, SIMPLIFY=FALSE)
+aFrac
+# anova
+lapply(aFrac, anova, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+lapply(aFrac, RsquareAdj)
+
+# forward selection for parsimonious model
+print("Forward selection for parsimonious model - all OTUs")
+
+# env variables
+print("Environmental variables - all OTUs")
+# create a tiny anonymous function to include formula syntax in call
+abFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commFull, sea_list, SIMPLIFY=FALSE) # Reduced model
+
+step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                   abFrac0, abFrac, SIMPLIFY=FALSE)
+
+step.env # an rda model, with the final model predictor variables
+
+print("Summary of environmental selection process - all OTUs")
+lapply(step.env, function(x) x$anova)
+print("ANOVA on full environmental selection - all OTUs")
+lapply(step.env, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/AG2008_step_envM.pdf")
+# make plot
+lapply(step.env, plot)
+dev.off()
+
+# spatial variables
+print("Spatial variables - all OTU")
+pcnm_df <- lapply(pcnm_list, function(x) as.data.frame(scores(x)))
+bcFrac <- mapply(function(x,data) rda(x~., data), 
+                 commFull, pcnm_df, SIMPLIFY=FALSE) # Full model
+bcFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commFull, pcnm_df, SIMPLIFY=FALSE) # Reduced model
+step.space <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                     bcFrac0, bcFrac, SIMPLIFY=FALSE)
+step.space
+
+# summary of selection process
+print("Summary of spatial selection process - all OTU")
+lapply(step.space, function(x) x$anova)
+print("ANOVA on full spatial selection - all OTU")
+lapply(step.space, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/AG2008_step_spaceM.pdf")
+# make plot
+lapply(step.space, plot)
+dev.off()
+
+print("Partition Bray-Curtis dissimilarities - all OTUs")
+vdist <- lapply(commFull, vegdist)
+pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
+               vdist, scores_list, sea_list, SIMPLIFY=FALSE)
+pbcd
+
+#cleanup
+# remove objects to be replaced/no longer needed
+rm(vdist,pbcd, commFull)
+rm(abFrac, aFrac,abFrac0, step.env, pcnm_df, bcFrac, bcFrac0, step.space)
+
+# I have removed the variation decomposition with parsimonious variables, 
+# since it was frequently failing and would likely cause issues.

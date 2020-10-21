@@ -1,3 +1,7 @@
+# for Hypothesis 2 - feeding differences
+# this script is for the diet supplementation plot
+# to load R on interactive graham
+# module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 #if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
 #devtools::install_github("jbisanz/qiime2R")

@@ -46,7 +46,7 @@ dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
 # save boxplot to PDF
 pdf("CanadaJayMicrobiome/plots/H2foodBox.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
-  geom_boxplot() + labs(x = "Food Supplementation Group")
+  geom_boxplot() + labs(x = "Food Supplementation")
 dev.off()
 
 # read in the aitchison ordination
@@ -61,9 +61,9 @@ pdf("CanadaJayMicrobiome/plots/H2foodOrdi.pdf", width = 9)
 # ellipse by territory
 # shape by food
 # too few samples to get much meaningful from this
-ggplot(aitch, aes(x=PC1, y=PC2, colour = FoodSupplement)) + #group=Territory, 
+ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplement)) + 
   geom_point() + # points are samples
   stat_ellipse(type = "norm") +
-  labs(colour = "Food Supplementation")
+  labs(shape = "Food Supplementation", linetype = "Food Supplementation")
 # turn off graphics device
 dev.off()

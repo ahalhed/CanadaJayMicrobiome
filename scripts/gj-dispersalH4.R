@@ -22,7 +22,7 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-c
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
-# read in the aitchison distance matrix
+# read in the ordination aitchison matrix
 ordiAitchison <- read_qza("aitchison-ordination.qza")
 
 ## Calculate distance between origin and sampling locations

@@ -17,8 +17,10 @@ theme_set(theme_bw())
 gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         # will eventually need to remove 2 once all samples are there
-                         metadata = "input/jay-met2.tsv")
+                         # q2 types line causes issues (so removed in the tsv file input here)
+                         metadata = "input/jay-met2.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)

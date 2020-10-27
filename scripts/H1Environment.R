@@ -61,6 +61,7 @@ dev.off()
 # Vegan-based analysis starts here
 # distance based RDA using aitchison distance matrix
 # should throw in collection season when there are more samples
+# might switch to the phyloseq implementation
 gj_cap <- capscale(dmAitchison$data ~ Prop_Spruce_On_Territory + CollectionYear + AgeAtCollection,
                    data = gj_meta, comm = otu_table(gj_ps), na.action = na.exclude)
 # look at summaries

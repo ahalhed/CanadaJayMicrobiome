@@ -41,11 +41,15 @@ offParPS <- prune_samples(sample_names(gj_ps) %in% rownames(offPar), gj_ps)
 # clean up
 rm(gj_ps, gj_meta, parents, offspring)
 
-# read in Aitchison distance matrix data
-dmAitchison <- read_qza("aitchison-distance.qza")$data %>% as.matrix %>%
+# read in Aitchison ordination data
+ordiAitchison <- read_qza("aitchison-ordination.qza")$data$Vectors %>%
   # subset to include only samples in phyloseq object
   # this needs final testing since we don't yet have sequence data for all samples
-  .[sample_names(offParPS), sample_names(offParPS)] %>% 
-  as.dist() # converting back to distance matrix
-# plot on dbRDA
-# or could just use aitchison ordination from Q2
+  filter(SampleID %in% sample_names(offParPS)) %>%
+  # combined with filtered metadata
+  # this needs final testing since we don't yet have sequence data for all samples
+  full_join(rownames_to_column(offPar, var = "SampledID"))
+# plot ordination data
+# territory is a proxy for nest group
+ggplot(ordiAitchison, aes(x = PC1, y = PC2, group = Territory, linetype = Territory)) +
+  geom_point() + stat_ellipse(type = "norm")

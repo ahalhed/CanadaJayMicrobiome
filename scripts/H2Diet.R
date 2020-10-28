@@ -52,7 +52,7 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
   geom_boxplot() + labs(x = "Food Supplementation")
 dev.off()
 
-# read in the aitchison ordination
+# read in the aitchison ordination (probs won't keep this)
 ordiAitchison <- read_qza("aitchison-ordination.qza")
 # combine aitchison vectors with environmental data
 aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%

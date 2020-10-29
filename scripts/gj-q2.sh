@@ -89,62 +89,11 @@ qiime phylogeny align-to-tree-mafft-fasttree \
   --o-tree trees/unrooted-tree.qza \
   --o-rooted-tree trees/rooted-tree.qza
 
-# ASSIGN TAXONOMY (need more than 4G ram - 8G works for GG)
+# ASSIGN TAXONOMY (need more than 4G ram)
 # Accessing the pretrained classifiers from here
 # https://docs.qiime2.org/2020.8/data-resources/
-# Download the  Green genes reference database (smaller, runs faster)
-wget -O "gg-13-8-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/gg-13-8-99-nb-classifier.qza"
-# assignment
-qiime feature-classifier classify-sklearn \
- --i-classifier references/gg-13-8-99-nb-classifier.qza \
- --p-n-jobs 16 \
- --i-reads rep-seqs-no-singletons.qza \
- --o-classification taxonomy/GG-taxonomy.qza
-# Generating taxonomy visualization
-qiime taxa barplot \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --o-visualization taxonomy/GG-taxa-bar-plots.qzv
-# Extracting Taxonomic Clasification
-# Phylum
-qiime taxa collapse \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --p-level 2 \
-  --o-collapsed-table taxonomy/GG-table-l2.qza
-# Class
-qiime taxa collapse \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --p-level 3 \
-  --o-collapsed-table taxonomy/GG-table-l3.qza
-# Order
-qiime taxa collapse \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --p-level 4 \
-  --o-collapsed-table taxonomy/GG-table-l4.qza
-# Family
-qiime taxa collapse \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --p-level 5 \
-  --o-collapsed-table taxonomy/GG-table-l5.qza
-# Genus
-qiime taxa collapse \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --p-level 6 \
-  --o-collapsed-table taxonomy/GG-table-l6.qza
-# Species
-qiime taxa collapse \
-  --i-table filtered-table-no-singletons.qza \
-  --i-taxonomy taxonomy/GG-taxonomy.qza \
-  --p-level 7 \
-  --o-collapsed-table taxonomy/GG-table-l7.qza
 
-# Obtaining SILVA reference database (much larger database, will likely do a better job at classifying)
+# Obtaining SILVA reference database (much larger database than GG, will likely do a better job at classifying)
 wget -O "silva-132-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza"
 # This has a high memory requirement (mem=128G,ntasks=16), but runs relatively quick (<30 min)
 # Classifying taxonomies
@@ -206,7 +155,8 @@ qiime taxa filter-table \
   --o-filtered-table filtered-table-no-singletons-mitochondria-chloroplast.qza
 
 # compositional data analysis
-# compute aitchison distance matrix
+# compute aitchison distance matrix 
+# full dataset (H1, H2)
 qiime deicode rpca \
     --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
     --p-min-feature-count 10 \
@@ -221,169 +171,35 @@ qiime emperor biplot \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
 
-
-# multivariate comparison
-# PERMANOVA & ANOSIM
-# by Territory
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv  \
-  --m-metadata-column Territory \
-  --o-visualization beta/Territory-permanova-aitchison.qzv
-
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv  \
-  --m-metadata-column Territory \
-  --p-method anosim \
-  --o-visualization beta/Territory-anosim-aitchison.qzv
-
-# by TerritoryQuality
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column TerritoryQuality \
-  --o-visualization beta/TerritoryQuality-permanova-aitchison.qzv
-
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column TerritoryQuality \
-  --p-method anosim \
-  --o-visualization beta/TerritoryQuality-anosim-aitchison.qzv
-
-# by Food supplement
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column FoodSupplement \
-  --o-visualization beta/FoodSupplement-permanova-aitchison.qzv
-
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column FoodSupplement \
-  --p-method anosim \
-  --o-visualization beta/FoodSupplement-anosim-aitchison.qzv
-
-# by jayID
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column JayID \
-  --o-visualization beta/JayID-permanova-aitchison.qzv
-
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column JayID \
-  --p-method anosim \
-  --o-visualization beta/JayID-anosim-aitchison.qzv
-
-# by CollectionSeason
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column CollectionSeason \
-  --o-visualization beta/CollectionSeason-permanova-aitchison.qzv
-
-qiime diversity beta-group-significance \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column CollectionSeason \
-  --p-method anosim \
-  --o-visualization beta/CollectionSeason-anosim-aitchison.qzv
-
-# by MeanTempC (average temperature on day of collection in degrees Celcius)
-# doesn't work b/c is numeric, not categorical
-
-# bioenv
-# long running (>2 hours)
-qiime diversity bioenv \
-  --i-distance-matrix aitchison-distance.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --o-visualization bioenv-aitchison.qzv
-
-# correlational analysis
-# with SparCC
-# attempting installation with: https://github.com/shafferm/q2-SCNIC
-qiime SCNIC sparcc-filter \
+# will test these two sections of code once have complete sequence set
+# Hypothesis 3 - spring 2020 samples (nest groups)
+qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
-  --o-table-filtered filtered-table-SparCC.qza
-# build a correlation table
-qiime SCNIC calculate-correlations \
-  --i-table filtered-table-SparCC.qza \
-  --p-method sparcc \
-  --o-correlation-table SparCC-correls.qza
-# build the correlation table
-qiime SCNIC build-correlation-network-r \
-  --i-correlation-table SparCC-correls.qza \
-  --p-min-val .35 \
-  --o-correlation-network SparCC-net.qza
-# summmarize results
-qiime SCNIC make-modules-on-correlation-table \
-  --i-correlation-table SparCC-correls.qza \
-  --i-feature-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
-  --p-min-r .35 \
-  --o-collapsed-table fake_data.collapsed.qza \
-  --o-correlation-network SparCC-net-modules.qza \
-  --o-module-membership SparCC-membership.qza
-# visualize results
-qiime meta tabulate \
-  --m-input-file SparCC-membership.qza \
-  --o-visualization SparCC-membership.qzv
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
+  --o-filtered-table H3-filtered-table.qza
 
+qiime deicode rpca \
+    --i-table H3-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot H3-aitchison-ordination.qza \
+    --o-distance-matrix H3-aitchison-distance.qza
 
-# differential abundance with ancom
-qiime composition add-pseudocount \
+# Hypothesis 4 - only samples with origin data
+# H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
+qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
-  --o-composition-table filtered-table-pseudo.qza
+  --m-metadata-file H4-samples.tsv \
+  --o-filtered-table H4-filtered-table.qza
 
-# need to make sure all rows have values
-# by Territory
-qiime composition ancom \
-  --i-table filtered-table-pseudo.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column Territory \
-  --o-visualization ancom/Territory-ancom.qzv
+qiime deicode rpca \
+    --i-table H4-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot H4-aitchison-ordination.qza \
+    --o-distance-matrix H4-aitchison-distance.qza
 
-# by TerritoryQuality
-# unknown = U
-qiime composition ancom \
-  --i-table filtered-table-pseudo.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column TerritoryQuality \
-  --o-visualization ancom/TerritoryQuality-ancom.qzv
-
-# by FoodSupplement
-# unknown = U
-qiime composition ancom \
-  --i-table filtered-table-pseudo.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column FoodSupplement \
-  --o-visualization ancom/FoodSupplement-ancom.qzv
-
-# by JayID
-qiime composition ancom \
-  --i-table filtered-table-pseudo.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column JayID \
-  --o-visualization ancom/JayID-ancom.qzv
-
-# by CollectionSeason
-qiime composition ancom \
-  --i-table filtered-table-pseudo.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column CollectionSeason \
-  --o-visualization ancom/CollectionSeason-ancom.qzv
-
-# by MeanTempC
-# doesn't work - is numeric (must be categorical)
-# could try forcing to categorical if needed
-
-# ALDEx2 - not necessary because of ANCOM
-# not working because of package/R version issues
-# https://library.qiime2.org/plugins/q2-aldex2/24/
-
+# removed other things (ancom, anosim) since they weren't associated with a particular hypothesis
 # Close QIIME2
 conda deactivate

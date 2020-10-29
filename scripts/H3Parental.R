@@ -20,16 +20,17 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-c
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
+# will likely do this filtering based on the qiime2 output (filtered in qiime2)
 # metadata will all samples (temp fix)
 #jay_ALL <- readxl::read_excel("~/OneDrive - University of Guelph/Alicia's Thesis/Grey Jays/metadata/jay-ALL.xlsx")
 # drop rows juveniles without parent(s) sampled from same season
 # jay_ALL[-1,] %>% 
 offspring <- gj_meta %>% rownames_to_column('sampleid') %>%
-  subset(!is.na(Sampled_Parent_Male) | !is.na(Sampled_Parent_Female)) %>% 
+  subset(!is.na(SampledParentMale) | !is.na(SampledParentFemale)) %>% 
   subset(JayID != 'BLANK')
 # retain parents identified in nestlings rows
 parents <- gj_meta %>% rownames_to_column('sampleid') %>%
-  subset(JayID %in% unique(offspring$Sampled_Parent_Male) | JayID %in% unique(offspring$Sampled_Parent_Female)) %>%
+  subset(JayID %in% unique(offspring$SampledParentMale) | JayID %in% unique(offspring$SampledParentFemale)) %>%
   subset(CollectionYear %in% unique(offspring$CollectionYear) & CollectionSeason %in% unique(offspring$CollectionSeason))
 # join parent and offspring together
 offPar <- full_join(offspring, parents) %>%

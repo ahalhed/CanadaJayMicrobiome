@@ -24,10 +24,8 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-c
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
-# read in the ordination aitchison matrix
-ordiAitchison <- read_qza("aitchison-ordination.qza")
-# read in the aitchison distance matrix
-dmAitchison <- read_qza("aitchison-distance.qza")
+# read in the ordination aitchison matrix (only samples with origins)
+ordiAitchison <- read_qza("aitchison-ordination-origin.qza")
 
 ## Calculate distance between origin and sampling locations
 # this uses the Haversine to calculate half circle distance
@@ -47,29 +45,14 @@ oriDistCol <- oriDist %>% rownames_to_column(var = "SampleID") %>%
   .[which(.$SampleID == .$SampleID2),] %>% select(-SampleID2) %>%
   # drop NAs from the Distance From Origin Column
   subset(!is.na(DistanceFromOrigin)) 
-# filter the distance matrix to only contain samples of interest
-distAitch <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
-  rownames_to_column(var = "SampleID") %>%
-  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "AitchisonDistance") %>%
-  # remove same-sample comparisons
-  .[-which(.$SampleID == .$SampleID2),] %>%
-  # select only the samples that we have harvesine distance from origin for
-  .[which(.$SampleID %in% oriDistCol$SampleID & .$SampleID2 %in% oriDistCol$SampleID),] %>%
-  # PIVOT wide
-  pivot_wider(id_cols = SampleID, names_from = SampleID2, values_from = AitchisonDistance) %>%
-  remove_rownames %>% column_to_rownames(var = "SampleID") %>%
-  # replace NA with 0 and convert back to distance matrix
-  mutate_all(~replace(., is.na(.), 0)) %>% as.matrix %>% as.dist()
-View(distAitch)
+
 ## Combine data from 3 above sources to plots
 # select columns of interest from meta (no location or extraction info)
 ordiDF <- gj_meta %>% select(1:5, 7:19, 28:33) %>%
   rownames_to_column(var = "SampleID") %>%
-  # distance from origin
-  full_join(oriDistCol)
-ordiDF
-capscale(dmAitchison$data ~ Prop_Spruce_On_Territory + CollectionYear + AgeAtCollection,
-         data = ordiDF, comm = otu_table(gj_ps), na.action = na.exclude)
+  # distance from origin and principle component axes
+  full_join(oriDistCol) %>% full_join(ordiAitchison$data$Vectors)
+
 
 ## Make an ordination plot
 pdf("CanadaJayMicrobiome/plots/H4DistanceFromOrigin.pdf")

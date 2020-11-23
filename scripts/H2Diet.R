@@ -8,6 +8,7 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(vegan)
+library(ggsignif)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -49,7 +50,10 @@ dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
 # save boxplot to PDF
 pdf("CanadaJayMicrobiome/plots/H2foodBox.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
-  geom_boxplot() + labs(x = "Food Supplementation")
+  geom_boxplot() + labs(x = "Food Supplementation") +
+  # add significance stars to plot (t-test)
+  geom_signif(comparisons = list(c("No", "Yes"), c("No", "Either"), c("Either", "Yes")),
+              map_signif_level=TRUE, step_increase = 0.05)
 dev.off()
 
 # read in the aitchison ordination (probs won't keep this)

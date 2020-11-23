@@ -1,5 +1,5 @@
 # addition plots scripts
-# not associated with a give hypothesis
+# not associated with a particular hypothesis
 
 
 # map of smapling locations

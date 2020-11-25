@@ -37,10 +37,11 @@ comm_obj <- function(XY, c) {
   return(comm)
 }
 # subset full metadata by season (placed inside for loop)
-met_filter <- function(meta, season) {
+met_filter <- function(meta, season, year) {
   # meta is the full metadata table
   met <- rownames_to_column(meta, var = "SampleID")
   df1 <- subset(met, CollectionSeason == season) %>%
+    subset(CollectionYear == year) %>%
     # may need to fiddle with the env data been uses
     select(1, 4, 5, 16) # make sure this is dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
@@ -86,40 +87,50 @@ OTU_core <- OTUclr[, cOTU$Feature.ID]
 OTU_rare <- select(as.data.frame(OTUclr), -one_of(cOTU$Feature.ID))
 
 print("Accessing the metadata by season/year")
-# loop to create individual season data frames
+# loop to create individual season/year data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
-    met <- met_filter(gj_meta, SeaSon)
-    assign(paste0("sea",SeaSon),met)
-    rm(met)
+  for (Year in unique(gj_meta$CollectionYear)) {
+    met <- met_filter(gj_meta, SeaSon, Year)
+    assign(paste0("sea",SeaSon,Year),met)
+    rm(met, Year)
+  }
+  rm(SeaSon)
 }
-# clean up from loop (don't need blanks in list)
-rm(seaBLANK, SeaSon)
+
+# clean up from loop (don't need blanks/empties in list)
+rm(seaBLANK2016, seaBLANK2017, seaBLANK2018, seaFall2016)
 # make a list of the season data frames generated from the loop
 sea_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("sea", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(seaFall)
+rm(seaFall2017, seaFall2018)
 
 print("Accessing the XY metadata by season/year")
-# loop to create individual season/year data frames
+# loop to create individual season/year XY data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
+  for (Year in unique(gj_meta$CollectionYear)) {
     met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
       rename("Latitude"="YsampDD", "Longitude"="XsampDD")
     df1 <- subset(met, CollectionSeason == SeaSon) %>%
+      subset(CollectionYear == Year) %>%
       select("SampleID", "Longitude", "Latitude") #dplyr select
     df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-    assign(paste0("xy",SeaSon),df2)
-    rm(met, df1, df2)
+    assign(paste0("xy",SeaSon,Year),df2)
+    rm(met, df1, df2, Year)
+  }
+  rm(SeaSon)
 }
+
 # we aren't interested in the blanks, so we will remove that (clean up)
-rm(xyBLANK, SeaSon)
+# 2016 removed since it's only 1 sample
+rm(xyFall2016, xyBLANK2016, xyBLANK2017, xyBLANK2018)
 # make a list of the xy data frames generated from the loop
 XY_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("xy", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(xyFall)
+rm(xyFall2017, xyFall2018)
 
 print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters

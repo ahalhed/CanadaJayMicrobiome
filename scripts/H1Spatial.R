@@ -37,13 +37,12 @@ comm_obj <- function(XY, c) {
   return(comm)
 }
 # subset full metadata by season (placed inside for loop)
-met_filter <- function(meta, season, year) {
+met_filter <- function(meta, season) {
   # meta is the full metadata table
   met <- rownames_to_column(meta, var = "SampleID")
   df1 <- subset(met, CollectionSeason == season) %>%
-    subset(CollectionYear == year) %>%
     # may need to fiddle with the env data been uses
-    select(1, 4, 5, 16) # make sure this is dplyr select
+    select(1, 4, 5, 12, 16) # make sure this is dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
   # replace NAs with blanks (so as to retain the columns)
   df3 <- df2 %>% mutate_all(~replace(., is.na(.), ''))
@@ -92,6 +91,7 @@ for (SeaSon in unique(gj_meta$CollectionSeason)) {
   assign(paste0("sea",SeaSon),met)
   rm(met)
 }
+
 # clean up from loop (don't need blanks in list)
 rm(seaBLANK, SeaSon)
 # make a list of the season data frames generated from the loop
@@ -100,7 +100,7 @@ sea_list <- do.call("list",
                     mget(grep("sea", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
 rm(seaFall)
-print("Accessing the XY metadata by season/year")
+print("Accessing the XY metadata by season")
 # loop to create individual season/year data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
   met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
@@ -124,13 +124,13 @@ print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters
 # reasonable alternative to doing euclidean distances
 dist_list <- lapply(XY_list, function(x) distm(x, x, fun = distHaversine))
-print("Maximum Distance (m) by Collection Season/Year")
+print("Maximum Distance (m) by Collection Season")
 lapply(dist_list, max_dist)
 
 
 ## community objects
 # subset the samples from the core microbiome
-print("Build the community object (OTU table) for season/year")
+print("Build the community object (OTU table) for season")
 commFull <- lapply(XY_list, comm_obj, c=OTUclr)
 commCore <- lapply(XY_list, comm_obj, c=OTU_core)
 commRare <- lapply(XY_list, comm_obj, c=OTU_rare)
@@ -162,7 +162,7 @@ vp_mod1_list <- mapply(varpart, commCore, scores_list, data=sea_list,
 # plot the partitioning
 pdf(file = "CanadaJayMicrobiome/plots/core_vp_mod1.pdf")
 # make plot
-# plotted in numerical order by month
+# plotted in numerical order by season
 lapply(vp_mod1_list, plot)
 dev.off()
 #remove vp object, to repeat with new OTU table

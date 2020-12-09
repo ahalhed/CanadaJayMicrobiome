@@ -2,7 +2,7 @@
 # Species: Canada (Grey) Jay
 # Sample: Oral Swabs
 # 16S rRNA
-# working with qiime2-2020.2
+# working with qiime2-2020.8
 
 # script starts here
 # ________________________________________
@@ -19,20 +19,19 @@ module load miniconda3
 conda activate qiime2-2020.8
 
 # import the sequence data
-# the raw files directory includes the "first jay" that Mason sent
+# the raw files directory includes sequences from all samples
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \
   --input-path input/rawFiles \
   --input-format CasavaOneEightSingleLanePerSampleDirFmt \
   --output-path demux-paired-end.qza
 
-# below was a quick run, so ran in login node
-# downloaded to local to look at the plot
 qiime demux summarize \
   --i-data demux-paired-end.qza \
   --o-visualization demux-paired-end.qzv
 
-# going to trim at 250 bp, don't really drop much based on plot
+# going to trim at 250 bp
+# this took just over two hours to run
 qiime dada2 denoise-single \
   --i-demultiplexed-seqs demux-paired-end.qza \
   --p-trim-left 0 \
@@ -59,7 +58,7 @@ qiime metadata tabulate \
 qiime tools view tabulated-metadata.qzv
 
 # Going to work with the DADA2 results
-# will use this figure to make sampling depth decision for
+# will use this figure to make sampling depth decision
 qiime feature-table summarize \
   --i-table table-dada2.qza \
   --o-visualization table-dada2.qzv \

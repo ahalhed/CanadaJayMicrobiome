@@ -1,0 +1,4 @@
+Saved FeatureData[AlignedSequence] to: aligned-rep-seqs.qza
+Saved FeatureData[AlignedSequence] to: masked-aligned-rep-seqs.qza
+Saved Phylogeny[Unrooted] to: ./trees/unrooted-tree.qza
+Saved Phylogeny[Rooted] to: ./trees/rooted-tree.qza

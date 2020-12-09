@@ -1,0 +1,20 @@
+# paste job number of dependency into header
+sbatch CanadaJayMicrobiome/scripts/batchJobs/1import.sh 
+# depends on 1
+nano CanadaJayMicrobiome/scripts/batchJobs/2denoise.sh
+sbatch CanadaJayMicrobiome/scripts/batchJobs/2denoise.sh
+# depends on 2
+nano CanadaJayMicrobiome/scripts/batchJobs/3cluster.sh 
+sbatch CanadaJayMicrobiome/scripts/batchJobs/3cluster.sh 
+# depends on 3
+nano CanadaJayMicrobiome/scripts/batchJobs/4repSeqs.sh
+sbatch CanadaJayMicrobiome/scripts/batchJobs/4repSeqs.sh
+# depends on 4
+nano CanadaJayMicrobiome/scripts/batchJobs/5tree.sh 
+sbatch CanadaJayMicrobiome/scripts/batchJobs/5tree.sh 
+# depends on 4
+nano CanadaJayMicrobiome/scripts/batchJobs/6taxonomy.sh 
+sbatch CanadaJayMicrobiome/scripts/batchJobs/6taxonomy.sh
+# depends on 6
+nano CanadaJayMicrobiome/scripts/batchJobs/7deicode.sh
+sbatch CanadaJayMicrobiome/scripts/batchJobs/7deicode.sh

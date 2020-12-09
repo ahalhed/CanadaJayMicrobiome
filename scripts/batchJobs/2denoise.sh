@@ -4,11 +4,12 @@
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=DADA2
 #SBATCH --dependency=afterok:41703231
-#SBATCH --output=CanadaJayMicrobiome/output/%x-%j.out
+#SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here
 #----------------------------------
 # depends on 1import.sh
+
 # going to trim at 250 bp
 # this took just over two hours to run
 qiime dada2 denoise-single \

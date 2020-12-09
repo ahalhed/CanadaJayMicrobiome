@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=01:00:00
+#SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=deicode
 #SBATCH --output=CanadaJayMicrobiome/output/%x-%j.out
@@ -46,7 +46,7 @@ qiime deicode rpca \
 # H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
-  --m-metadata-file H4-samples.tsv \
+  --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
   --o-filtered-table H4-filtered-table.qza
 
 qiime deicode rpca \

@@ -1,0 +1,40 @@
+There was a problem importing input/rawFiles:
+
+  /tmp/q2-SingleLanePerSamplePairedEndFastqDirFmt-u1w0zft3 is not a(n) SingleLanePerSamplePairedEndFastqDirFmt:
+
+  These samples do not have matching pairs of forward and reverse reads: {'.G87'}
+
+Usage: qiime demux summarize [OPTIONS]
+
+  Summarize counts per sample for all samples, and generate interactive
+  positional quality plots based on `n` randomly selected sequences.
+
+Inputs:
+  --i-data ARTIFACT SampleData[SequencesWithQuality |
+    PairedEndSequencesWithQuality | JoinedSequencesWithQuality]
+                       The demultiplexed sequences to be summarized.
+                                                                    [required]
+Parameters:
+  --p-n INTEGER        The number of sequences that should be selected at
+                       random for quality score plots. The quality plots will
+                       present the average positional qualities across all of
+                       the sequences selected. If input sequences are paired
+                       end, plots will be generated for both forward and
+                       reverse reads for the same `n` sequences.
+                                                              [default: 10000]
+Outputs:
+  --o-visualization VISUALIZATION
+                                                                    [required]
+Miscellaneous:
+  --output-dir PATH    Output unspecified results to a directory
+  --verbose / --quiet  Display verbose output to stdout and/or stderr during
+                       execution of this action. Or silence output if
+                       execution is successful (silence is golden).
+  --examples           Show usage examples and exit.
+  --citations          Show citations and exit.
+  --help               Show this message and exit.
+
+                    There was a problem with the command:                     
+ (1/1) Invalid value for '--i-data': 'demux-paired-end.qza' is not a valid
+  filepath
+Saved Visualization to: tabulated-metadata.qzv

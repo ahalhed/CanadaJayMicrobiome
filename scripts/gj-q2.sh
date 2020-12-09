@@ -44,17 +44,11 @@ qiime metadata tabulate \
   --m-input-file stats-dada2.qza \
   --o-visualization stats-dada2.qzv
 
-# using vsearch (not run yet)
-qiime vsearch dereplicate-sequences \
-  --i-sequences demux-paired-end.qza \
-  --o-dereplicated-table table-vsearch.qza \
-  --o-dereplicated-sequences rep-seqs-vsearch.qza
-
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
 wget -O "silva-138-99-seqs.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-seqs.qza"
 # switch 2020.8 to 2020.11 if updating q2 version
-# testing the with dada2 for now until I can get all files on graham
+
 qiime vsearch cluster-features-closed-reference \
   --i-table table-dada2.qza \
   --i-sequences rep-seqs-dada2.qza \
@@ -87,54 +81,27 @@ qiime feature-table tabulate-seqs \
   --i-data rep-seqs-cr-99.qza \
   --o-visualization rep-seqs-cr-99.qzv
 
-# dada so we have that summary
-qiime feature-table summarize \
-  --i-table table-dada2.qza \
-  --o-visualization table-dada2.qzv \
-  --m-sample-metadata-file input/jay-met.tsv
-
-qiime feature-table tabulate-seqs \
-  --i-data rep-seqs-dada2.qza \
-  --o-visualization rep-seqs-dada2.qzv
-
 # drop the singletons from the OTU tables
-qiime feature-table filter-features \
-  --i-table table-dada2.qza \
-  --p-min-samples 2 \
-  --o-filtered-table filtered-table-no-singletons.qza
-
 qiime feature-table filter-features \
   --i-table table-cr-99.qza \
   --p-min-samples 2 \
-  --o-filtered-table filtered-table-no-singletons-cr-99.qza
+  --o-filtered-table filtered-table-no-singletons.qza
 
 # filter representative sequences for all samples
 qiime feature-table filter-seqs \
-  --i-data rep-seqs-dada2.qza \
+  --i-data rep-seqs-cr-99.qza \
   --i-table filtered-table-no-singletons.qza \
   --o-filtered-data rep-seqs-no-singletons.qza
 
-qiime feature-table filter-seqs \
-  --i-data rep-seqs-cr-99.qza \
-  --i-table filtered-table-no-singletons-cr-99.qza \
-  --o-filtered-data rep-seqs-no-singletons-cr-99.qza
-
 # create the phylogenetic tree
 # fasttree pipeline
-# dada2 based
+# vsearch closed reference
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences rep-seqs-no-singletons.qza \
   --o-alignment aligned-rep-seqs.qza \
   --o-masked-alignment masked-aligned-rep-seqs.qza \
   --o-tree trees/unrooted-tree.qza \
   --o-rooted-tree trees/rooted-tree.qza
-# vsearch closed reference
-qiime phylogeny align-to-tree-mafft-fasttree \
-  --i-sequences rep-seqs-no-singletons-cr-99.qza \
-  --o-alignment aligned-rep-seqs-cr-99.qza \
-  --o-masked-alignment masked-aligned-rep-seqs-cr-99.qza \
-  --o-tree trees/unrooted-tree-cr-99.qza \
-  --o-rooted-tree trees/rooted-tree-cr-99.qza
 
 
 # ASSIGN TAXONOMY (need more than 4G ram)
@@ -152,7 +119,7 @@ wget -O "silva-138-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/
 # This has a high memory requirement (mem=128G,ntasks=16), but runs relatively quick (<30 min)
 # Classifying taxonomies (see 5taxonomyCR for closed reference)
 qiime feature-classifier classify-sklearn \
-  --i-classifier references/silva-132-99-nb-classifier.qza \
+  --i-classifier references/silva-138-99-nb-classifier.qza \
   --p-n-jobs 16 \
   --i-reads rep-seqs-no-singletons.qza \
   --o-classification taxonomy/SILVA-taxonomy.qza
@@ -161,7 +128,7 @@ qiime taxa barplot \
   --i-table filtered-table-no-singletons.qza \
   --i-taxonomy taxonomy/SILVA-taxonomy.qza \
   --m-metadata-file input/jay-met.tsv \
-  --o-visualization taxonomy/SILVA-dada2-taxa-bar-plots.qzv
+  --o-visualization taxonomy/SILVA-cr99-taxa-bar-plots.qzv
 # Extracting Taxonomic Clasification
 # Phylum
 qiime taxa collapse \
@@ -211,37 +178,22 @@ qiime taxa filter-table \
 # compositional data analysis
 # compute aitchison distance matrix 
 # full dataset (H1, H2)
-# dada2
 qiime deicode rpca \
     --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot aitchison-ordination.qza \
     --o-distance-matrix aitchison-distance.qza
-# (not run yet b/c no taxonomy)
+
 qiime emperor biplot \
     --i-biplot aitchison-ordination.qza \
     --m-sample-metadata-file input/jay-met.tsv \
     --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
-#vsearch closed reference
-qiime deicode rpca \
-    --i-table filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot aitchison-ordination-cr-99.qza \
-    --o-distance-matrix aitchison-distance-cr-99.qza
-# (not run yet b/c no taxonomy)
-qiime emperor biplot \
-    --i-biplot aitchison-ordination-cr-99.qza \
-    --m-sample-metadata-file input/jay-met.tsv \
-    --m-feature-metadata-file taxonomy/SILVA-taxonomy-cr-99.qza \
-    --o-visualization aitchison-biplot-cr-99.qzv \
-    --p-number-of-features 8
+
 # will test these two sections of code once have complete sequence set
 # Hypothesis 3 - spring 2020 samples (nest groups)
-# dada2
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -254,22 +206,9 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot H3-aitchison-ordination.qza \
     --o-distance-matrix H3-aitchison-distance.qza
-# closed ref
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
-  --o-filtered-table H3-filtered-table-cr-99.qza
 
-qiime deicode rpca \
-    --i-table H3-filtered-table-cr-99.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot H3-aitchison-ordination-cr-99.qza \
-    --o-distance-matrix H3-aitchison-distance-cr-99.qza
 # Hypothesis 4 - only samples with origin data
 # H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
-#dada2
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
@@ -281,19 +220,6 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot H4-aitchison-ordination.qza \
     --o-distance-matrix H4-aitchison-distance.qza
-
-# closed ref
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza \
-  --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
-  --o-filtered-table H4-filtered-table-cr-99.qza
-
-qiime deicode rpca \
-    --i-table H4-filtered-table-cr-99.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot H4-aitchison-ordination-cr-99.qza \
-    --o-distance-matrix H4-aitchison-distance-cr-99.qza
 # removed other things (ancom, anosim) since they weren't associated with a particular hypothesis
 # Close QIIME2
 conda deactivate

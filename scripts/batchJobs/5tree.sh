@@ -7,7 +7,7 @@
 
 #script starts here
 #----------------------------------
-# dependent on 3repSeqs.sh
+# dependent on 4repSeqs.sh
 
 # create the phylogenetic tree
 # fasttree pipeline

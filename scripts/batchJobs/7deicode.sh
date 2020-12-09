@@ -7,7 +7,7 @@
 
 #script starts here
 #----------------------------------
-# dependent on 5taxonomy.sh
+# dependent on 6taxonomy.sh
 
 # compositional data analysis
 # compute aitchison distance matrix 

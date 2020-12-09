@@ -8,11 +8,12 @@
 
 #script starts here
 #----------------------------------
-# depends on 3repSeqs.sh
+# depends on 4repSeqs.sh
 
-# Classifying taxonomies
+# This has a high memory requirement (mem=128G,ntasks=16), but runs relatively quick (<30 min)
+# Classifying taxonomies (see 5taxonomyCR for closed reference)
 qiime feature-classifier classify-sklearn \
-  --i-classifier references/silva-132-99-nb-classifier.qza \
+  --i-classifier references/silva-138-99-nb-classifier.qza \
   --p-n-jobs 16 \
   --i-reads rep-seqs-no-singletons.qza \
   --o-classification taxonomy/SILVA-taxonomy.qza
@@ -21,7 +22,7 @@ qiime taxa barplot \
   --i-table filtered-table-no-singletons.qza \
   --i-taxonomy taxonomy/SILVA-taxonomy.qza \
   --m-metadata-file input/jay-met.tsv \
-  --o-visualization taxonomy/SILVA-dada2-taxa-bar-plots.qzv
+  --o-visualization taxonomy/SILVA-cr99-taxa-bar-plots.qzv
 # Extracting Taxonomic Clasification
 # Phylum
 qiime taxa collapse \

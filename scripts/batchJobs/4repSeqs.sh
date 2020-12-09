@@ -3,11 +3,12 @@
 #SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=repSeqs
-#SBATCH --dependency=afterok:
+#SBATCH --dependency=afterok:41703237
 #SBATCH --output=CanadaJayMicrobiome/output/%x-%j.out
 
 #script starts here
 #----------------------------------
+# depends on 3cluster.sh
 
 # Going to work with the closed reference results
 # will use this figure to make sampling depth decision (for core selection only)

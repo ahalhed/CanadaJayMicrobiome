@@ -57,8 +57,7 @@ print("Building phyloseq object")
 gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         # q2 types line causes issues (so removed in the tsv file input here)
-                         metadata = "input/jay-met2.tsv") %>%
+                         metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
 

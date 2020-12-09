@@ -44,6 +44,25 @@ qiime metadata tabulate \
   --m-input-file stats-dada2.qza \
   --o-visualization stats-dada2.qzv
 
+# using vsearch (not run yet)
+qiime vsearch dereplicate-sequences \
+  --i-sequences demux-paired-end.qza \
+  --o-dereplicated-table table-vsearch.qza \
+  --o-dereplicated-sequences rep-seqs-vsearch.qza
+
+# Obtaining SILVA reference database 
+# need this to do closed reference otu picking
+wget -O "silva-138-99-seqs.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-seqs.qza"
+# switch 2020.8 to 2020.11 if updating q2 version
+# testing the with dada2 for now until I can get all files on graham
+qiime vsearch cluster-features-closed-reference \
+  --i-table table-dada2.qza \
+  --i-sequences rep-seqs-dada2.qza \
+  --i-reference-sequences references/silva-138-99-seqs.qza \
+  --p-perc-identity 0.99 \
+  --o-clustered-table table-cr-99.qza \
+  --o-clustered-sequences rep-seqs-cr-99.qza \
+  --o-unmatched-sequences unmatched-cr-99.qza
 
 # in the original metadata spreadsheet, KOOLTOSR-2017 and KOOLTOSR-2018 were labelled as G19
 # LOYLOOSR-2017 was labelled as G21, but fell between the two G19's
@@ -57,8 +76,18 @@ qiime metadata tabulate \
 # to look at a visualization
 qiime tools view tabulated-metadata.qzv
 
-# Going to work with the DADA2 results
-# will use this figure to make sampling depth decision
+# Going to work with the closed reference results
+# will use this figure to make sampling depth decision (for core selection only)
+qiime feature-table summarize \
+  --i-table table-cr-99.qza \
+  --o-visualization table-cr-99.qzv \
+  --m-sample-metadata-file input/jay-met.tsv
+
+qiime feature-table tabulate-seqs \
+  --i-data rep-seqs-cr-99.qza \
+  --o-visualization rep-seqs-cr-99.qzv
+
+# dada so we have that summary
 qiime feature-table summarize \
   --i-table table-dada2.qza \
   --o-visualization table-dada2.qzv \
@@ -68,34 +97,60 @@ qiime feature-table tabulate-seqs \
   --i-data rep-seqs-dada2.qza \
   --o-visualization rep-seqs-dada2.qzv
 
-# drop the singletons from the OTU table
+# drop the singletons from the OTU tables
 qiime feature-table filter-features \
   --i-table table-dada2.qza \
   --p-min-samples 2 \
   --o-filtered-table filtered-table-no-singletons.qza
-# filter representative sequences for this group
+
+qiime feature-table filter-features \
+  --i-table table-cr-99.qza \
+  --p-min-samples 2 \
+  --o-filtered-table filtered-table-no-singletons-cr-99.qza
+
+# filter representative sequences for all samples
 qiime feature-table filter-seqs \
   --i-data rep-seqs-dada2.qza \
   --i-table filtered-table-no-singletons.qza \
   --o-filtered-data rep-seqs-no-singletons.qza
 
+qiime feature-table filter-seqs \
+  --i-data rep-seqs-cr-99.qza \
+  --i-table filtered-table-no-singletons-cr-99.qza \
+  --o-filtered-data rep-seqs-no-singletons-cr-99.qza
+
 # create the phylogenetic tree
 # fasttree pipeline
+# dada2 based
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences rep-seqs-no-singletons.qza \
   --o-alignment aligned-rep-seqs.qza \
   --o-masked-alignment masked-aligned-rep-seqs.qza \
   --o-tree trees/unrooted-tree.qza \
   --o-rooted-tree trees/rooted-tree.qza
+# vsearch closed reference
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs-no-singletons-cr-99.qza \
+  --o-alignment aligned-rep-seqs-cr-99.qza \
+  --o-masked-alignment masked-aligned-rep-seqs-cr-99.qza \
+  --o-tree trees/unrooted-tree-cr-99.qza \
+  --o-rooted-tree trees/rooted-tree-cr-99.qza
+
 
 # ASSIGN TAXONOMY (need more than 4G ram)
 # Accessing the pretrained classifiers from here
 # https://docs.qiime2.org/2020.8/data-resources/
+# Obtaining SILVA reference database 
+# need this to do closed reference otu picking
+wget -O "silva-138-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza"
+# if switching to 2020.11, use below link
+#https://data.qiime2.org/2020.11/common/silva-138-99-nb-classifier.qza
+# classifier ref
+# Bokulich, N.A., Robeson, M., Dillon, M.R. bokulich-lab/RESCRIPt. Zenodo. http://doi.org/10.5281/zenodo.3891931
+# Bokulich, N.A., Kaehler, B.D., Rideout, J.R. et al. Optimizing taxonomic classification of marker-gene amplicon sequences with QIIME 2’s q2-feature-classifier plugin. Microbiome 6, 90 (2018). https://doi.org/10.1186/s40168-018-0470-z
 
-# Obtaining SILVA reference database (much larger database than GG, will likely do a better job at classifying)
-wget -O "silva-132-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza"
 # This has a high memory requirement (mem=128G,ntasks=16), but runs relatively quick (<30 min)
-# Classifying taxonomies
+# Classifying taxonomies (see 5taxonomyCR for closed reference)
 qiime feature-classifier classify-sklearn \
   --i-classifier references/silva-132-99-nb-classifier.qza \
   --p-n-jobs 16 \
@@ -156,6 +211,7 @@ qiime taxa filter-table \
 # compositional data analysis
 # compute aitchison distance matrix 
 # full dataset (H1, H2)
+# dada2
 qiime deicode rpca \
     --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
     --p-min-feature-count 10 \
@@ -169,7 +225,20 @@ qiime emperor biplot \
     --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
-
+#vsearch closed reference
+qiime deicode rpca \
+    --i-table filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-cr-99.qza \
+    --o-distance-matrix aitchison-distance-cr-99.qza
+# (not run yet b/c no taxonomy)
+qiime emperor biplot \
+    --i-biplot aitchison-ordination-cr-99.qza \
+    --m-sample-metadata-file input/jay-met.tsv \
+    --m-feature-metadata-file taxonomy/SILVA-taxonomy-cr-99.qza \
+    --o-visualization aitchison-biplot-cr-99.qzv \
+    --p-number-of-features 8
 # will test these two sections of code once have complete sequence set
 # Hypothesis 3 - spring 2020 samples (nest groups)
 qiime feature-table filter-samples \

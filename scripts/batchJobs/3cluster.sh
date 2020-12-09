@@ -3,10 +3,12 @@
 #SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=vsearch
+#SBATCH --dependency=afterok:
 #SBATCH --output=CanadaJayMicrobiome/output/%x-%j.out
 
 #script starts here
 #----------------------------------
+# depends on 2denoise.sh
 
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking

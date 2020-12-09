@@ -3,7 +3,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=repSeqs
-#SBATCH --output=output/%x-%j.out
+#SBATCH --output=CanadaJayMicrobiome/output/%x-%j.out
 
 #script starts here
 #----------------------------------

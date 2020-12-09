@@ -3,7 +3,7 @@
 #SBATCH --time=01:00:00
 #SBATCH --mem-per-cpu 16G
 #SBATCH --job-name=ImportDemux
-#SBATCH --output=./output/%x-%j.out
+#SBATCH --output=./CanadaJayMicrobiome/output/%x-%j.out
 
 #script starts here
 #----------------------------------

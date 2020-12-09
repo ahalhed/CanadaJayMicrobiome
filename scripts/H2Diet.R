@@ -15,18 +15,18 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
-                         tree = "trees/rooted-tree.qza", 
-                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza", 
+                         tree = "trees/rooted-tree-cr-99.qza", 
+                         taxonomy = "taxonomy/SILVA-taxonomy-cr-99.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
-                         metadata = "input/jay-met2.tsv") %>%
+                         metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # read in the aitchison distance matrix
-dmAitchison <- read_qza("aitchison-distance.qza")
+dmAitchison <- read_qza("aitchison-distance-cr-99.qza")
 # getting ready for boxplot
 # combine the aitchison distance data with metadata data
 dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
@@ -57,7 +57,7 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
 dev.off()
 
 # read in the aitchison ordination (probs won't keep this)
-ordiAitchison <- read_qza("aitchison-ordination.qza")
+ordiAitchison <- read_qza("aitchison-ordination-cr-99.qza")
 # combine aitchison vectors with environmental data
 aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%
   full_join(ordiAitchison$data$Vectors) %>%

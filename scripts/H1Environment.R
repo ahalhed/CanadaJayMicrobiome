@@ -40,7 +40,7 @@ dmAitchison <- read_qza("aitchison-distance-cr-99.qza")
 ## Territory Figure
 # Corresponds to figure 3-1 from proposal. 
 # Version 1 - plot PC1/PC2 by territory
-pdf("CanadaJayMicrobiome/plots/H1pc.pdf", width = 20)
+pdf("CanadaJayMicrobiome/plots/H1pc.pdf", width = 10)
 # the first sequencing run seems to grouping entirely together
 # need to figure out how to correct this
 ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = JayID)) + #, group = JayID

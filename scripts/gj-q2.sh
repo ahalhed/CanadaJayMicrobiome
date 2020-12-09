@@ -218,7 +218,7 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot aitchison-ordination.qza \
     --o-distance-matrix aitchison-distance.qza
-
+# (not run yet b/c no taxonomy)
 qiime emperor biplot \
     --i-biplot aitchison-ordination.qza \
     --m-sample-metadata-file input/jay-met.tsv \
@@ -241,6 +241,7 @@ qiime emperor biplot \
     --p-number-of-features 8
 # will test these two sections of code once have complete sequence set
 # Hypothesis 3 - spring 2020 samples (nest groups)
+# dada2
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -253,12 +254,25 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot H3-aitchison-ordination.qza \
     --o-distance-matrix H3-aitchison-distance.qza
+# closed ref
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
+  --o-filtered-table H3-filtered-table-cr-99.qza
 
+qiime deicode rpca \
+    --i-table H3-filtered-table-cr-99.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot H3-aitchison-ordination-cr-99.qza \
+    --o-distance-matrix H3-aitchison-distance-cr-99.qza
 # Hypothesis 4 - only samples with origin data
 # H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
+#dada2
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
-  --m-metadata-file H4-samples.tsv \
+  --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
   --o-filtered-table H4-filtered-table.qza
 
 qiime deicode rpca \
@@ -268,6 +282,18 @@ qiime deicode rpca \
     --o-biplot H4-aitchison-ordination.qza \
     --o-distance-matrix H4-aitchison-distance.qza
 
+# closed ref
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza \
+  --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
+  --o-filtered-table H4-filtered-table-cr-99.qza
+
+qiime deicode rpca \
+    --i-table H4-filtered-table-cr-99.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot H4-aitchison-ordination-cr-99.qza \
+    --o-distance-matrix H4-aitchison-distance-cr-99.qza
 # removed other things (ancom, anosim) since they weren't associated with a particular hypothesis
 # Close QIIME2
 conda deactivate

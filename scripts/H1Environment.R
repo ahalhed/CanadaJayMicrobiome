@@ -13,10 +13,10 @@ library(tidyverse)
 theme_set(theme_bw())
 
 ## Load in the required data
-# build the phyloseq object (adding -cr-99 for closed reference)
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza", 
-                         tree = "trees/rooted-tree-cr-99.qza", 
-                         taxonomy = "taxonomy/SILVA-taxonomy-cr-99.qza",
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
+                         tree = "trees/rooted-tree.qza", 
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
@@ -24,7 +24,7 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-c
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # read in the aitchison ordination
-ordiAitchison <- read_qza("aitchison-ordination-cr-99.qza")
+ordiAitchison <- read_qza("aitchison-ordination.qza")
 # join aitchison vectors with metadata
 # select columns of interest from meta (no location or extraction info)
 gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
@@ -35,7 +35,7 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
   remove_rownames()
 # read in aitchison distance matrix
 # aitchison distances
-dmAitchison <- read_qza("aitchison-distance-cr-99.qza")
+dmAitchison <- read_qza("aitchison-distance.qza")
 
 ## Territory Figure
 # Corresponds to figure 3-1 from proposal. 

@@ -10,9 +10,9 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast-cr-99.qza", 
-                         tree = "trees/rooted-tree-cr-99.qza", 
-                         taxonomy = "taxonomy/SILVA-taxonomy-cr-99.qza",
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
+                         tree = "trees/rooted-tree.qza", 
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -31,6 +31,8 @@ parents <- gj_meta %>% rownames_to_column('sampleid') %>%
   subset(CollectionYear %in% unique(offspring$CollectionYear) & CollectionSeason %in% unique(offspring$CollectionSeason))
 # join parent and offspring together
 offPar <- full_join(offspring, parents) %>%
+  # dropping offspring where parent was only sampled in past seasons
+  subset(Territory != "SundayCreek") %>%
   remove_rownames() %>% column_to_rownames('sampleid')
 # subset the phyloseq object accordingly
 # this needs final testing since we don't yet have sequence data for all samples
@@ -39,15 +41,19 @@ offParPS <- prune_samples(sample_names(gj_ps) %in% rownames(offPar), gj_ps)
 rm(gj_ps, gj_meta, parents, offspring)
 
 # read in Aitchison ordination data
-ordiAitchison <- read_qza("aitchison-ordination-cr-99-wmc.qza")$data$Vectors %>%
+ordiAitchison <- read_qza("aitchison-ordination.qza")$data$Vectors %>%
   # subset to include only samples in phyloseq object
   # this needs final testing since we don't yet have sequence data for all samples
   filter(SampleID %in% sample_names(offParPS)) %>%
   # combined with filtered metadata
   # this needs final testing since we don't yet have sequence data for all samples
   full_join(rownames_to_column(offPar, var = "SampleID"))
+
+pdf("CanadaJayMicrobiome/plots/H3nestOrdi.pdf", width = 9)
 # plot ordination data
 # territory is a proxy for nest group
-ggplot(ordiAitchison, aes(x = PC1, y = PC2, group = Territory, linetype = Territory)) +
-  geom_point() + stat_ellipse(type = "norm")
-#working on the appearance of this one
+ggplot(ordiAitchison, aes(x = PC1, y = PC2, colour = Territory)) + # , group = Territory, linetype = Territory
+  geom_point() + stat_ellipse(type = "norm") +
+  scale_color_viridis_d()
+# working on the appearance of this one
+dev.off()

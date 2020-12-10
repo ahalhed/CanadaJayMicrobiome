@@ -1,15 +1,14 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=02:15:00
+#SBATCH --time=03:00:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=DADA2
-#SBATCH --dependency=afterok:41719040
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here
 #----------------------------------
 # depends on 1import.sh
-
+# ran out of time on first time (reset to 3hrs)
 # going to trim at 250 bp
 # this took just over two hours to run
 qiime dada2 denoise-single \

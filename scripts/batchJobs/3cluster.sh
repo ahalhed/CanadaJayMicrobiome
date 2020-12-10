@@ -3,7 +3,7 @@
 #SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=vsearch
-#SBATCH --dependency=afterok:41715564
+#SBATCH --dependency=afterok:41719054
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here

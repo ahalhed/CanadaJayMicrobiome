@@ -4,7 +4,7 @@
 #SBATCH --time=0-01:00:00
 #SBATCH --mem-per-cpu 16G
 #SBATCH --job-name=taxonomy
-#SBATCH --dependency=afterok:41715601
+#SBATCH --dependency=afterok:41719074
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here

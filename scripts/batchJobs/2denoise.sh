@@ -3,7 +3,7 @@
 #SBATCH --time=02:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=DADA2
-#SBATCH --dependency=afterok:41715558
+#SBATCH --dependency=afterok:41719040
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here

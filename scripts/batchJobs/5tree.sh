@@ -3,7 +3,7 @@
 #SBATCH --time=00:10:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=FastTree
-#SBATCH --dependency=afterok:
+#SBATCH --dependency=afterok:41732527
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here

@@ -54,7 +54,7 @@ met_filter <- function(meta, season) {
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
@@ -90,34 +90,34 @@ for (SeaSon in unique(gj_meta$CollectionSeason)) {
   assign(paste0("sea",SeaSon),met)
   rm(met)
 }
-
-# clean up from loop (don't need blanks in list)
-rm(seaBLANK, SeaSon)
+# need to fix something with sex in above loop
 # make a list of the season data frames generated from the loop
 sea_list <- do.call("list",
                     # searching the global environment for the pattern
-                    mget(grep("sea", names(.GlobalEnv), value=TRUE)))
+                    mget(grep("sea", names(.GlobalEnv), value=TRUE))) %>%
+  # correct list order to be consistent
+  .[c("seaFall", "seaWinter", "seaSpring")]
 # clean up individual data frames, now that the list is there
-rm(seaFall)
+rm(SeaSon, seaWinter, seaFall, seaSpring)
+
 print("Accessing the XY metadata by season")
 # loop to create individual season/year data frames
 for (SeaSon in unique(gj_meta$CollectionSeason)) {
   met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
-    rename("Latitude"="YsampDD", "Longitude"="XsampDD")
+    rename("Latitude"="LatitudeSamplingDD", "Longitude"="LongitudeSamplingDD")
   df1 <- subset(met, CollectionSeason == SeaSon) %>%
     select("SampleID", "Longitude", "Latitude") #dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
   assign(paste0("xy",SeaSon),df2)
   rm(met, df1, df2)
 }
-# we aren't interested in the blanks, so we will remove that (clean up)
-rm(xyBLANK, SeaSon)
+
 # make a list of the xy data frames generated from the loop
 XY_list <- do.call("list",
                    # searching the global environment for the pattern
                    mget(grep("xy", names(.GlobalEnv), value=TRUE)))
 # clean up individual data frames, now that the list is there
-rm(xyFall)
+rm(SeaSon, xyFall, xySpring, xyWinter)
 
 print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters
@@ -147,6 +147,7 @@ pcnm_list <- lapply(dist_list, pcnm)
 for (month in pcnm_list) {
   print(month$vectors)
 }
+rm(month)
 print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
 
@@ -197,7 +198,7 @@ abFrac0 <- mapply(function(x,data) rda(x~1, data),
 step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
                    abFrac0, abFrac, SIMPLIFY=FALSE)
 step.env # an rda model, with the final model predictor variables
-
+#  Error in ordiR2step(x, scope = formula(y)) : the upper scope cannot be fitted (too many terms?) 
 print("Summary of environmental selection process - core OTUs")
 lapply(step.env, function(x) x$anova)
 print("ANOVA on full environmental selection - core OTUs")
@@ -293,7 +294,7 @@ abFrac0 <- mapply(function(x,data) rda(x~1, data),
 step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
                    abFrac0, abFrac, SIMPLIFY=FALSE)
 step.env # an rda model, with the final model predictor variables
-
+#  Error in ordiR2step(x, scope = formula(y)) : the upper scope cannot be fitted (too many terms?) 
 print("Summary of environmental selection process - rare OTUs")
 lapply(step.env, function(x) x$anova)
 print("ANOVA on full environmental selection - rare OTUs")
@@ -389,7 +390,7 @@ abFrac0 <- mapply(function(x,data) rda(x~1, data),
 
 step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
                    abFrac0, abFrac, SIMPLIFY=FALSE)
-
+# Error in ordiR2step(x, scope = formula(y)) : the upper scope cannot be fitted (too many terms?)
 step.env # an rda model, with the final model predictor variables
 
 print("Summary of environmental selection process - all OTUs")
@@ -436,6 +437,3 @@ pbcd
 # remove objects to be replaced/no longer needed
 rm(vdist,pbcd, commFull)
 rm(abFrac, aFrac,abFrac0, step.env, pcnm_df, bcFrac, bcFrac0, step.space)
-
-# I have removed the variation decomposition with parsimonious variables, 
-# since it was frequently failing and would likely cause issues.

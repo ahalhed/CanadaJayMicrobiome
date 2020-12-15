@@ -30,7 +30,6 @@ ordiAitchison <- read_qza("aitchison-ordination.qza")
 gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
   rownames_to_column(var = "SampleID") %>% # row names need to be a column to join
   left_join(ordiAitchison$data$Vectors,.) %>%
-  # drop G6, because it is the blank (not needed)
   .[ which(.$JayID != "BLANK"), ] %>%
   remove_rownames()
 # read in aitchison distance matrix
@@ -41,11 +40,8 @@ dmAitchison <- read_qza("aitchison-distance.qza")
 # Corresponds to figure 3-1 from proposal. 
 # Version 1 - plot PC1/PC2 by territory
 pdf("CanadaJayMicrobiome/plots/H1pc.pdf", width = 10)
-# the first sequencing run seems to grouping entirely together
-# need to figure out how to correct this
 ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = JayID)) + #, group = JayID
-  geom_point() + #geom_line() + # points are samples
-  #facet_grid(~Territory) + 
+  geom_point() + #geom_line()
   labs(shape = "Collection Year")
 dev.off()
 # considering also averaging the samples by territory (so fewer panels)

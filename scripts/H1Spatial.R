@@ -67,6 +67,7 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 print("Extract the metadata")
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
+gj_meta[is.na(gj_meta)] <- "" # putting blanks instead of NA to fix complete case issue
 
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
 print("CLR transformation")
@@ -94,16 +95,16 @@ for (YeaR in unique(gj_meta$CollectionYear)) {
   rm(met)
   }
 }
-# remove data frames that are too small to be useful (not enough samples for this)
-rm(seaFall2016, seaFall2019, seaSpring2016, seaSpring2017, seaSpring2018, seaSpring2019,
-   seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2019, seaWinter2020)
+
 # need to fix something with sex in above loop
 # make a list of the season data frames generated from the loop
-sea_list <- do.call("list",
-                    # searching the global environment for the pattern
-                    mget(grep("sea", names(.GlobalEnv), value=TRUE)))
+sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
+                 seaFall2020 = seaFall2020, seaSpring2020 = seaSpring2020)
 # clean up individual data frames, now that the list is there
-rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020)
+rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
+   # not enough samples in these ones
+   seaFall2016, seaFall2019, seaSpring2016, seaSpring2017, seaSpring2018, seaSpring2019,
+   seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2019, seaWinter2020)
 
 print("Accessing the XY metadata by season")
 # loop to create individual season/year data frames
@@ -119,16 +120,16 @@ for (YeaR in unique(gj_meta$CollectionYear)) {
   rm(met, df1, df2)
   }
 }
-# remove small ones (not enough samples)
-rm(xyFall2016, xyFall2019, xySpring2016, xySpring2017, xySpring2018, xySpring2019,
-   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2019, xyWinter2020)
 
 # make a list of the xy data frames generated from the loop
-XY_list <- do.call("list",
-                   # searching the global environment for the pattern
-                   mget(grep("xy", names(.GlobalEnv), value=TRUE)))
+XY_list <- list(xyFall2017 = xyFall2017, xyFall2018 = xyFall2018, 
+                xyFall2020 = xyFall2020, xySpring2020 = xySpring2020)
+
 # clean up individual data frames, now that the list is there
-rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020)
+rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020,
+   # not in list b/c not enough samples for this analysis
+   xyFall2016, xyFall2019, xySpring2016, xySpring2017, xySpring2018, xySpring2019,
+   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2019, xyWinter2020)
 
 print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters
@@ -146,7 +147,7 @@ commCore <- lapply(XY_list, comm_obj, c=OTU_core)
 commRare <- lapply(XY_list, comm_obj, c=OTU_rare)
 
 # Remove objects we're done with
-print("Removing pobjects that are no longer needed")
+print("Removing objects that are no longer needed")
 rm(gj_meta, cOTU, OTUclr, gj_ps, OTU_core, OTU_rare)
 # leaving functions, just in case
 
@@ -154,22 +155,17 @@ rm(gj_meta, cOTU, OTUclr, gj_ps, OTU_core, OTU_rare)
 # unweighted PCNM
 print("Unweighted PCNM - for use with all OTU tables")
 pcnm_list <- lapply(dist_list, pcnm)
-# need to sort out how to generalize printing  label with the vectors
-for (month in pcnm_list) {
-  print(month$vectors)
-}
-rm(month) # remove loop product
+lapply(pcnm_list, function(x) x$vectors)
+
 print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
 
 # core OTUs
 print("Analysis for Core OTUs")
 print("Variance partitioning - Core OTUs")
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
 vp_mod1_list <- mapply(varpart, commCore, scores_list, data=sea_list,
-                       MoreArgs = list(~Sex + BirthYear),
+                       MoreArgs = list(~.),
                        SIMPLIFY = FALSE)
-
 # plot the partitioning
 pdf(file = "CanadaJayMicrobiome/plots/core_vp_mod1.pdf")
 # make plot
@@ -182,7 +178,6 @@ rm(vp_mod1_list)
 # test with RDA
 print("Testing with RDA (full model) - core OTUS")
 # create a tiny anonymous function to include formula syntax in call
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
 abFrac <- mapply(function(x,data) rda(x~Sex + BirthYear, data), 
                  commCore, sea_list, SIMPLIFY=FALSE)
 abFrac # Full model
@@ -262,10 +257,11 @@ rm(abFrac, aFrac,abFrac0, step.env, pcnm_df, bcFrac, bcFrac0, step.space)
 # Rare OTUs
 print("Analysis for Rare OTUs")
 print("Variance partitioning - Rare OTUs")
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
 vp_mod1_list <- mapply(varpart, commRare, scores_list, data=sea_list, 
-                       MoreArgs = list(~ Sex + BirthYear),
+                       MoreArgs = list(~.),
                        SIMPLIFY = FALSE)
+factor(sea_list[[1]], exclude = NULL)
+
 vp_mod1_list
 # plot the partitioning
 pdf(file = "CanadaJayMicrobiome/plots/rare_vp_mod1.pdf")
@@ -279,8 +275,7 @@ rm(vp_mod1_list)
 # test with RDA
 print("Testing with RDA (full model) - rare OTUS")
 # create a tiny anonymous function to include formula syntax in call
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-abFrac <- mapply(function(x,data) rda(x~ Sex + BirthYear, data), 
+abFrac <- mapply(function(x,data) rda(x~., data), 
                  commRare, sea_list, SIMPLIFY=FALSE)
 abFrac # Full model
 # anova
@@ -292,7 +287,7 @@ lapply(abFrac, RsquareAdj)
 print("Testing with partial RDA (fraction [a]) - rare OTUS")
 # create a tiny anonymous function to include formula syntax in call
 # na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-aFrac <- mapply(function(x,y,data) rda(x~ Sex + BirthYear+Condition(scores(y)), data), 
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
                 commRare, pcnm_list, sea_list, SIMPLIFY=FALSE)
 aFrac
 # anova
@@ -349,7 +344,7 @@ dev.off()
 print("Partition Bray-Curtis dissimilarities - rare OTUs")
 vdist <- lapply(commRare, dist) # eclidean dist on clr = aitchison
 # na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-pbcd <- mapply(function(x,y,z) varpart(x, ~Sex +BirthYear, y, data = z),
+pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd
 
@@ -363,7 +358,7 @@ print("Analysis for All OTUs")
 print("Variance partitioning - All OTUs")
 # na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
 vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list, 
-                       MoreArgs = list(~ Sex + BirthYear),
+                       MoreArgs = list(~.),
                        SIMPLIFY = FALSE)
 vp_mod1_list
 # plot the partitioning
@@ -378,8 +373,7 @@ rm(vp_mod1_list)
 # test with RDA
 print("Testing with RDA (full model) - all OTUS")
 # create a tiny anonymous function to include formula syntax in call
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-abFrac <- mapply(function(x,data) rda(x~ Sex + BirthYear, data), 
+abFrac <- mapply(function(x,data) rda(x~., data), 
                  commFull, sea_list, SIMPLIFY=FALSE)
 
 abFrac # Full model
@@ -391,7 +385,7 @@ lapply(abFrac, RsquareAdj)
 # Test fraction [a] using partial RDA:
 print("Testing with partial RDA (fraction [a]) - all OTUS")
 # create a tiny anonymous function to include formula syntax in call
-aFrac <- mapply(function(x,y,data) rda(x~ Sex + BirthYear+Condition(scores(y)), data), 
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
                 commFull, pcnm_list, sea_list, SIMPLIFY=FALSE)
 aFrac
 # anova

@@ -34,9 +34,10 @@ dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
   # remove same-sample comparisons
   .[-which(.$Sample1 == .$Sample2),] %>%
-  # drop G6 (it's the blank)
-  # not sure if this is something I should assess somewhere
-  .[ which(.$Sample1 != "G6" | .$Sample2 != "G6"), ] %>%
+  # drop the blanks
+  .[-which(.$Sample1 == "G6" | .$Sample2 == "G6"), ] %>%
+  .[-which(.$Sample1 == "G70" | .$Sample2 == "G70"), ] %>%
+  .[-which(.$Sample1 == "G90" | .$Sample2 == "G90"), ] %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2") %>%
   # add shared food information
@@ -70,7 +71,8 @@ pdf("CanadaJayMicrobiome/plots/H2foodOrdi.pdf", width = 9)
 # too few samples to get much meaningful from this
 ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplement)) + 
   geom_point() + # points are samples
-  stat_ellipse(type = "norm") +
+  stat_ellipse(type = "norm") + 
+  coord_fixed(ylim = c(-0.6, 0.4), xlim = c(-0.6, 0.4)) +
   labs(shape = "Food Supplementation", linetype = "Food Supplementation")
 # turn off graphics device
 dev.off()

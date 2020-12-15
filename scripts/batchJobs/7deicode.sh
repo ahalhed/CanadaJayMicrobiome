@@ -10,11 +10,19 @@
 #----------------------------------
 # dependent on 6taxonomy.sh
 
-# compositional data analysis
+# Hypothesis 1 - rarefaction
+# rarefying to feed into core definition in R (needed nowhere else)
+# 344 retains all samples
+qiime feature-table rarefy \
+    --i-table filtered-table-no-blanks.qza \
+    --p-sampling-depth 344 \
+    --p-no-with-replacement \
+    --o-rarefied-table rarefied-table
+
+# Hypothesis 1 & 2 - full dataset
 # compute aitchison distance matrix 
-# full dataset (H1, H2)
 qiime deicode rpca \
-    --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
+    --i-table filtered-table-no-blanks.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot aitchison-ordination.qza \
@@ -26,7 +34,6 @@ qiime emperor biplot \
     --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
-
 
 # will test these two sections of code once have complete sequence set
 # Hypothesis 3 - spring 2020 samples (nest groups)
@@ -42,7 +49,18 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot H3-aitchison-ordination.qza \
     --o-distance-matrix H3-aitchison-distance.qza
-
+# creates a sample tree
+qiime diversity beta-rarefaction \
+    --i-table H3-filtered-table.qza \
+    --i-phylogeny trees/rooted-tree.qza \
+    --p-metric 'aitchison' \
+    --p-clustering-method 'nj' \
+    --m-metadata-file input/jay-met.tsv \
+    --p-sampling-depth 500 \
+    --p-iterations 100 \
+    --p-correlation-method 'spearman' \
+    --p-color-scheme 'PuOr_r' \
+    --o-visualization H3-aitchison-beta-rarefaction
 # Hypothesis 4 - only samples with origin data
 # H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
 qiime feature-table filter-samples \

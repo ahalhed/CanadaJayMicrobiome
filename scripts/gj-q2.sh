@@ -175,11 +175,27 @@ qiime taxa filter-table \
   --p-exclude mitochondria,chloroplast \
   --o-filtered-table filtered-table-no-singletons-mitochondria-chloroplast.qza
 
-# compositional data analysis
-# compute aitchison distance matrix 
-# full dataset (H1, H2)
-qiime deicode rpca \
+# filtering out blanks (for H1 & H2)
+qiime feature-table filter-samples \
     --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --p-exclude-ids 'TRUE' \
+    --p-where "[JayID]='BLANK'" \
+    --o-filtered-table filtered-table-no-blanks.qza
+
+# Hypothesis 1 - rarefaction
+# rarefying to feed into core definition in R (needed nowhere else)
+# 344 retains all samples
+qiime feature-table rarefy \
+    --i-table filtered-table-no-blanks.qza \
+    --p-sampling-depth 344 \
+    --p-no-with-replacement \
+    --o-rarefied-table rarefied-table
+
+# Hypothesis 1 & 2 - full dataset
+# compute aitchison distance matrix 
+qiime deicode rpca \
+    --i-table filtered-table-no-blanks.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot aitchison-ordination.qza \
@@ -192,8 +208,8 @@ qiime emperor biplot \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
 
-# will test these two sections of code once have complete sequence set
 # Hypothesis 3 - spring 2020 samples (nest groups)
+# using this i-table since we're filtering, so blanks will be dropped anyways
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -206,9 +222,21 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot H3-aitchison-ordination.qza \
     --o-distance-matrix H3-aitchison-distance.qza
+# creates a sample tree
+qiime diversity beta-rarefaction \
+    --i-table H3-filtered-table.qza \
+    --i-phylogeny trees/rooted-tree.qza \
+    --p-metric 'aitchison' \
+    --p-clustering-method 'nj' \
+    --m-metadata-file input/jay-met.tsv \
+    --p-sampling-depth 500 \
+    --p-iterations 100 \
+    --p-correlation-method 'spearman' \
+    --p-color-scheme 'PuOr_r' \
+    --o-visualization H3-aitchison-beta-rarefaction
 
 # Hypothesis 4 - only samples with origin data
-# H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
+# H4-samples.tsv is a list of sampleid's to keep
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
@@ -220,6 +248,6 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot H4-aitchison-ordination.qza \
     --o-distance-matrix H4-aitchison-distance.qza
-# removed other things (ancom, anosim) since they weren't associated with a particular hypothesis
+
 # Close QIIME2
 conda deactivate

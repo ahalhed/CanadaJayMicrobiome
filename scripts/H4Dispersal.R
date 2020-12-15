@@ -56,5 +56,10 @@ ordiDF <- gj_meta %>%
 ## Make an ordination plot
 pdf("CanadaJayMicrobiome/plots/H4DistanceFromOrigin.pdf")
 ggplot(ordiDF, aes(x = PC1, y = PC2, color = DistanceFromOrigin, size = AgeAtCollection)) +
-  geom_point() + labs(size = "Age at Collection", shape = "Distance from Origin (m)")
+  geom_point() + labs(size = "Age at Collection", shape = "Distance from Origin (m)") +
+  coord_fixed(ylim = c(-0.3, 1), xlim = c(-0.3, 1)) + scale_color_viridis_c()
 dev.off()
+
+
+ggplot(ordiDF, aes(x=PC1, size= DistanceFromOrigin, y = AgeAtCollection)) + 
+  geom_point() + labs(size = "Distance From Origin", y = "Age at Collection")

@@ -1,12 +1,31 @@
+# to load R on interactive graham
+# module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
+setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
+
 # addition plots scripts
 # not associated with a particular hypothesis
+library(phyloseq)
+library(qiime2R)
+library(ggmap)
+library(tidyverse)
 
+theme_set(theme_bw())
 
-# map of smapling locations
-# combine location data with metadata
-comb <- merge(XY_gj, meta_sub, by=0) 
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
+                         tree = "trees/rooted-tree.qza", 
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+
+# map of sampling locations
 # plot the locations (test run)
-ggplot(comb, aes(y = Latitude, x = Longitude,
+ggplot(gj_meta, aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD,
                  shape=as.character(CollectionYear))) +
   geom_count() +  #facet_grid(CollectionYear~.) +
   labs(y = "Latitude", x = "Longitude", shape = "Collection Year", size = "Number of Samples")
@@ -24,10 +43,26 @@ ggmap(map_gj)
 # Let's just throw everything onto the map to see what we've got
 ggmap(map_gj) + 
   # switch count to jitter to get around being right on top of one another
-  geom_count(data = comb, 
-             aes(y = Latitude, x = Longitude, shape = as.character(CollectionYear))) + 
+  geom_count(data = gj_meta, 
+             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD, 
+                 shape = as.character(CollectionYear))) + 
   #facet_grid(CollectionYear~.) +
   theme(legend.position = "bottom", legend.box = "vertical") +
   labs(shape = "Collection Year", size = "Number of Samples",
        title = "Map of Canada Jay Sampling Locations",
        subtitle = "Algonquin Park, Ontario (2016-2020)")
+
+
+# core plot
+coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
+# save plot
+pdf("CanadaJayMicrobiome/plots/core.pdf")
+ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
+  geom_point() +
+  # log transform the x axis, set discrete viridis colour scheme
+  scale_x_log10() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
+       y = "Occupancy (Proportion of Samples)",
+       color = "OTU Type")
+dev.off()

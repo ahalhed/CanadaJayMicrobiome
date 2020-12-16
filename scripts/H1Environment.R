@@ -80,7 +80,7 @@ gj_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + CollectionYe
 # look at summaries
 summary(gj_cap)
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf", width = 10)
+pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf")
 plot(gj_cap, main = "Aitchison Distance-based RDA")
 dev.off()
 
@@ -104,3 +104,4 @@ summary(rare_cap)
 pdf("CanadaJayMicrobiome/plots/H1envBiplotRare.pdf")
 plot(rare_cap, main = "Aitchison Distance-based RDA", sub = "Rare OTUs")
 dev.off()
+

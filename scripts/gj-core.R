@@ -135,16 +135,3 @@ occ_abunT <- tax %>%
   right_join(occ_abun, by = c("Feature.ID" = "otu" ))
 # save core information to file
 write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
-#View(occ_abunT)
-
-# save plot
-pdf("CanadaJayMicrobiome/plots/core.pdf")
-ggplot(occ_abun, aes(y = otu_occ, x = otu_rel, color = fill)) + 
-  geom_point() +
-  # log transform the x axis, set discrete viridis colour scheme
-  scale_x_log10() + scale_colour_viridis_d() + 
-  # add axis labels
-  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
-       y = "Occupancy (Proportion of Samples)",
-       color = "OTU Type")
-dev.off()

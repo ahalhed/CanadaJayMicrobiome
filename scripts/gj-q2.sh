@@ -195,13 +195,14 @@ qiime feature-table rarefy \
 # filter for core variants
 qiime feature-table filter-features \
   --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file coreFeatures.tsv \
+  --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
   --o-filtered-table filtered-table-core.qza
 # filter for rare variants
 qiime feature-table filter-features \
   --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file coreFeatures.tsv \
-  --o-filtered-table filtered-table-core.qza
+  --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
+  --p-exclude-ids TRUE \
+  --o-filtered-table filtered-table-rare.qza
 # Hypothesis 1 & 2 - full dataset
 # compute aitchison distance matrix 
 qiime deicode rpca \
@@ -218,8 +219,33 @@ qiime emperor biplot \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
 # repeat above for core variants
+qiime deicode rpca \
+    --i-table filtered-table-core.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-core.qza \
+    --o-distance-matrix aitchison-distance-core.qza
 
+qiime emperor biplot \
+    --i-biplot aitchison-ordination-core.qza \
+    --m-sample-metadata-file input/jay-met.tsv \
+    --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
+    --o-visualization aitchison-biplot-core.qzv \
+    --p-number-of-features 8
 # repeat above for rare variants
+qiime deicode rpca \
+    --i-table filtered-table-rare.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-rare.qza \
+    --o-distance-matrix aitchison-distance-rare.qza
+
+qiime emperor biplot \
+    --i-biplot aitchison-ordination-rare.qza \
+    --m-sample-metadata-file input/jay-met.tsv \
+    --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
+    --o-visualization aitchison-biplot-rare.qzv \
+    --p-number-of-features 8
 # Hypothesis 3 - spring 2020 samples (nest groups)
 # using this i-table since we're filtering, so blanks will be dropped anyways
 qiime feature-table filter-samples \

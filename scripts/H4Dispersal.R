@@ -37,8 +37,10 @@ rownames(oriDist) <- rownames(gj_meta)
 colnames(oriDist) <- rownames(gj_meta)
 # retain only calculation of distance between origin and same sample location
 oriDistCol <- oriDist %>% rownames_to_column(var = "SampleID") %>%
-  # drop G6, because it is the blank (not needed)
+  # drop G6/G70/G90, because it is the blank (not needed)
   .[ which(.$SampleID != "G6"), ] %>%
+  .[ which(.$SampleID != "G70"), ] %>%
+  .[ which(.$SampleID != "G90"), ] %>%
   # pivot to longer (proper formatting for plotting), keep only same sample distances
   pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
   .[which(.$SampleID == .$SampleID2),] %>% select(-SampleID2) %>%

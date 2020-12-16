@@ -80,7 +80,7 @@ OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
 print("Separating core microbiome")
 # extract the core identified OTUs from the occ-abun results (coreJay)
 cOTU <- read.csv("CanadaJayMicrobiome/data/coreJay.csv") %>% 
-  .[which(.$fill == "core"),]
+  .[which(.$fill == "Core"),]
 # make the new data frames
 print("Subset the OTU table to find core and rare OTUs")
 OTU_core <- OTUclr[, cOTU$Feature.ID]
@@ -178,7 +178,7 @@ rm(vp_mod1_list)
 # test with RDA
 print("Testing with RDA (full model) - core OTUS")
 # create a tiny anonymous function to include formula syntax in call
-abFrac <- mapply(function(x,data) rda(x~Sex + BirthYear, data), 
+abFrac <- mapply(function(x,data) rda(x~., data), 
                  commCore, sea_list, SIMPLIFY=FALSE)
 abFrac # Full model
 lapply(abFrac, anova, step=200, perm.max=1000)
@@ -188,8 +188,7 @@ lapply(abFrac, RsquareAdj)
 # Test fraction [a] using partial RDA:
 print("Testing with partial RDA (fraction [a]) - core OTUS")
 # create a tiny anonymous function to include formula syntax in call
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-aFrac <- mapply(function(x,y,data) rda(x~Sex + BirthYear+Condition(scores(y)), data), 
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
                 commCore, pcnm_list, sea_list, SIMPLIFY=FALSE)
 aFrac
 lapply(aFrac, anova, step=200, perm.max=1000)
@@ -243,8 +242,7 @@ dev.off()
 
 print("Partition Aitchison dissimilarities - core OTUs")
 vdist <- lapply(commCore, dist) # euclidean on clr = aitchison
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-pbcd <- mapply(function(x,y,z) varpart(x, ~ Sex + BirthYear, y, data = z),
+pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd
 
@@ -443,8 +441,7 @@ dev.off()
 
 print("Partition Bray-Curtis dissimilarities - all OTUs")
 vdist <- lapply(commFull, dist) # euclidean dist on clr = aitchison
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
-pbcd <- mapply(function(x,y,z) varpart(x, ~Sex + BirthYear, y, data = z),
+pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd
 

@@ -1,40 +1,25 @@
----
-title: "Grey Jay Core Microbiome"
-author: "Alicia Halhed"
-date: "30/05/2020"
-output: html_document
----
+# this script is for the environmental analysis
+# to load R on interactive graham
+# module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
+setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## Set Up
-```{r}
-# set working directory
-setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/")
-# attach required packages
 library(qiime2R)
 library(vegan)
 library(tidyverse)
 # set theme
 theme_set(theme_bw())
-```
 
-```{r, message=FALSE}
-# data
+# read in the required data
 nReads <- 344
-otu <- read_qza("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/rarefied-table.qza")$data
-map <- read_tsv("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/input/jay-met.tsv")
+otu <- read_qza("rarefied-table.qza")$data
+map <- read_tsv("input/jay-met.tsv")
 
 # transforms
 otu_PA <- 1*((otu>0)==1)                                               # presence-absence data
 otu_occ <- rowSums(otu_PA)/ncol(otu_PA)                                # occupancy calculation
 otu_rel <- apply(decostand(otu, method="total", MARGIN=2),1, mean)     # mean relative abundance
 occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),'otu') # combining occupancy and abundance data frame
-```
 
-```{r}
 # Ranking OTUs based on their occupancy
 # For caluclating raking index we included following conditions:
 #   - time-specific occupancy (sumF) = frequency of detection within time point (genotype or site)
@@ -57,10 +42,7 @@ otu_ranked <- occ_abun %>%
   transmute(otu=otu,
             rank=Index) %>%
   arrange(desc(rank))
-```
 
-
-```{r}
 # Calculating the contribution of ranked OTUs to the BC similarity
 BCaddition <- NULL
 
@@ -107,9 +89,7 @@ Increase=BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
 increaseDF <- data.frame(IncreaseBC=c(0,(Increase)), rank=factor(c(1:(length(Increase)+1))))
 BC_ranked <- left_join(BC_ranked, increaseDF)
 BC_ranked <- BC_ranked[-nrow(BC_ranked),]
-```
 
-```{r Plot}
 #Creating thresholds for core inclusion 
 
 #Method: 
@@ -127,14 +107,12 @@ elbow <- which.max(BC_ranked$fo_diffs)
 lastCall <- last(as.numeric(BC_ranked$rank[(BC_ranked$IncreaseBC>=1.02)]))
 
 #Creating occupancy abundance plot
-occ_abun$fill <- 'no'
+occ_abun$fill <- 'Rare'
 # correcting the NA issue with the cbinds
-occ_abun$fill[occ_abun$otu %in% cbind(BC_ranked, otu_ranked)$otu[cbind(BC_ranked, otu_ranked)$IncreaseBC>=1.02]] <- 'core'
-```
+occ_abun$fill[occ_abun$otu %in% cbind(BC_ranked, otu_ranked)$otu[cbind(BC_ranked, otu_ranked)$IncreaseBC>=1.02]] <- 'Core'
 
-```{r}
 # add taxonomy information to occ_abun
-tax <- read_qza("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/taxonomy/silva-taxonomy.qza")$data
+tax <- read_qza("taxonomy/SILVA-taxonomy.qza")$data
 # clean up/separatee taxonomy labels
 tax$Taxon <- tax$Taxon %>%
   str_replace_all("d__", "") %>%
@@ -156,20 +134,17 @@ occ_abunT <- tax %>%
   # join to core labels
   right_join(occ_abun, by = c("Feature.ID" = "otu" ))
 # save core information to file
-write.table(occ_abunT, file = "~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
+write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
 #View(occ_abunT)
-```
 
-
-```{r}
-# plot
+# save plot
+pdf("CanadaJayMicrobiome/plots/core.pdf")
 ggplot(occ_abun, aes(y = otu_occ, x = otu_rel, color = fill)) + 
   geom_point() +
   # log transform the x axis, set discrete viridis colour scheme
-  scale_x_log10() + scale_colour_viridis_d(labels = c("Core", "Rare")) + 
+  scale_x_log10() + scale_colour_viridis_d() + 
   # add axis labels
   labs(x = "Mean Relative Abundance of Each OTU (log10)", 
        y = "Occupancy (Proportion of Samples)",
        color = "OTU Type")
-```
-
+dev.off()

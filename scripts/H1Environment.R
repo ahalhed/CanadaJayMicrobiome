@@ -36,6 +36,17 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
 # aitchison distances
 dmAitchison <- read_qza("aitchison-distance.qza")
 
+## Core and rare divide
+print("Separating core microbiome")
+# extract the core identified OTUs from the occ-abun results (coreJay)
+cOTU <- read.csv("CanadaJayMicrobiome/data/coreJay.csv") %>% 
+  .[which(.$fill == "Core"),]
+# make the new data frames
+print("Subset the OTU table to find core and rare OTUs")
+OTU_core <- otu_table(gj_ps)[, cOTU$Feature.ID]
+# make sure this is dplyr select
+OTU_rare <- select(as.data.frame(otu_table(gj_ps)), -one_of(cOTU$Feature.ID))
+
 ## Territory Figure
 # Corresponds to figure 3-1 from proposal. 
 # Version 1 - plot PC1/PC2 by territory
@@ -69,3 +80,22 @@ pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf")
 plot(gj_cap, main = "Aitchison Distance-based RDA")
 dev.off()
 
+# core dbRDA
+core_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + CollectionYear + AgeAtCollection + CollectionSeason,
+                   data = gj_meta, comm = OTU_core, na.action = na.exclude)
+# look at summaries
+summary(core_cap)
+# simple biplot
+pdf("CanadaJayMicrobiome/plots/H1envBiplotCore.pdf")
+plot(core_cap, main = "Aitchison Distance-based RDA", sub = "Core OTUs")
+dev.off()
+
+# rare dbRDA
+rare_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + CollectionYear + AgeAtCollection + CollectionSeason,
+                   data = gj_meta, comm = OTU_rare, na.action = na.exclude)
+# look at summaries
+summary(rare_cap)
+# simple biplot
+pdf("CanadaJayMicrobiome/plots/H1envBiplotRare.pdf")
+plot(rare_cap, main = "Aitchison Distance-based RDA", sub = "Rare OTUs")
+dev.off()

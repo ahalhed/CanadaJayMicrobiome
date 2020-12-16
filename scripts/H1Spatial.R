@@ -46,8 +46,6 @@ met_filter <- function(meta, season, year) {
     select("SampleID", "Sex", "BirthYear", "CollectionSeason", 
            "CollectionYear", "ProportionSpruceOnTerritory") # make sure this is dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-  # replace NAs with blanks (so as to retain the columns)
-  #df3 <- df2 %>% mutate_all(na_if,"")
   # select columns with more than one level
   df4 <- df2[sapply(df2, function(x) length(unique(x))>1)]
   return(df4)
@@ -258,9 +256,8 @@ print("Variance partitioning - Rare OTUs")
 vp_mod1_list <- mapply(varpart, commRare, scores_list, data=sea_list, 
                        MoreArgs = list(~.),
                        SIMPLIFY = FALSE)
-factor(sea_list[[1]], exclude = NULL)
-
 vp_mod1_list
+
 # plot the partitioning
 pdf(file = "CanadaJayMicrobiome/plots/rare_vp_mod1.pdf")
 # make plot

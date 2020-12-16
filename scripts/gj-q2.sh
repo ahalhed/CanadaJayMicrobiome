@@ -191,7 +191,17 @@ qiime feature-table rarefy \
     --p-sampling-depth 344 \
     --p-no-with-replacement \
     --o-rarefied-table rarefied-table
-
+# ran gj-core.R here, then produced a list of core and rare features
+# filter for core variants
+qiime feature-table filter-features \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file coreFeatures.tsv \
+  --o-filtered-table filtered-table-core.qza
+# filter for rare variants
+qiime feature-table filter-features \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file coreFeatures.tsv \
+  --o-filtered-table filtered-table-core.qza
 # Hypothesis 1 & 2 - full dataset
 # compute aitchison distance matrix 
 qiime deicode rpca \
@@ -207,7 +217,9 @@ qiime emperor biplot \
     --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
+# repeat above for core variants
 
+# repeat above for rare variants
 # Hypothesis 3 - spring 2020 samples (nest groups)
 # using this i-table since we're filtering, so blanks will be dropped anyways
 qiime feature-table filter-samples \

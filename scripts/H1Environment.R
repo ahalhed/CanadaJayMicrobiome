@@ -14,7 +14,7 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
@@ -30,11 +30,13 @@ ordiAitchison <- read_qza("aitchison-ordination.qza")
 gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
   rownames_to_column(var = "SampleID") %>% # row names need to be a column to join
   left_join(ordiAitchison$data$Vectors,.) %>%
-  .[ which(.$JayID != "BLANK"), ] %>%
   remove_rownames()
 # read in aitchison distance matrix
 # aitchison distances
 dmAitchison <- read_qza("aitchison-distance.qza")
+# these two do not include blanks
+dmAitchisonCore <- read_qza("aitchison-distance-core.qza")
+dmAitchisonRare <- read_qza("aitchison-distance-rare.qza")
 
 ## Core and rare divide
 print("Separating core microbiome")
@@ -51,6 +53,7 @@ OTU_rare <- select(as.data.frame(otu_table(gj_ps)), -one_of(cOTU$Feature.ID))
 # Corresponds to figure 3-1 from proposal. 
 # Version 1 - plot PC1/PC2 by territory
 pdf("CanadaJayMicrobiome/plots/H1pc.pdf", width = 10)
+# need to sort out NA thing
 ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = JayID)) + #, group = JayID
   geom_point() + #geom_line()
   labs(shape = "Collection Year")
@@ -62,6 +65,7 @@ aitchSum <- gj_aitch_V %>% group_by(CollectionYear, CollectionSeason, Territory)
 # Version 2 - Cleveland dot plot by territory could be a different way to look at these
 # see section 13.7 in R Graphics cookbook for more information
 pdf("CanadaJayMicrobiome/plots/H1cleveland.pdf")
+# need to sort out NA season
 ggplot(aitchSum, aes(x=PC1, y=Territory, size = CollectionYear, shape = CollectionSeason)) + 
   geom_point() + labs(size = "Collection Year", shape = "Collection Season")
 dev.off()
@@ -76,12 +80,13 @@ gj_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + CollectionYe
 # look at summaries
 summary(gj_cap)
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf")
+pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf", width = 10)
 plot(gj_cap, main = "Aitchison Distance-based RDA")
 dev.off()
 
 # core dbRDA
-core_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + CollectionYear + AgeAtCollection + CollectionSeason,
+# no blanks here
+core_cap <- capscale(dmAitchisonCore$data ~ ProportionSpruceOnTerritory + CollectionYear + AgeAtCollection + CollectionSeason,
                    data = gj_meta, comm = OTU_core, na.action = na.exclude)
 # look at summaries
 summary(core_cap)
@@ -91,7 +96,7 @@ plot(core_cap, main = "Aitchison Distance-based RDA", sub = "Core OTUs")
 dev.off()
 
 # rare dbRDA
-rare_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + CollectionYear + AgeAtCollection + CollectionSeason,
+rare_cap <- capscale(dmAitchisonRare$data ~ ProportionSpruceOnTerritory + CollectionYear + AgeAtCollection + CollectionSeason,
                    data = gj_meta, comm = OTU_rare, na.action = na.exclude)
 # look at summaries
 summary(rare_cap)

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=00:15:00
+#SBATCH --time=00:20:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=deicode
 #SBATCH --dependency=afterok:41736717
@@ -10,6 +10,14 @@
 #----------------------------------
 # dependent on 6taxonomy.sh
 
+# filtering out blanks (for H1 & H2)
+qiime feature-table filter-samples \
+    --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --p-exclude-ids 'TRUE' \
+    --p-where "[JayID]='BLANK'" \
+    --o-filtered-table filtered-table-no-blanks.qza
+
 # Hypothesis 1 - rarefaction
 # rarefying to feed into core definition in R (needed nowhere else)
 # 344 retains all samples
@@ -18,7 +26,18 @@ qiime feature-table rarefy \
     --p-sampling-depth 344 \
     --p-no-with-replacement \
     --o-rarefied-table rarefied-table
-
+# ran gj-core.R here, then produced a list of core and rare features
+# filter for core variants
+qiime feature-table filter-features \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
+  --o-filtered-table filtered-table-core.qza
+# filter for rare variants
+qiime feature-table filter-features \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
+  --p-exclude-ids TRUE \
+  --o-filtered-table filtered-table-rare.qza
 # Hypothesis 1 & 2 - full dataset
 # compute aitchison distance matrix 
 qiime deicode rpca \
@@ -34,9 +53,36 @@ qiime emperor biplot \
     --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
     --o-visualization aitchison-biplot.qzv \
     --p-number-of-features 8
+# repeat above for core variants
+qiime deicode rpca \
+    --i-table filtered-table-core.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-core.qza \
+    --o-distance-matrix aitchison-distance-core.qza
 
-# will test these two sections of code once have complete sequence set
+qiime emperor biplot \
+    --i-biplot aitchison-ordination-core.qza \
+    --m-sample-metadata-file input/jay-met.tsv \
+    --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
+    --o-visualization aitchison-biplot-core.qzv \
+    --p-number-of-features 8
+# repeat above for rare variants
+qiime deicode rpca \
+    --i-table filtered-table-rare.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-rare.qza \
+    --o-distance-matrix aitchison-distance-rare.qza
+
+qiime emperor biplot \
+    --i-biplot aitchison-ordination-rare.qza \
+    --m-sample-metadata-file input/jay-met.tsv \
+    --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
+    --o-visualization aitchison-biplot-rare.qzv \
+    --p-number-of-features 8
 # Hypothesis 3 - spring 2020 samples (nest groups)
+# using this i-table since we're filtering, so blanks will be dropped anyways
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -61,8 +107,9 @@ qiime diversity beta-rarefaction \
     --p-correlation-method 'spearman' \
     --p-color-scheme 'PuOr_r' \
     --o-visualization H3-aitchison-beta-rarefaction
+
 # Hypothesis 4 - only samples with origin data
-# H4-samples.tsv is a list of sampleid's to keep (will complete list once have all metadata)
+# H4-samples.tsv is a list of sampleid's to keep
 qiime feature-table filter-samples \
   --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
   --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \

@@ -24,15 +24,15 @@ rownames(gj_meta) <- sample_names(gj_ps)
 
 # select only offspring with parent information
 offspring <- gj_meta %>% rownames_to_column('sampleid') %>%
-  subset(!is.na(SampledBreederMale) | !is.na(SampledBreederFemale))
+  subset(CollectionYear == 2020) %>% subset(CollectionSeason == "Spring")
 # retain parents identified in nestlings rows
 parents <- gj_meta %>% rownames_to_column('sampleid') %>%
   subset(JayID %in% unique(offspring$SampledBreederMale) | JayID %in% unique(offspring$SampledBreederFemale)) %>%
-  subset(CollectionYear %in% unique(offspring$CollectionYear) & CollectionSeason %in% unique(offspring$CollectionSeason))
+  subset(CollectionYear == 2020) %>% subset(CollectionSeason == "Spring")
 # join parent and offspring together
 offPar <- full_join(offspring, parents) %>%
   # dropping offspring where parent was only sampled in past seasons
-  subset(Territory != "SundayCreek") %>%
+  #subset(Territory != "SundayCreek") %>%
   remove_rownames() %>% column_to_rownames('sampleid')
 # subset the phyloseq object accordingly
 # this needs final testing since we don't yet have sequence data for all samples
@@ -57,3 +57,8 @@ ggplot(ordiAitchison, aes(x = PC1, y = PC2, colour = Territory)) + # , group = T
   scale_color_viridis_d()
 # working on the appearance of this one
 dev.off()
+
+# permanova
+dmAitchison <- read_qza("H3-aitchison-distance.qza")$data
+adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
+        data = offPar)

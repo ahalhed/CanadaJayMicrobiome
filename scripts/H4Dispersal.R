@@ -8,13 +8,14 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(geosphere)
+library(vegan)
 library(tidyverse)
 
 theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
@@ -37,10 +38,6 @@ rownames(oriDist) <- rownames(gj_meta)
 colnames(oriDist) <- rownames(gj_meta)
 # retain only calculation of distance between origin and same sample location
 oriDistCol <- oriDist %>% rownames_to_column(var = "SampleID") %>%
-  # drop G6/G70/G90, because it is the blank (not needed)
-  .[ which(.$SampleID != "G6"), ] %>%
-  .[ which(.$SampleID != "G70"), ] %>%
-  .[ which(.$SampleID != "G90"), ] %>%
   # pivot to longer (proper formatting for plotting), keep only same sample distances
   pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
   .[which(.$SampleID == .$SampleID2),] %>% select(-SampleID2) %>%
@@ -65,3 +62,8 @@ dev.off()
 
 ggplot(ordiDF, aes(x=PC1, size= DistanceFromOrigin, y = AgeAtCollection)) + 
   geom_point() + labs(size = "Distance From Origin", y = "Age at Collection")
+
+# permanova
+dmAitchison <- read_qza("H4-aitchison-distance.qza")$data
+adonis2(dmAitchison ~ DistanceFromOrigin + JayID + AgeAtCollection + CollectionYear,
+        data = ordiDF)

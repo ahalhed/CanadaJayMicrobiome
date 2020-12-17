@@ -15,7 +15,7 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza", 
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
                          tree = "trees/rooted-tree.qza", 
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
@@ -34,10 +34,6 @@ dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
   # remove same-sample comparisons
   .[-which(.$Sample1 == .$Sample2),] %>%
-  # drop the blanks
-  .[-which(.$Sample1 == "G6" | .$Sample2 == "G6"), ] %>%
-  .[-which(.$Sample1 == "G70" | .$Sample2 == "G70"), ] %>%
-  .[-which(.$Sample1 == "G90" | .$Sample2 == "G90"), ] %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2") %>%
   # add shared food information
@@ -51,18 +47,14 @@ dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
 # save boxplot to PDF
 pdf("CanadaJayMicrobiome/plots/H2foodBox.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
-  geom_boxplot() + labs(x = "Food Supplementation") +
-  # add significance stars to plot (t-test)
-  geom_signif(comparisons = list(c("No", "Yes"), c("No", "Either"), c("Either", "Yes")),
-              map_signif_level=TRUE, step_increase = 0.05)
+  geom_boxplot() + labs(x = "Food Supplementation")
 dev.off()
 
 # read in the aitchison ordination (probs won't keep this)
 ordiAitchison <- read_qza("aitchison-ordination.qza")
 # combine aitchison vectors with environmental data
 aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%
-  full_join(ordiAitchison$data$Vectors) %>%
-  subset(JayID != 'BLANK')
+  full_join(ordiAitchison$data$Vectors)
 
 # save ordination plot to PDF
 pdf("CanadaJayMicrobiome/plots/H2foodOrdi.pdf", width = 9)
@@ -76,3 +68,7 @@ ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplemen
   labs(shape = "Food Supplementation", linetype = "Food Supplementation")
 # turn off graphics device
 dev.off()
+
+# PERMANOVA
+adonis2(dmAitchison$data ~ FoodSupplement + JayID + AgeAtCollection + CollectionYear,
+        data = gj_meta)

@@ -27,7 +27,7 @@ gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # read in the ordination aitchison matrix (only samples with origins)
 ordiAitchison <- read_qza("H4-aitchison-ordination.qza")
-ordiAitchison$data$Species
+
 ## Calculate distance between origin and sampling locations
 # this uses the Haversine to calculate half circle distance
 oriDist <- distm(gj_meta %>% select(LongitudeSamplingDD, LatitudeSamplingDD), 

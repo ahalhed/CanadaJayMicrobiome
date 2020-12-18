@@ -1,0 +1,112 @@
+---
+title: "H4DispersalVOrigin"
+author: "Alicia Halhed"
+date: "18/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r packages}
+#if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
+#devtools::install_github("jbisanz/qiime2R")
+library(qiime2R)
+library(phyloseq)
+library(geosphere)
+library(tidyverse)
+
+theme_set(theme_bw())
+```
+
+```{r data}
+setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
+                         tree = "trees/rooted-tree.qza", 
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+# read in the ordination aitchison matrix (only samples with origins)
+ordiAitchison <- read_qza("H4-aitchison-ordination.qza")
+dmAitchison <- read_qza("H4-aitchison-distance.qza")$data
+```
+
+```{r Distances}
+## Calculate distance between origin and sampling locations
+# this uses the Haversine to calculate half circle distance
+oriDist <- distm(gj_meta %>% select(LongitudeSamplingDD, LatitudeSamplingDD), 
+      gj_meta %>% select(LongitudeOriginDD, LatitudeOriginDD), 
+      fun = distHaversine) %>% as.data.frame
+# add extract labels to distances
+rownames(oriDist) <- rownames(gj_meta) 
+colnames(oriDist) <- rownames(gj_meta)
+# retain only calculation of distance between origin and same sample location
+oriDistCol <- oriDist %>% rownames_to_column(var = "SampleID") %>%
+  # pivot to longer (proper formatting for plotting), keep only same sample distances
+  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
+  .[which(.$SampleID == .$SampleID2),] %>% select(-SampleID2) %>%
+  # drop NAs from the Distance From Origin Column
+  subset(!is.na(DistanceFromOrigin)) 
+```
+
+Pairing off samples from the same collection year. Determining least distance from origin of one sample to current location of another
+```{r}
+mixed <- distm(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,] %>%
+        select(LongitudeSamplingDD, LatitudeSamplingDD), 
+      gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,] %>%
+        select(LongitudeOriginDD, LatitudeOriginDD), 
+      fun = distHaversine) %>% as.data.frame
+# add extract labels to distances
+rownames(mixed) <- rownames(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,])
+colnames(mixed) <- rownames(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,])
+# pivot to longer (proper formatting for plotting)
+mixedLong <- mixed %>% rownames_to_column(var = "SampleID") %>%
+  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
+  .[which(.$SampleID != .$SampleID2),]
+# collect only metadata of interest
+meta_sub <- gj_meta %>%
+  select(CollectionYear, CollectionSeason, Territory, JayID) %>%
+  rownames_to_column(var = "SampleID") %>%
+  .[.$SampleID %in% oriDistCol$SampleID,]
+
+mixedMeta <- left_join(mixedLong, meta_sub) %>%
+  left_join(meta_sub, suffix = c("", "2"), by = c("SampleID2" = "SampleID")) %>%
+  .[.$CollectionYear==.$CollectionYear2,] %>%
+  .[.$CollectionSeason==.$CollectionSeason2,] %>%
+  select(JayID, SampleID, JayID2, SampleID2, DistanceFromOrigin, CollectionYear, Territory, Territory2)
+# distance that sample 1 is from the origin of sample 2
+mixedDF <- mixedMeta[mixedMeta$DistanceFromOrigin<1000,]
+```
+
+Prepare the data for plotting.
+```{r}
+AitchisonLong <- dmAitchison %>% 
+  as.matrix %>% as.data.frame %>% 
+  rownames_to_column(var = "SampleID") %>%
+  # pivot to longer (proper formatting for plotting)
+  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "AitchisonDistance")
+# 2 plots --> one with distances less than 1 KM and all samples
+plotDFnear <- left_join(AitchisonLong, mixedDF, by = c("SampleID", "SampleID2")) %>% .[!is.na(.$JayID),]
+plotDFall <- left_join(AitchisonLong, mixedMeta, by = c("SampleID", "SampleID2")) %>% .[!is.na(.$JayID),]
+```
+
+```{r}
+# samples collected within the same year and season only
+ggplot(plotDFnear, aes(x = DistanceFromOrigin, y = AitchisonDistance)) +
+  geom_point() +
+  labs(y = "Aitchison Distance",
+       x = "Distance from Origin of Focal Individual (m)")
+ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance)) +
+  geom_point() +
+  labs(y = "Aitchison Distance",
+       x = "Distance from Origin of Focal Individual (m)")
+```
+

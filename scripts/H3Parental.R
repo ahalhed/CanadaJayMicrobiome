@@ -52,8 +52,9 @@ ordiAitchison <- read_qza("aitchison-ordination.qza")$data$Vectors %>%
 pdf("CanadaJayMicrobiome/plots/H3nestOrdi.pdf", width = 9)
 # plot ordination data
 # territory is a proxy for nest group
-ggplot(ordiAitchison, aes(x = PC1, y = PC2, colour = Territory)) + # , group = Territory, linetype = Territory
-  geom_point() + stat_ellipse(type = "norm") +
+ggplot(ordiAitchison, aes(x = PC1, y = PC2, colour = Territory)) + # , linetype = Territory, group = Territory
+  geom_point(aes(shape = JuvenileStatus, size = BreedingStatus)) + 
+  stat_ellipse(type = "norm") +
   scale_color_viridis_d()
 # working on the appearance of this one
 dev.off()
@@ -76,3 +77,12 @@ dev.off()
 # permanova
 adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
         data = offPar)
+# dbRDA
+gj_cap <- capscale(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
+                   data = offPar, comm = otu_table(offParPS), na.action = na.exclude)
+# look at summaries
+summary(gj_cap)
+# simple biplot
+pdf("CanadaJayMicrobiome/plots/H3Biplot.pdf")
+plot(gj_cap, main = "Aitchison Distance-based RDA")
+dev.off()

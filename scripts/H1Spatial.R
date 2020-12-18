@@ -45,8 +45,7 @@ met_filter <- function(meta, season, year) {
     # may need to fiddle with the env data been uses
     # not including JayID b/c it fully constrains models
     select("SampleID", "Sex", "BirthYear", "CollectionSeason", 
-           "CollectionYear", "BreedingStatus", "JuvenileStatus",
-           "ProportionSpruceOnTerritory") # make sure this is dplyr select
+           "CollectionYear", "BreedingStatus", "JuvenileStatus") # make sure this is dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
   # select columns with more than one level
   df4 <- df2[sapply(df2, function(x) length(unique(x))>1)]
@@ -147,13 +146,9 @@ lapply(pcnm_list, function(x) x$vectors)
 
 print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
-#"SampleID", "JayID", "Sex", "BirthYear", "CollectionSeason", 
-#"CollectionYear", "BreedingStatus", "JuvenileStatus",
-#"ProportionSpruceOnTerritory"
 # analysis for all OTUs
 print("Analysis for All OTUs")
 print("Variance partitioning - All OTUs")
-# na's in ProportionSpruceOnTerritory throwing errors (so skipping for now - ~.)
 vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list, 
                        MoreArgs = list(~.),
                        SIMPLIFY = FALSE)
@@ -170,7 +165,7 @@ rm(vp_mod1_list)
 # test with RDA
 print("Testing with RDA (full model) - all OTUS")
 # create a tiny anonymous function to include formula syntax in call
-abFrac <- mapply(function(x,data) rda(x~Sex + BirthYear + BreedingStatus + JuvenileStatus, data), 
+abFrac <- mapply(function(x,data) rda(x~., data), 
                  commFull, sea_list, SIMPLIFY=FALSE)
 
 abFrac # Full model
@@ -182,7 +177,7 @@ lapply(abFrac, RsquareAdj)
 # Test fraction [a] using partial RDA:
 print("Testing with partial RDA (fraction [a]) - all OTUS")
 # create a tiny anonymous function to include formula syntax in call
-aFrac <- mapply(function(x,y,data) rda(x~ProportionSpruceOnTerritory+Condition(scores(y)), data), 
+aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
                 commFull, pcnm_list, sea_list, SIMPLIFY=FALSE)
 aFrac
 # anova
@@ -203,7 +198,7 @@ step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)),
                    abFrac0, abFrac, SIMPLIFY=FALSE)
 # Error in ordiR2step(x, scope = formula(y)) : the upper scope cannot be fitted (too many terms?)
 step.env # an rda model, with the final model predictor variables
-
+# focus on the environment that is the host
 print("Summary of environmental selection process - all OTUs")
 lapply(step.env, function(x) x$anova)
 print("ANOVA on full environmental selection - all OTUs")

@@ -38,7 +38,7 @@ offPar <- full_join(offspring, parents) %>%
 # this needs final testing since we don't yet have sequence data for all samples
 offParPS <- prune_samples(sample_names(gj_ps) %in% rownames(offPar), gj_ps)
 # clean up
-rm(gj_ps, gj_meta, parents, offspring)
+rm(gj_ps, parents, offspring)
 
 # read in Aitchison ordination data
 ordiAitchison <- read_qza("aitchison-ordination.qza")$data$Vectors %>%
@@ -58,7 +58,21 @@ ggplot(ordiAitchison, aes(x = PC1, y = PC2, colour = Territory)) + # , group = T
 # working on the appearance of this one
 dev.off()
 
-# permanova
 dmAitchison <- read_qza("H3-aitchison-distance.qza")$data
+dm_meta <- dmAitchison %>% as.matrix %>% as.data.frame %>%
+  rownames_to_column(var = "Sample1") %>%
+  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
+  # remove same-sample comparisons
+  .[-which(.$Sample1 == .$Sample2),] %>%
+  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
+  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2") %>%
+  # remove across territory comparisons
+  .[-which(.$Territory.x == .$Territory.y),]
+# boxplot
+pdf("CanadaJayMicrobiome/plots/H3parentalBox.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory.x)) +
+  geom_boxplot() + labs(x = "Territory")
+dev.off()
+# permanova
 adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
         data = offPar)

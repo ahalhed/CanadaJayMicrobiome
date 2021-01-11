@@ -29,9 +29,7 @@ map <- read_tsv("input/jay-met.tsv")[-1,]
 otu_PA <- 1*((otu>0)==1)                                               # presence-absence data
 otu_occ <- rowSums(otu_PA)/ncol(otu_PA)                                # occupancy calculation
 otu_rel <- apply(decostand(otu, method="total", MARGIN=2),1, mean)     # relative abundance 
-# `add_rownames()` is deprecated as of dplyr 1.0.0.
-# Please use `tibble::rownames_to_column()` instead.
-occ_abun <- add_rownames(as.data.frame(cbind(otu_occ, otu_rel)),'otu') # combining occupancy and abundance 
+occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),var="otu") # combining occupancy and abundance 
 ```
 
 ```{r}
@@ -40,8 +38,8 @@ PresenceSum <- data.frame(otu = as.factor(row.names(otu)), otu) %>%
   left_join(map, by = 'sampleid') %>%
   group_by(otu, Territory) %>%
   summarise(plot_freq=sum(abun>0)/length(abun),        # frequency of detection between time points
-            coreSite=ifelse(plot_freq == 1, 1, 0), # 1 only if occupancy 1 with specific genotype, 0 if not
-            detect=ifelse(plot_freq > 0, 1, 0)) %>%    # 1 if detected and 0 if not detected with specific genotype
+            coreSite=ifelse(plot_freq == 1, 1, 0), # 1 only if occupancy 1 with specific site, 0 if not
+            detect=ifelse(plot_freq > 0, 1, 0)) %>%    # 1 if detected and 0 if not detected with specific site
   group_by(otu) %>%
   summarise(sumF=sum(plot_freq),
             sumG=sum(coreSite),
@@ -98,7 +96,8 @@ BC_ranked <- data.frame(rank = as.factor(row.names(t(temp_BC_matrix))),t(temp_BC
   summarise(MeanBC=mean(BC)) %>%
   arrange(-desc(MeanBC)) %>%
   mutate(proportionBC=MeanBC/max(MeanBC))
-Increase=BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
+#### something weird in this section about assigning 0 contribution to diversity to the high occ/abun
+Increase <- BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
 increaseDF <- data.frame(IncreaseBC=c(0,(Increase)), rank=factor(c(1:(length(Increase)+1))))
 BC_ranked <- left_join(BC_ranked, increaseDF)
 BC_ranked <- BC_ranked[-nrow(BC_ranked),]
@@ -111,6 +110,7 @@ fo_difference <- function(pos){
 BC_ranked$fo_diffs <- sapply(1:nrow(BC_ranked), fo_difference)
 
 elbow <- which.max(BC_ranked$fo_diffs)
+BC_ranked
 ```
 
 ```{r}
@@ -131,28 +131,11 @@ occ_abun$fill[occ_abun$otu %in% cbind(BC_ranked, otu_ranked)$otu[cbind(BC_ranked
 
 spp=t(otu)
 taxon=as.vector(rownames(otu))
-
-#Models for the whole community
-# not working
-obs.np=sncm.fit(spp, taxon, stats=FALSE, pool=NULL)
-sta.np=sncm.fit(spp, taxon, stats=TRUE, pool=NULL)
-sta.np.16S <- sta.np
-
-above.pred=sum(obs.np$freq > (obs.np$pred.upr), na.rm=TRUE)/sta.np$Richness
-below.pred=sum(obs.np$freq < (obs.np$pred.lwr), na.rm=TRUE)/sta.np$Richness
-
-ap = obs.np$freq > (obs.np$pred.upr)
-bp = obs.np$freq < (obs.np$pred.lwr)
-```
-
-```{r}
-ggplot() +
-  geom_point(data=occ_abun[occ_abun$fill=='no',], aes(x=log10(otu_rel), y=otu_occ), pch=21, fill='white', alpha=.2)+
-  geom_point(data=occ_abun[occ_abun$fill!='no',], aes(x=log10(otu_rel), y=otu_occ), pch=21, fill='blue', size=1.8) +
-  geom_line(color='black', data=obs.np, size=1, aes(y=obs.np$freq.pred, x=log10(obs.np$p)), alpha=.25) +
-  geom_line(color='black', lty='twodash', size=1, data=obs.np, aes(y=obs.np$pred.upr, x=log10(obs.np$p)), alpha=.25)+
-  geom_line(color='black', lty='twodash', size=1, data=obs.np, aes(y=obs.np$pred.lwr, x=log10(obs.np$p)), alpha=.25)+
-  labs(x="log10(mean relative abundance)", y="Occupancy")
+#took out the scnm.fit stuff
+# the high occupancy/abundance one isn't core???
+occ_abun %>% filter(otu=="KU324909.1.1217")
+occ_abun %>% filter(fill=="core")
+cbind(BC_ranked, otu_ranked)
 ```
 
 ```{r}
@@ -173,20 +156,23 @@ plotDF <- data.frame(otu = as.factor(row.names(otu_relabun)), otu_relabun) %>%
 plotDF$otu <- factor(plotDF$otu, levels=otu_ranked$otu[1:647])
 plotDF$group <- 1
 # top 2%
-0.02*nrow(otu_ranked)
-plotDF$group[plotDF$otu %in% c(otu_ranked %>% top_n(13, rank))] <- 2
+plotDF$group[plotDF$otu %in% (otu_ranked %>% top_n(0.02*nrow(otu_ranked), rank))$otu] <- 2
+# select otus occurring in 100% of samples at a site or in the highest ranke
+filteredDF <- plotDF %>% filter(group==2) %>%
+  left_join(filter(plotDF, coreSite==1))
 ```
 
 ```{r}
 setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome")
-pdf("CanadaJayMicrobiome/plots/testCore.pdf", height = 50)
-subset(plotDF,coreSite==1 | group == 2) %>%
-  # need to fiddle with this some more
-  ggplot(.,aes(x=otu, plot_freq, group=Territory,fill=Territory)) +    
+pdf("CanadaJayMicrobiome/plots/testCore.pdf")
+ggplot(filteredDF,aes(x=Territory,fill=otu, y=plot_freq)) + #, group=Territory,fill=Territory
   geom_bar(stat = 'identity', position = 'dodge') +
   coord_flip() +
-  scale_x_discrete(limits = rev(levels(plotDF$otu))) +
+  scale_fill_viridis_d() +
   theme(axis.text = element_text(size=6)) +
   labs(x='Ranked OTUs', y='Occupancy by site')
 dev.off()
 ```
+
+
+

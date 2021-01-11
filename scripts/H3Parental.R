@@ -3,6 +3,9 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 #devtools::install_github("jbisanz/qiime2R")
 library(qiime2R)
 library(vegan)
+library(zCompositions)
+# devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
+library(CoDaSeq)
 library(phyloseq)
 library(tidyverse)
 
@@ -86,3 +89,50 @@ summary(gj_cap)
 pdf("CanadaJayMicrobiome/plots/H3Biplot.pdf")
 plot(gj_cap, main = "Aitchison Distance-based RDA")
 dev.off()
+
+# doing the PCNM here
+OTUclr <- cmultRepl(otu_table(offParPS), label=0, method="CZM") %>% # all OTUs
+  codaSeq.clr
+env <- sample_data(offParPS) %>% as.matrix() %>% as.data.frame() %>%
+  dplyr::select(Sex, BirthYear, Territory, ProportionSpruceOnTerritory, BreedingStatus, JuvenileStatus)
+
+
+# compute the possible spatial patterns
+pcnm1 <- sample_data(offParPS) %>% as.matrix() %>% as.data.frame() %>% 
+  dplyr::select(LatitudeSamplingDD, LongitudeSamplingDD) %>%
+  dist %>% pcnm
+
+mod <- varpart(OTUclr, ~ ., scores(pcnm1), data = env)
+mod
+plot(mod)
+
+# Test fraction [a+b], total environment, using RDA:
+abFrac <- rda(OTUclr ~ ., env)
+anova(abFrac, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+RsquareAdj(abFrac)
+
+# Test fraction [a] using partial RDA:
+aFrac <- rda(OTUclr ~ . + Condition(scores(pcnm1)), data = env)
+anova(aFrac, step=200, perm.max=1000)
+# RsquareAdj gives the same result as component [a] of varpart
+RsquareAdj(aFrac)
+
+# forward selection for parsimonious model
+# env variables
+abFrac # Full model
+abFrac0 <- rda(OTUclr ~ 1, env) # Reduced model
+# Here is where the magic happens, but almost automatically!
+step.env <- ordiR2step(abFrac0, scope = formula(abFrac))
+step.env
+anova(step.env) 
+plot(step.env)
+step.env$anova
+
+# spatial variables
+OTUclr.pcnm <- as.data.frame(scores(pcnm1))
+bcFrac <- rda(OTUclr ~ ., OTUclr.pcnm) # Full model
+bcFrac0 <- rda(OTUclr ~ 1, OTUclr.pcnm) # Reduced model
+step.space <- ordiR2step(bcFrac0, scope = formula(bcFrac))
+step.space$anova
+plot(step.space)

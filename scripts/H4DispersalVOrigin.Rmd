@@ -81,32 +81,45 @@ mixedMeta <- left_join(mixedLong, meta_sub) %>%
   left_join(meta_sub, suffix = c("", "2"), by = c("SampleID2" = "SampleID")) %>%
   .[.$CollectionYear==.$CollectionYear2,] %>%
   .[.$CollectionSeason==.$CollectionSeason2,] %>%
-  select(JayID, SampleID, JayID2, SampleID2, DistanceFromOrigin, CollectionYear, Territory, Territory2)
-# distance that sample 1 is from the origin of sample 2
-mixedDF <- mixedMeta[mixedMeta$DistanceFromOrigin<1000,]
+  .[.$CollectionSeason=="Fall",] %>% # omitting spring b/c of nest thing
+  select(JayID, JayID2, DistanceFromOrigin, CollectionYear,SampleID,SampleID2)
 ```
 
 Prepare the data for plotting.
 ```{r}
+# samples collected within the same year and season only
 AitchisonLong <- dmAitchison %>% 
   as.matrix %>% as.data.frame %>% 
   rownames_to_column(var = "SampleID") %>%
   # pivot to longer (proper formatting for plotting)
   pivot_longer(-SampleID, names_to = "SampleID2", values_to = "AitchisonDistance")
-# 2 plots --> one with distances less than 1 KM and all samples
-plotDFnear <- left_join(AitchisonLong, mixedDF, by = c("SampleID", "SampleID2")) %>% .[!is.na(.$JayID),]
+# all origins
 plotDFall <- left_join(AitchisonLong, mixedMeta, by = c("SampleID", "SampleID2")) %>% .[!is.na(.$JayID),]
 ```
 
 ```{r}
-# samples collected within the same year and season only
-ggplot(plotDFnear, aes(x = DistanceFromOrigin, y = AitchisonDistance)) +
-  geom_point() +
-  labs(y = "Aitchison Distance",
-       x = "Distance from Origin of Focal Individual (m)")
-ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance)) +
-  geom_point() +
+# all distances
+ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance,
+                      colour = CollectionYear)) +
+  geom_point() + scale_color_viridis_c() +
+  geom_smooth(method='lm', formula= y~x, color="black") +
+  facet_grid(~CollectionYear) +
   labs(y = "Aitchison Distance",
        x = "Distance from Origin of Focal Individual (m)")
 ```
 
+```{r}
+# mean aitchison by distance (could also add in year)
+meanT <- plotDFall %>%  # fall only samples
+  select(DistanceFromOrigin, AitchisonDistance) %>%
+  # round to the nearest kilometer
+  mutate(DistanceFromOrigin = mapply(round, DistanceFromOrigin, digits = -3)) %>%
+  # take the mean
+  aggregate(. ~ DistanceFromOrigin, ., mean)
+
+ggplot(meanT, aes(x = DistanceFromOrigin, y = AitchisonDistance)) +
+  geom_point() +
+  labs(y = "Aitchison Distance",
+       x = "Distance from Origin of Focal Individual (m)") +
+  geom_smooth(method='lm', formula= y~x, color="black") 
+```

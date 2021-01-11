@@ -29,7 +29,7 @@ map <- read_tsv("input/jay-met.tsv")[-1,]
 otu_PA <- 1*((otu>0)==1)                                               # presence-absence data
 otu_occ <- rowSums(otu_PA)/ncol(otu_PA)                                # occupancy calculation
 otu_rel <- apply(decostand(otu, method="total", MARGIN=2),1, mean)     # relative abundance 
-occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),var="otu") # combining occupancy and abundance 
+occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),var="otu") # combining occupancy and abundance
 ```
 
 ```{r}
@@ -56,7 +56,7 @@ otu_ranked <- occ_abun %>%
 ```{r}
 BCaddition <- NULL
 
-otu_start=otu_ranked$otu[1]
+otu_start <- otu_ranked$otu[1]
 start_matrix <- as.matrix(otu[otu_start,])
 start_matrix <- t(start_matrix)
 x <- apply(combn(ncol(start_matrix), 2), 2, function(x) sum(abs(start_matrix[,x[1]]- start_matrix[,x[2]]))/(2*nReads))
@@ -96,33 +96,12 @@ BC_ranked <- data.frame(rank = as.factor(row.names(t(temp_BC_matrix))),t(temp_BC
   summarise(MeanBC=mean(BC)) %>%
   arrange(-desc(MeanBC)) %>%
   mutate(proportionBC=MeanBC/max(MeanBC))
-#### something weird in this section about assigning 0 contribution to diversity to the high occ/abun
+
 Increase <- BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
-increaseDF <- data.frame(IncreaseBC=c(0,(Increase)), rank=factor(c(1:(length(Increase)+1))))
+# moved the 0 in c to after Increase
+increaseDF <- data.frame(IncreaseBC=c((Increase),0), rank=factor(c(1:(length(Increase)+1))))
 BC_ranked <- left_join(BC_ranked, increaseDF)
 BC_ranked <- BC_ranked[-nrow(BC_ranked),]
-
-fo_difference <- function(pos){
-  left <- (BC_ranked[pos, 2] - BC_ranked[1, 2]) / pos
-  right <- (BC_ranked[nrow(BC_ranked), 2] - BC_ranked[pos, 2]) / (nrow(BC_ranked) - pos)
-  return(left - right)
-}
-BC_ranked$fo_diffs <- sapply(1:nrow(BC_ranked), fo_difference)
-
-elbow <- which.max(BC_ranked$fo_diffs)
-BC_ranked
-```
-
-```{r}
-
-ggplot(BC_ranked[1:200,], aes(x=factor(BC_ranked$rank[1:200], levels=BC_ranked$rank[1:200]))) +
-  geom_point(aes(y=proportionBC)) +
-  theme_classic() + theme(strip.background = element_blank(),axis.text.x = element_text(size=7, angle=45)) +
-  geom_vline(xintercept=elbow, lty=3, col='red', cex=.5) +
-  geom_vline(xintercept=last(as.numeric(BC_ranked$rank[(BC_ranked$IncreaseBC>=1.02)])), lty=3, col='blue', cex=.5) +
-  labs(x='ranked OTUs',y='Bray-Curtis similarity') +
-  annotate(geom="text", x=elbow+10, y=.15, label=paste("Elbow method"," (",elbow,")", sep=''), color="red")+    
-  annotate(geom="text", x=last(as.numeric(BC_ranked$rank[(BC_ranked$IncreaseBC>=1.02)]))-4, y=.08, label=paste("Last 2% increase (",last(as.numeric(BC_ranked$rank[(BC_ranked$IncreaseBC>=1.02)])),')',sep=''), color="blue")
 ```
 
 ```{r}

@@ -107,14 +107,6 @@ BC_ranked <- BC_ranked[-nrow(BC_ranked),]
 ```{r}
 occ_abun$fill <- 'no'
 occ_abun$fill[occ_abun$otu %in% cbind(BC_ranked, otu_ranked)$otu[cbind(BC_ranked, otu_ranked)$IncreaseBC>=1.02]] <- 'core'
-
-spp=t(otu)
-taxon=as.vector(rownames(otu))
-#took out the scnm.fit stuff
-# the high occupancy/abundance one isn't core???
-occ_abun %>% filter(otu=="KU324909.1.1217")
-occ_abun %>% filter(fill=="core")
-cbind(BC_ranked, otu_ranked)
 ```
 
 ```{r}
@@ -136,7 +128,7 @@ plotDF$otu <- factor(plotDF$otu, levels=otu_ranked$otu[1:647])
 plotDF$group <- 1
 # top 2%
 plotDF$group[plotDF$otu %in% (otu_ranked %>% top_n(0.02*nrow(otu_ranked), rank))$otu] <- 2
-# select otus occurring in 100% of samples at a site or in the highest ranke
+# select otus occurring in 100% of samples at a site and/or in the highest ranked
 filteredDF <- plotDF %>% filter(group==2) %>%
   left_join(filter(plotDF, coreSite==1))
 ```
@@ -144,11 +136,9 @@ filteredDF <- plotDF %>% filter(group==2) %>%
 ```{r}
 setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome")
 pdf("CanadaJayMicrobiome/plots/testCore.pdf")
-ggplot(filteredDF,aes(x=Territory,fill=otu, y=plot_freq)) + #, group=Territory,fill=Territory
+ggplot(filteredDF,aes(x=Territory, fill=otu, y=plot_freq)) +
   geom_bar(stat = 'identity', position = 'dodge') +
-  coord_flip() +
-  scale_fill_viridis_d() +
-  theme(axis.text = element_text(size=6)) +
+  coord_flip() + scale_fill_viridis_d() +
   labs(x='Ranked OTUs', y='Occupancy by site')
 dev.off()
 ```

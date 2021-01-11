@@ -12,13 +12,12 @@ theme_set(theme_bw())
 # read in the required data
 nReads <- 344
 otu <- read_qza("rarefied-table.qza")$data
-map <- read_tsv("input/jay-met.tsv")
+map <- read_tsv("input/jay-met.tsv")[-1,]
 
-# transforms
 otu_PA <- 1*((otu>0)==1)                                               # presence-absence data
 otu_occ <- rowSums(otu_PA)/ncol(otu_PA)                                # occupancy calculation
-otu_rel <- apply(decostand(otu, method="total", MARGIN=2),1, mean)     # mean relative abundance
-occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),'otu') # combining occupancy and abundance data frame
+otu_rel <- apply(decostand(otu, method="total", MARGIN=2),1, mean)     # relative abundance 
+occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),var="otu") # combining occupancy and abundance
 
 # Ranking OTUs based on their occupancy
 # For caluclating raking index we included following conditions:
@@ -28,14 +27,15 @@ occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),'otu') # c
 PresenceSum <- data.frame(otu = as.factor(row.names(otu)), otu) %>% 
   gather(sampleid, abun, -otu) %>%
   left_join(map, by = 'sampleid') %>%
-  group_by(otu, CollectionDate) %>%
-  summarise(time_freq=sum(abun>0)/length(abun),            # frequency of detection between time points
-            coreTime=ifelse(time_freq == 1, 1, 0)) %>%     # 1 only if occupancy 1 with specific time, 0 if not
+  group_by(otu, Territory) %>%
+  summarise(plot_freq=sum(abun>0)/length(abun),        # frequency of detection between time points
+            coreSite=ifelse(plot_freq == 1, 1, 0), # 1 only if occupancy 1 with specific site, 0 if not
+            detect=ifelse(plot_freq > 0, 1, 0)) %>%    # 1 if detected and 0 if not detected with specific site
   group_by(otu) %>%
-  summarise(sumF=sum(time_freq),
-            sumG=sum(coreTime),
-            nS=length(CollectionDate)*2,           
-            Index=(sumF+sumG)/nS)                 # calculating weighting Index based on number of time points detected and 
+  summarise(sumF=sum(plot_freq),
+            sumG=sum(coreSite),
+            nS=length(Territory)*2,
+            Index=(sumF+sumG)/nS) # calculating weighting Index based on number of time points detected and 
 
 otu_ranked <- occ_abun %>%
   left_join(PresenceSum, by='otu') %>%
@@ -46,8 +46,7 @@ otu_ranked <- occ_abun %>%
 # Calculating the contribution of ranked OTUs to the BC similarity
 BCaddition <- NULL
 
-# calculating BC dissimilarity based on the 1st ranked OTU
-otu_start=otu_ranked$otu[1]                   
+otu_start <- otu_ranked$otu[1]
 start_matrix <- as.matrix(otu[otu_start,])
 start_matrix <- t(start_matrix)
 x <- apply(combn(ncol(start_matrix), 2), 2, function(x) sum(abs(start_matrix[,x[1]]- start_matrix[,x[2]]))/(2*nReads))
@@ -55,9 +54,9 @@ x_names <- apply(combn(ncol(start_matrix), 2), 2, function(x) paste(colnames(sta
 df_s <- data.frame(x_names,x)
 names(df_s)[2] <- 1 
 BCaddition <- rbind(BCaddition,df_s)
-# calculating BC dissimilarity based on additon of ranked OTUs from 2nd to 500th. Can be set to the entire length of OTUs in the dataset, however it might take some time if more than 5000 OTUs are included.
-for(i in 2:647){                              
-  otu_add=otu_ranked$otu[i]                       
+# calculating BC dissimilarity based on additon of ranked OTUs from 2nd to 647th (entire length).
+for(i in 2:647){
+  otu_add=otu_ranked$otu[i]
   add_matrix <- as.matrix(otu[otu_add,])
   add_matrix <- t(add_matrix)
   start_matrix <- rbind(start_matrix, add_matrix)
@@ -65,10 +64,10 @@ for(i in 2:647){
   x_names <- apply(combn(ncol(start_matrix), 2), 2, function(x) paste(colnames(start_matrix)[x], collapse=' - '))
   df_a <- data.frame(x_names,x)
   names(df_a)[2] <- i 
-  BCaddition <- left_join(BCaddition, df_a, by=c('x_names'))
+  BCaddition <- left_join(BCaddition, df_a, by=c('x_names'))  
 }
-# calculating the BC dissimilarity of the whole dataset (not needed if the second loop is already including all OTUs) 
-x <-  apply(combn(ncol(otu), 2), 2, function(x) sum(abs(otu[,x[1]]-otu[,x[2]]))/(2*nReads))   
+
+x <-  apply(combn(ncol(otu), 2), 2, function(x) sum(abs(otu[,x[1]]-otu[,x[2]]))/(2*nReads))
 x_names <- apply(combn(ncol(otu), 2), 2, function(x) paste(colnames(otu)[x], collapse=' - '))
 df_full <- data.frame(x_names,x)
 names(df_full)[2] <- length(rownames(otu))
@@ -82,29 +81,16 @@ temp_BC_matrix <- as.matrix(temp_BC)
 BC_ranked <- data.frame(rank = as.factor(row.names(t(temp_BC_matrix))),t(temp_BC_matrix)) %>% 
   gather(comparison, BC, -rank) %>%
   group_by(rank) %>%
-  summarise(MeanBC=mean(BC)) %>%            # mean Bray-Curtis dissimilarity
-  arrange(desc(-MeanBC)) %>%
-  mutate(proportionBC=MeanBC/max(MeanBC))   # proportion of the dissimilarity explained by the n number of ranked OTUs
-Increase=BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
-increaseDF <- data.frame(IncreaseBC=c(0,(Increase)), rank=factor(c(1:(length(Increase)+1))))
+  summarise(MeanBC=mean(BC)) %>%
+  arrange(-desc(MeanBC)) %>%
+  mutate(proportionBC=MeanBC/max(MeanBC))
+
+Increase <- BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
+# moved the 0 in c to after Increase
+increaseDF <- data.frame(IncreaseBC=c((Increase),0), rank=factor(c(1:(length(Increase)+1))))
 BC_ranked <- left_join(BC_ranked, increaseDF)
 BC_ranked <- BC_ranked[-nrow(BC_ranked),]
 
-#Creating thresholds for core inclusion 
-
-#Method: 
-#A) Elbow method (first order difference) (script modified from https://pommevilla.github.io/random/elbows.html)
-fo_difference <- function(pos){
-  left <- (BC_ranked[pos, 2] - BC_ranked[1, 2]) / pos
-  right <- (BC_ranked[nrow(BC_ranked), 2] - BC_ranked[pos, 2]) / (nrow(BC_ranked) - pos)
-  return(left - right)
-}
-BC_ranked$fo_diffs <- sapply(1:nrow(BC_ranked), fo_difference)
-
-elbow <- which.max(BC_ranked$fo_diffs)
-
-#B) Final increase in BC similarity of equal or greater then 2% 
-lastCall <- last(as.numeric(BC_ranked$rank[(BC_ranked$IncreaseBC>=1.02)]))
 
 #Creating occupancy abundance plot
 occ_abun$fill <- 'Rare'

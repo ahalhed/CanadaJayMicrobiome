@@ -1,0 +1,58 @@
+---
+title: "Freeze-Thaw"
+author: "Alicia Halhed"
+date: "13/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(tidyverse)
+```
+
+## Read in the data
+
+```{r samples}
+# jay sampling dates
+dates <- read_excel("OneDrive - University of Guelph/Alicia's Thesis/Grey Jays/metadata/jay-ft.xlsx") %>%
+  # modify the dates to match wheather dates
+  mutate(Date = paste(word(CollectionDate, 3, sep="/"), 
+                              word(CollectionDate, 2, sep="/"), 
+                              word(CollectionDate, 1, sep="/"),
+                              sep = "-"))
+```
+
+```{r weather}
+setwd("~/OneDrive - University of Guelph/Alicia's Thesis/Grey Jays/weather-data")
+weather <- read_csv("2020.csv") %>% 
+  rbind(read_csv("2019.csv")) %>% 
+  rbind(read_csv("2018.csv")) %>% 
+  rbind(read_csv("2017.csv")) %>% 
+  rbind(read_csv("2016.csv"))
+```
+
+## Freeze thaw plot
+
+```{r}
+ggplot(weather, aes())
+```
+
+
+## How many freeze thaw events occured in the 14 days leading up to fall sampling dates?
+
+
+```{r}
+
+```
+
+
+## How many freeze thaw events occured in the caching seasons?
+
+```{r}
+read.csv()
+```
+

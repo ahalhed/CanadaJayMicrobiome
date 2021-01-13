@@ -55,8 +55,9 @@ df_s <- data.frame(x_names,x)
 names(df_s)[2] <- 1 
 BCaddition <- rbind(BCaddition,df_s)
 # calculating BC dissimilarity based on additon of ranked OTUs from 2nd to 647th (entire length).
-for(i in 2:647){
-  otu_add=otu_ranked$otu[i]
+# subscript out of bound error here on graham
+for(i in 2:648){
+  otu_add <- otu_ranked$otu[i]
   add_matrix <- as.matrix(otu[otu_add,])
   add_matrix <- t(add_matrix)
   start_matrix <- rbind(start_matrix, add_matrix)

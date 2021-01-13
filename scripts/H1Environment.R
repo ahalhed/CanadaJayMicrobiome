@@ -61,7 +61,7 @@ dev.off()
 # distance based RDA using aitchison distance matrix
 # should throw in collection season when there are more samples
 # might switch to the phyloseq implementation
-gj_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + MeanTempC,
+gj_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + MeanTempC + CollectionSeason + CollectionYear,
                    data = gj_meta, comm = otu_table(gj_ps), na.action = na.exclude)
 # look at summaries
 summary(gj_cap)
@@ -69,3 +69,8 @@ summary(gj_cap)
 pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf")
 plot(gj_cap, main = "Aitchison Distance-based RDA")
 dev.off()
+
+gj_meta %>% mutate(across(everything(), ~replace_na(.x, '')))
+# PERMANOVA
+adonis2(dmAitchison$data ~ TerritoryQuality + MeanTempC + CollectionSeason + CollectionYear + JayID,
+        data = gj_meta, na.action = na.exclude)

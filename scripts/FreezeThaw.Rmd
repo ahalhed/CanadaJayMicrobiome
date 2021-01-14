@@ -36,6 +36,14 @@ weather <- read_csv("2020.csv") %>%
   rbind(read_csv("2016.csv"))
 ```
 
+```{r}
+# add new freeze-thaw column
+weather$FreezeThaw <- ifelse(weather$`Max Temp (°C)` > -1.9 & weather$`Min Temp (°C)` < -1.9, "Freeze-Thaw",
+       ifelse(weather$`Max Temp (°C)` > -1.9 & weather$`Min Temp (°C)` > -1.9, "Warm", "Frozen"))
+# add new season column
+weather$Season <- ifelse(as.numeric(weather$Month) > 9 & as.numeric(weather$Month) < 13, "Caching", "Pre-breeding")
+```
+
 ## Freeze thaw plot
 
 ```{r}
@@ -43,11 +51,11 @@ weather <- read_csv("2020.csv") %>%
 # caching period = October-December
 # pre-breeding period = January-February
 longWeather <-  weather %>%
-  select(`Min Temp (°C)`, `Max Temp (°C)`,`Date/Time`) %>%
+  select(`Min Temp (°C)`, `Max Temp (°C)`,`Date/Time`, FreezeThaw, Season) %>%
   rename('Daily Minimum' = `Min Temp (°C)`, 
          'Daily Maximum' = `Max Temp (°C)`) %>%
   # long formatting (for making plot)
-  pivot_longer(-c(`Date/Time`), names_to = "Type", values_to = "Temperature")
+  pivot_longer(-c(`Date/Time`, FreezeThaw, Season), names_to = "Type", values_to = "Temperature")
 # select only caching period and pre-breeding period by annual season
 # 2016-2017
 weather1 <- longWeather %>% mutate(Group = "2016-2017") %>% # labelling groups
@@ -76,27 +84,45 @@ rm(longWeather, weather1, weather2, weather3, weather4)
 ```
 
 ```{r}
-ggplot(plotWeather, aes(x=Number,y=Temperature, group=Type)) +
-  #scale_x_date(date_labels = "%B") +
+ggplot(plotWeather, aes(x=Number,y=Temperature, group=Type)) + # could add in colour = FreezeThaw
   geom_line() + facet_grid(Group~.) +
   scale_x_continuous(breaks=c(1, 32, 62, 93, 124),
                      labels = c("October", "November", "December", "January", "February")) +
   geom_hline(yintercept = -1.9, linetype = "dashed") +
   theme(axis.text.x = element_text(hjust = 0, vjust = 0.5)) +
-  labs(x = "Month", y = "Temperature (°C)")
+  labs(x = "Month", y = "Daily Temperature Range (°C)")
+```
+
+## How many freeze thaw events occured in the caching seasons?
+
+```{r} 
+weather %>% group_by(Year, Season) %>% count(vars = FreezeThaw)
+```
+```{r}
+ggplot(na.omit(plotWeather), aes(x = Group, fill = FreezeThaw)) +
+  geom_bar(position = "dodge") + scale_fill_viridis_d() +
+  facet_grid(Season~.) +
+  labs(y = "Daily Temperature Events", x = "Annual Group", 
+       fill = "Temperature Event")
 ```
 
 ## How many freeze thaw events occured in the 14 days leading up to fall sampling dates?
 
+```{r}
+weather %>% rename(EventDate = `Date/Time`) %>%
+  select(EventDate, FreezeThaw, Season)
+```
 
 ```{r}
+sapply(report$date, function(x)
+    sum(as.Date(df1$startdate) < as.Date(x) &
+    as.Date(df1$enddate) > as.Date(x) & 
+    df1$state == 'Open'))
 
 ```
 
 
-## How many freeze thaw events occured in the caching seasons?
 
-```{r}
-read.csv()
-```
+
+
 

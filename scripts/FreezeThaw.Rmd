@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(readxl)
+library(lubridate)
 library(tidyverse)
 theme_set(theme_bw())
 ```
@@ -21,10 +22,8 @@ theme_set(theme_bw())
 # jay sampling dates
 dates <- read_excel("~/OneDrive - University of Guelph/Alicia's Thesis/Grey Jays/metadata/jay-ft.xlsx") %>%
   # modify the dates to match wheather dates
-  mutate(Date = paste(word(CollectionDate, 3, sep="/"), 
-                              word(CollectionDate, 2, sep="/"), 
-                              word(CollectionDate, 1, sep="/"),
-                              sep = "-"))
+  mutate(CollectionDate = dmy(.$CollectionDate))
+
 ```
 
 ```{r weather}
@@ -41,46 +40,46 @@ weather <- read_csv("2020.csv") %>%
 weather$FreezeThaw <- ifelse(weather$`Max Temp (°C)` > -1.9 & weather$`Min Temp (°C)` < -1.9, "Freeze-Thaw",
        ifelse(weather$`Max Temp (°C)` > -1.9 & weather$`Min Temp (°C)` > -1.9, "Warm", "Frozen"))
 # add new season column
-weather$Season <- ifelse(as.numeric(weather$Month) > 9 & as.numeric(weather$Month) < 13, "Caching", "Pre-breeding")
+weather$Behaviour <- ifelse(as.numeric(weather$Month) > 9 & as.numeric(weather$Month) < 13, "Caching", "Pre-breeding")
 ```
 
 ## Freeze thaw plot
+
+```{r}
+cacheGroup <- function(Data, Group, Date1, Date2) {
+  df <- Data %>% mutate(Group = Group) %>% # labelling groups
+  subset(`Date/Time` > Date1 & `Date/Time` < Date2) %>%
+  # assign a number to each date in order
+  .[order(.$`Date/Time`), ] %>% mutate(Number = rep(1:(0.5*nrow(. )), each=2))
+  return(df)
+}
+```
 
 ```{r}
 # fomatting columns
 # caching period = October-December
 # pre-breeding period = January-February
 longWeather <-  weather %>%
-  select(`Min Temp (°C)`, `Max Temp (°C)`,`Date/Time`, FreezeThaw, Season) %>%
+  select(`Min Temp (°C)`, `Max Temp (°C)`,`Date/Time`, FreezeThaw, Behaviour) %>%
   rename('Daily Minimum' = `Min Temp (°C)`, 
          'Daily Maximum' = `Max Temp (°C)`) %>%
   # long formatting (for making plot)
-  pivot_longer(-c(`Date/Time`, FreezeThaw, Season), names_to = "Type", values_to = "Temperature")
+  pivot_longer(-c(`Date/Time`, FreezeThaw, Behaviour), names_to = "Type", values_to = "Temperature")
 # select only caching period and pre-breeding period by annual season
 # 2016-2017
-weather1 <- longWeather %>% mutate(Group = "2016-2017") %>% # labelling groups
-  subset(`Date/Time` > "2016-09-30" & `Date/Time` < "2017-03-01") %>%
-  # assign a number to each date in order
-  .[order(.$`Date/Time`), ] %>% mutate(Number = rep(1:(0.5*nrow(. )), each=2))
+weather1 <- cacheGroup(longWeather, "2016-2017", "2016-09-30", "2017-03-01")
 # 2017-2018
-weather2 <- longWeather %>% mutate(Group = "2017-2018") %>%
-  subset(`Date/Time` > "2017-09-30" & `Date/Time` < "2018-03-01") %>%
-  # assign a number to each date in order
-  .[order(.$`Date/Time`), ] %>% mutate(Number = rep(1:(0.5*nrow(. )), each=2))
+weather2 <- cacheGroup(longWeather, "2017-2018", "2017-09-30", "2018-03-01")
 # 2018-2019
-weather3 <- longWeather %>% mutate(Group = "2018-2019") %>%
-  subset(`Date/Time` > "2018-09-30" & `Date/Time` < "2019-03-01") %>%
-  # assign a number to each date in order
-  .[order(.$`Date/Time`), ] %>% mutate(Number = rep(1:(0.5*nrow(. )), each=2))
+weather3 <- cacheGroup(longWeather, "2018-2019", "2018-09-30", "2019-03-01")
 # 2019-2020
-weather4 <- longWeather %>% mutate(Group = "2019-2020") %>%
-  subset(`Date/Time` > "2019-09-30" & `Date/Time` < "2020-03-01") %>%
-  # assign a number to each date in order
-  .[order(.$`Date/Time`), ] %>% mutate(Number = rep(1:(0.5*nrow(. )), each=2))
+weather4 <- cacheGroup(longWeather, "2019-2020", "2019-09-30", "2020-03-01")
+# 2020 Caching
+weather5 <-cacheGroup(longWeather, "Fall 2020", "2020-09-30", "2021-01-01")
 # combine groups
-plotWeather <- rbind(weather1, weather2) %>% rbind(., weather3) %>% rbind(., weather4)
+plotWeather <- rbind(weather1, weather2) %>% rbind(., weather3) %>% rbind(., weather4) %>% rbind(., weather5)
 # clean up
-rm(longWeather, weather1, weather2, weather3, weather4)
+rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 ```
 
 ```{r}
@@ -94,14 +93,16 @@ ggplot(plotWeather, aes(x=Number,y=Temperature, group=Type)) + # could add in co
 ```
 
 ## How many freeze thaw events occured in the caching seasons?
-
-```{r} 
-weather %>% group_by(Year, Season) %>% count(vars = FreezeThaw)
-```
 ```{r}
+# counts of freeze thaws
+plotWeather %>%
+  select(Group, FreezeThaw, Behaviour) %>% 
+  group_by(Group, Behaviour) %>% 
+  count(vars = FreezeThaw)
+# plot of counts
 ggplot(na.omit(plotWeather), aes(x = Group, fill = FreezeThaw)) +
   geom_bar(position = "dodge") + scale_fill_viridis_d() +
-  facet_grid(Season~.) +
+  facet_grid(Behaviour~.) +
   labs(y = "Daily Temperature Events", x = "Annual Group", 
        fill = "Temperature Event")
 ```
@@ -109,19 +110,42 @@ ggplot(na.omit(plotWeather), aes(x = Group, fill = FreezeThaw)) +
 ## How many freeze thaw events occured in the 14 days leading up to fall sampling dates?
 
 ```{r}
-weather %>% rename(EventDate = `Date/Time`) %>%
-  select(EventDate, FreezeThaw, Season)
+#add groups to dates
+metaWeather <- plotWeather %>% 
+  rename("CollectionDate" = "Date/Time") %>%
+  select(CollectionDate, Behaviour, Group) %>% 
+  unique %>% right_join(dates) %>%
+  remove_rownames() %>% column_to_rownames(var = "sampleid")
+# put in labels for breeding season
+metaWeather$Behaviour <- replace_na(metaWeather$Behaviour, "Breeding")
+metaWeather$Group <- replace_na(metaWeather$Group, "Spring 2020")
+if(metaWeather$CollectionSeason == "Spring" & metaWeather$CollectionYear == 2019){
+  print("Spring 2019")
+}
+if(metaWeather$CollectionSeason == "Spring" & metaWeather$CollectionYear == 2019) {"Spring 2019"}
+# read in aitchison DM
+dmAitchison <- qiime2R::read_qza("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/aitchison-distance.qza")$data %>%
+  as.matrix %>% .[rownames(metaWeather), rownames(metaWeather)]
 ```
 
 ```{r}
-sapply(report$date, function(x)
-    sum(as.Date(df1$startdate) < as.Date(x) &
-    as.Date(df1$enddate) > as.Date(x) & 
-    df1$state == 'Open'))
-
+# freeze-thaw events in the pre-breeding season for samples in the breeding season
+# freeze-thaw events in the two weeks prior for samples in the caching season
+# freeze-thaw events in the caching season for samples in the pre-breeding season
+metaWeather$FreezeThawCount <- ifelse(metaWeather$Group == "Spring 2020", 46,
+                                      ifelse(metaWeather$Group == "2019-2020" & metaWeather$Behaviour == "Pre-breeding", 90,
+                                             ifelse(metaWeather$Group == "2018-2019" & metaWeather$Behaviour == "Pre-breeding", 70, NA)))
+unique(metaWeather$CollectionDate)
 ```
 
 
+## Stats
+```{r}
+# need to put in counts above to include here
+# PERMANOVA
+vegan::adonis2(dmAitchison ~ Behaviour,
+        data = metaWeather, na.action = na.exclude)
+```
 
 
 

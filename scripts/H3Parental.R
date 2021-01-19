@@ -104,7 +104,10 @@ pcnm1 <- sample_data(offParPS) %>% as.matrix() %>% as.data.frame() %>%
 
 mod <- varpart(OTUclr, ~ ., scores(pcnm1), data = env)
 mod
+
+pdf("CanadaJayMicrobiome/plots/H3Mod.pdf")
 plot(mod)
+dev.off()
 
 # Test fraction [a+b], total environment, using RDA:
 abFrac <- rda(OTUclr ~ ., env)
@@ -120,19 +123,27 @@ RsquareAdj(aFrac)
 
 # forward selection for parsimonious model
 # env variables
+print("Environmental Variables")
 abFrac # Full model
 abFrac0 <- rda(OTUclr ~ 1, env) # Reduced model
 # Here is where the magic happens, but almost automatically!
 step.env <- ordiR2step(abFrac0, scope = formula(abFrac))
 step.env
-anova(step.env) 
-plot(step.env)
+# anova
+anova(step.env)
 step.env$anova
+# plot
+pdf("CanadaJayMicrobiome/plots/H3StepEnv.pdf")
+plot(step.env)
+dev.off()
 
 # spatial variables
+print("Spatial Variables")
 OTUclr.pcnm <- as.data.frame(scores(pcnm1))
 bcFrac <- rda(OTUclr ~ ., OTUclr.pcnm) # Full model
 bcFrac0 <- rda(OTUclr ~ 1, OTUclr.pcnm) # Reduced model
 step.space <- ordiR2step(bcFrac0, scope = formula(bcFrac))
 step.space$anova
+pdf("CanadaJayMicrobiome/plots/H3StepSpatial.pdf")
 plot(step.space)
+dev.off()

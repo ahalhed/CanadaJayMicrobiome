@@ -70,5 +70,4 @@ ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplemen
 dev.off()
 
 # PERMANOVA
-adonis2(dmAitchison$data ~ FoodSupplement + JayID + AgeAtCollection + CollectionYear,
-        data = gj_meta)
+adonis2(dmAitchison$data ~ FoodSupplement + JayID, data = gj_meta)

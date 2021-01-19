@@ -98,7 +98,7 @@ plotDFall <- left_join(AitchisonLong, mixedMeta, by = c("SampleID", "SampleID2")
 ```
 
 ```{r}
-# all distances
+# all distances within the same year and season only
 ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance,
                       colour = CollectionYear)) +
   geom_point() + scale_color_viridis_c() +

@@ -119,31 +119,43 @@ metaWeather <- plotWeather %>%
 # put in labels for breeding season
 metaWeather$Behaviour <- replace_na(metaWeather$Behaviour, "Breeding")
 metaWeather$Group <- replace_na(metaWeather$Group, "Spring 2020")
-if(metaWeather$CollectionSeason == "Spring" & metaWeather$CollectionYear == 2019){
-  print("Spring 2019")
-}
-if(metaWeather$CollectionSeason == "Spring" & metaWeather$CollectionYear == 2019) {"Spring 2019"}
+metaWeather$Group[rownames(metaWeather)=="G46"] <- "Spring 2019"
+
 # read in aitchison DM
 dmAitchison <- qiime2R::read_qza("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/aitchison-distance.qza")$data %>%
   as.matrix %>% .[rownames(metaWeather), rownames(metaWeather)]
 ```
 
 ```{r}
-# freeze-thaw events in the pre-breeding season for samples in the breeding season
-# freeze-thaw events in the two weeks prior for samples in the caching season
-# freeze-thaw events in the caching season for samples in the pre-breeding season
-metaWeather$FreezeThawCount <- ifelse(metaWeather$Group == "Spring 2020", 46,
-                                      ifelse(metaWeather$Group == "2019-2020" & metaWeather$Behaviour == "Pre-breeding", 90,
-                                             ifelse(metaWeather$Group == "2018-2019" & metaWeather$Behaviour == "Pre-breeding", 70, NA)))
-unique(metaWeather$CollectionDate)
+eventCount <- function(station, column, event){
+  # station is the data from the weather station with freeze thaw & season information
+  # column is the data frame column containing the sampling dates of interest
+  df1 <- station %>% filter(`Date/Time` %in% seq(column - days(14), column - days(1), by="day"))
+  df2 <- df1 %>% select(FreezeThaw) %>% count(vars = FreezeThaw)
+  df3 <- df2 %>% filter(vars == event) %>% .$n
+  return(df3)
+}
 ```
 
+```{r}
+# count the number of freeze-thaw days in the 14 days prior to collection
+metaWeather$FreezeThaw <- sapply(metaWeather$CollectionDate, eventCount, 
+                                 station = weather, event = 'Freeze-Thaw')
+# count the number of warm days in the 14 days prior to collection
+metaWeather$Warm <- sapply(metaWeather$CollectionDate, eventCount, 
+                                 station = weather, event = 'Warm')
+metaWeather$Warm[metaWeather$Warm== "integer(0)"] <- 0
+# count the number of cold days in the 14 days prior to collection
+metaWeather$Frozen <- sapply(metaWeather$CollectionDate, eventCount, 
+                                 station = weather, event = 'Frozen')
+metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
+```
 
 ## Stats
 ```{r}
 # need to put in counts above to include here
 # PERMANOVA
-vegan::adonis2(dmAitchison ~ Behaviour,
+vegan::adonis2(dmAitchison ~ Behaviour + Group + FreezeThaw,
         data = metaWeather, na.action = na.exclude)
 ```
 

@@ -8,7 +8,6 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(vegan)
-library(ggsignif)
 library(tidyverse)
 
 theme_set(theme_bw())

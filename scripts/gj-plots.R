@@ -56,7 +56,7 @@ ggmap(map_gj) +
 # core plot
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 # save plot
-pdf("CanadaJayMicrobiome/plots/core.pdf")
+pdf("CanadaJayMicrobiome/plots/coreAllSites.pdf")
 ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
   geom_point() +
   # log transform the x axis, set discrete viridis colour scheme

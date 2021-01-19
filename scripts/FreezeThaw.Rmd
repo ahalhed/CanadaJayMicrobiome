@@ -155,7 +155,7 @@ metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 ```{r}
 # need to put in counts above to include here
 # PERMANOVA
-vegan::adonis2(dmAitchison ~ Behaviour + Group + FreezeThaw,
+vegan::adonis2(dmAitchison ~ FreezeThaw + Behaviour + Group,
         data = metaWeather, na.action = na.exclude)
 ```
 

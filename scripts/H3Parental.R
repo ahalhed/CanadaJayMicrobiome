@@ -78,8 +78,7 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory.x)) +
   geom_boxplot() + labs(x = "Territory")
 dev.off()
 # permanova
-adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
-        data = offPar)
+adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus, data = offPar)
 # dbRDA
 gj_cap <- capscale(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
                    data = offPar, comm = otu_table(offParPS), na.action = na.exclude)

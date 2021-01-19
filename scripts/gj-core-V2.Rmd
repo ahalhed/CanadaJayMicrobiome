@@ -135,11 +135,12 @@ filteredDF <- plotDF %>% filter(group==2) %>%
 
 ```{r}
 setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome")
-pdf("CanadaJayMicrobiome/plots/testCore.pdf")
+pdf("CanadaJayMicrobiome/plots/coreSites.pdf")
 ggplot(filteredDF,aes(x=Territory, fill=otu, y=plot_freq)) +
   geom_bar(stat = 'identity', position = 'dodge') +
   coord_flip() + scale_fill_viridis_d() +
-  labs(x='Ranked OTUs', y='Occupancy by site')
+  labs(x='Canada Jay Territory in Algonquin Provincial Park',
+       y='Occupancy by site')
 dev.off()
 ```
 

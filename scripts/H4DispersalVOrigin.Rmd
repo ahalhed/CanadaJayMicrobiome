@@ -85,7 +85,7 @@ mixedMeta <- left_join(mixedLong, meta_sub) %>%
   select(JayID, JayID2, DistanceFromOrigin, CollectionYear,SampleID,SampleID2)
 ```
 
-Prepare the data for plotting.
+## Prepare the data for plotting.
 ```{r}
 # samples collected within the same year and season only
 AitchisonLong <- dmAitchison %>% 
@@ -97,17 +97,20 @@ AitchisonLong <- dmAitchison %>%
 plotDFall <- left_join(AitchisonLong, mixedMeta, by = c("SampleID", "SampleID2")) %>% .[!is.na(.$JayID),]
 ```
 
+## Plotting
+### All points
 ```{r}
 # all distances within the same year and season only
 ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance,
                       colour = CollectionYear)) +
   geom_point() + scale_color_viridis_c() +
   geom_smooth(method='lm', formula= y~x, color="black") +
-  facet_grid(~CollectionYear) +
+  #facet_grid(~CollectionYear) +
   labs(y = "Aitchison Distance",
        x = "Distance from Origin of Focal Individual (m)")
 ```
 
+### Mean
 ```{r}
 # mean aitchison by distance (could also add in year)
 meanT <- plotDFall %>%  # fall only samples
@@ -123,3 +126,29 @@ ggplot(meanT, aes(x = DistanceFromOrigin, y = AitchisonDistance)) +
        x = "Distance from Origin of Focal Individual (m)") +
   geom_smooth(method='lm', formula= y~x, color="black") 
 ```
+
+## stats
+```{r}
+# linear regression on all samples
+lm(AitchisonDistance~DistanceFromOrigin, data = plotDFall) %>%
+   summary
+# linear regression on means of all samples
+lm(AitchisonDistance~DistanceFromOrigin, data = meanT) %>%
+   summary
+```
+
+```{r}
+# 2017
+lm(AitchisonDistance~DistanceFromOrigin, 
+    data=filter(plotDFall,CollectionYear == 2017)) %>%
+   summary
+# 2018
+lm(AitchisonDistance~DistanceFromOrigin, 
+    data=filter(plotDFall,CollectionYear == 2018)) %>%
+   summary
+# 2020
+lm(AitchisonDistance~DistanceFromOrigin, 
+    data=filter(plotDFall,CollectionYear == 2020)) %>%
+   summary
+```
+

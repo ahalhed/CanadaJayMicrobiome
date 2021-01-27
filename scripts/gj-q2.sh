@@ -30,6 +30,7 @@ qiime demux summarize \
   --i-data demux-paired-end.qza \
   --o-visualization demux-paired-end.qzv
 
+
 # going to trim at 250 bp
 # this took just over two hours to run
 qiime dada2 denoise-single \
@@ -46,9 +47,11 @@ qiime metadata tabulate \
 
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
-wget -O "silva-138-99-seqs.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-seqs.qza"
+wget -O "references/silva-138-99-seqs.qza" \
+  "https://data.qiime2.org/2018.4/common/silva-128-99-seqs.qza"
 # switch 2020.8 to 2020.11 if updating q2 version
 
+# using closed reference clustering to account for the two different runs
 qiime vsearch cluster-features-closed-reference \
   --i-table table-dada2.qza \
   --i-sequences rep-seqs-dada2.qza \
@@ -94,8 +97,30 @@ qiime feature-table filter-seqs \
   --o-filtered-data rep-seqs-no-singletons.qza
 
 # create the phylogenetic tree
-# fasttree pipeline
-# vsearch closed reference
+# fragment insertion tree (best for tree building on different 16S regions)
+# have to use different versions of SILVA (128 here and 138 for OTUs) since 
+# the QIIME2 version (2020.8) only has the recent (138) SILVA for OTU picking
+# but the plugin (fragment-insertion) only has the older (128) SILVA version
+wget -O "references/sepp-refs-silva-128.qza" \
+  "https://data.qiime2.org/2020.8/common/sepp-refs-silva-128.qza"
+
+qiime fragment-insertion sepp \
+  --i-representative-sequences rep-seqs-no-singletons.qza \
+  --i-reference-database references/sepp-refs-silva-128.qza \
+  --o-tree trees/insertion-tree.qza \
+  --o-placements trees/insertion-placements.qza
+#Plugin error from fragment-insertion:
+#Command '['run-sepp.sh', '/var/folders/wd/s68yr8892s137xwylsfl43nw0000gn/T/qiime2-archive-w__w93y1/540cc42f-8cdd-4386-ae0c-a0cc195c848f/data/dna-sequences.fasta', 'q2-fragment-insertion', '-x', '1', '-A', '1000', '-P', '5000', '-a', '/var/folders/wd/s68yr8892s137xwylsfl43nw0000gn/T/qiime2-archive-ixa4qg0f/e44b5e78-31e5-4a0f-9041-494bc3ca2df2/data/aligned-dna-sequences.fasta', '-t', '/var/folders/wd/s68yr8892s137xwylsfl43nw0000gn/T/qiime2-archive-ixa4qg0f/e44b5e78-31e5-4a0f-9041-494bc3ca2df2/data/tree.nwk', '-r', '/var/folders/wd/s68yr8892s137xwylsfl43nw0000gn/T/qiime2-archive-ixa4qg0f/e44b5e78-31e5-4a0f-9041-494bc3ca2df2/data/raxml-info.txt']' returned non-zero exit status 1.
+# Debug info has been saved to /var/folders/wd/s68yr8892s137xwylsfl43nw0000gn/T/qiime2-q2cli-err-z1hbwmce.log
+
+# filter otu table based on tree
+qiime fragment-insertion filter-features \
+  --i-table table.qza \
+  --i-tree insertion-tree.qza \
+  --o-filtered-table filtered-tree-table.qza \
+  --o-removed-table removed-table.qza
+
+# fasttree pipeline (denovo - will remove if the insertion works)
 qiime phylogeny align-to-tree-mafft-fasttree \
   --i-sequences rep-seqs-no-singletons.qza \
   --o-alignment aligned-rep-seqs.qza \
@@ -109,7 +134,8 @@ qiime phylogeny align-to-tree-mafft-fasttree \
 # https://docs.qiime2.org/2020.8/data-resources/
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
-wget -O "silva-138-99-nb-classifier.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza"
+wget -O "references/silva-138-99-nb-classifier.qza" \
+  "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza"
 # if switching to 2020.11, use below link
 #https://data.qiime2.org/2020.11/common/silva-138-99-nb-classifier.qza
 # classifier ref

@@ -133,10 +133,8 @@ lapply(dist_list, max_dist)
 print("Build the community object (OTU table) for season")
 commFull <- lapply(XY_list, comm_obj, c=OTUclr)
 
-# Remove objects we're done with
-print("Removing objects that are no longer needed")
-rm(gj_meta, OTUclr, gj_ps)
-# leaving functions, just in case
+# cleanup
+rm(OTUclr, comm_obj, max_dist, met_filter, XY_list)
 
 ## Analysis time!
 # unweighted PCNM
@@ -148,22 +146,22 @@ print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
 # analysis for all OTUs
 print("Analysis for All OTUs")
-print("Variance partitioning - All OTUs")
+print("Variance partitioning")
 vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list, 
                        MoreArgs = list(~.),
                        SIMPLIFY = FALSE)
 vp_mod1_list
 # plot the partitioning
-pdf(file = "CanadaJayMicrobiome/plots/vp_mod1M.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/H1VPmod1.pdf")
 # make plot
 # plotted in numerical order by month
 lapply(vp_mod1_list, plot)
 dev.off()
-#remove vp object, done with it now
-rm(vp_mod1_list)
+# clean up
+rm(vp_mod1_list, dist_list)
 
 # test with RDA
-print("Testing with RDA (full model) - all OTUS")
+print("Testing with RDA (full model)")
 # create a tiny anonymous function to include formula syntax in call
 abFrac <- mapply(function(x,data) rda(x~., data), 
                  commFull, sea_list, SIMPLIFY=FALSE)
@@ -175,7 +173,7 @@ lapply(abFrac, anova, step=200, perm.max=1000)
 lapply(abFrac, RsquareAdj)
 
 # Test fraction [a] using partial RDA:
-print("Testing with partial RDA (fraction [a]) - all OTUS")
+print("Testing with partial RDA (fraction [a])")
 # create a tiny anonymous function to include formula syntax in call
 aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
                 commFull, pcnm_list, sea_list, SIMPLIFY=FALSE)
@@ -186,31 +184,11 @@ lapply(aFrac, anova, step=200, perm.max=1000)
 lapply(aFrac, RsquareAdj)
 
 # forward selection for parsimonious model
-print("Forward selection for parsimonious model - all OTUs")
+print("Forward selection for parsimonious model")
 
-# env variables
-print("Environmental variables - all OTUs")
-# create a tiny anonymous function to include formula syntax in call
-abFrac0 <- mapply(function(x,data) rda(x~1, data), 
-                  commFull, sea_list, SIMPLIFY=FALSE) # Reduced model
-
-step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
-                   abFrac0, abFrac, SIMPLIFY=FALSE)
-step.env # an rda model, with the final model predictor variables
-# focus on the environment that is the host
-print("Summary of environmental selection process - all OTUs")
-lapply(step.env, function(x) x$anova)
-print("ANOVA on full environmental selection - all OTUs")
-lapply(step.env, anova)
-
-# save plot
-pdf(file = "CanadaJayMicrobiome/plots/step_envM.pdf")
-# make plot
-lapply(step.env, plot)
-dev.off()
-
+print("Prediction 1A")
 # spatial variables
-print("Spatial variables - all OTU")
+print("Spatial variables")
 pcnm_df <- lapply(pcnm_list, function(x) as.data.frame(scores(x)))
 bcFrac <- mapply(function(x,data) rda(x~., data), 
                  commFull, pcnm_df, SIMPLIFY=FALSE) # Full model
@@ -221,24 +199,70 @@ step.space <- mapply(function(x,y) ordiR2step(x, scope = formula(y)),
 step.space
 
 # summary of selection process
-print("Summary of spatial selection process - all OTU")
+print("Summary of spatial selection process")
 lapply(step.space, function(x) x$anova)
-print("ANOVA on full spatial selection - all OTU")
+print("ANOVA on full spatial selection")
 lapply(step.space, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/step_spaceM.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/H1StepSpace.pdf")
 # make plot
 lapply(step.space, plot)
 dev.off()
 
-print("Partition Bray-Curtis dissimilarities - all OTUs")
+print("Partition Bray-Curtis dissimilarities")
 vdist <- lapply(commFull, dist) # euclidean dist on clr = aitchison
 pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
                vdist, scores_list, sea_list, SIMPLIFY=FALSE)
 pbcd
 
+# clean up
+rm(pcnm_list, scores_list)
+
+print("Prediction 1B")
+# env variables
+print("Environmental variables")
+# create a tiny anonymous function to include formula syntax in call
+abFrac0 <- mapply(function(x,data) rda(x~1, data), 
+                  commFull, sea_list, SIMPLIFY=FALSE) # Reduced model
+
+step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
+                   abFrac0, abFrac, SIMPLIFY=FALSE)
+step.env # an rda model, with the final model predictor variables
+# focus on the environment that is the host
+print("Summary of environmental selection process")
+lapply(step.env, function(x) x$anova)
+print("ANOVA on full environmental selection")
+lapply(step.env, anova)
+
+# save plot
+pdf(file = "CanadaJayMicrobiome/plots/H1StepEnv.pdf")
+# make plot
+lapply(step.env, plot)
+dev.off()
+
 #cleanup
 # remove objects to be replaced/no longer needed
-rm(vdist,pbcd, commFull)
-rm(abFrac, aFrac,abFrac0, step.env, pcnm_df, bcFrac, bcFrac0, step.space)
+rm(vdist,pbcd, commFull, sea_list, abFrac, aFrac, abFrac0,
+   step.env, pcnm_df, bcFrac, bcFrac0, step.space)
+
+
+# distance based RDA using aitchison distance matrix
+
+# read in aitchison distance matrix
+dmAitchison <- read_qza("aitchison-distance.qza")
+# might switch to the phyloseq implementation
+gj_cap <- capscale(dmAitchison$data ~ ProportionSpruceOnTerritory + MeanTempC + CollectionSeason + CollectionYear,
+                   data = gj_meta, comm = otu_table(gj_ps), na.action = na.exclude)
+# look at summaries
+summary(gj_cap)
+# simple biplot
+pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf")
+plot(gj_cap, main = "Aitchison Distance-based RDA")
+dev.off()
+
+# PERMANOVA
+adonis2(dmAitchison$data ~ TerritoryQuality + MeanTempC + CollectionSeason + CollectionYear + JayID,
+        data = gj_meta, na.action = na.exclude)
+# clean up
+rm(gj_meta, gj_ps, dmAitchison, gj_cap)

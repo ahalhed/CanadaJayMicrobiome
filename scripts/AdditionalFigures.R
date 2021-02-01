@@ -1,5 +1,4 @@
-# for Hypothesis 1 - related to environmental/spatial differences
-# this script is for the environmental analysis
+# additional figures that don't necessarily fit into one hypothesis
 # to load R on interactive graham
 # module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
@@ -44,7 +43,3 @@ ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = 
   geom_point() + #geom_line()
   labs(shape = "Collection Year")
 dev.off()
-# considering also averaging the samples by territory (so fewer panels)
-aitchSum <- gj_aitch_V %>% group_by(CollectionYear, CollectionSeason, Territory) %>%
-  # averages all individuals collected on the same territory in same year/season
-  summarise(PC1 = mean(PC1), PC2 = mean(PC2), PC3 = mean(PC3))

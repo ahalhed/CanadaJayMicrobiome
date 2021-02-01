@@ -110,21 +110,21 @@ dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
   select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
          JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
-  mutate(Group = "Same Territory")
+  mutate(Group = "Same as Breeder")
 # breeders with non-breeders on different territory (does not include between breeders)
 dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
   .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
   select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
          JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
-  mutate(Group = "Different Territory")
+  mutate(Group = "Different From Breeder")
 # put back together
 dm_meta <- rbind(dm_between, dm_within) %>% select(Group, everything())
 # save figure
 pdf("CanadaJayMicrobiome/plots/H3C.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Territory of Non-Breeder", y = "Aitchison Distance") +
-  geom_signif(comparisons = list(c("Different Territory", "Same Territory")), 
+  geom_signif(comparisons = list(c("Different From Breeder", "Same as Breeder")), 
               map_signif_level=TRUE)
 dev.off()
 # clean up

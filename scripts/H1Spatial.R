@@ -196,7 +196,6 @@ abFrac0 <- mapply(function(x,data) rda(x~1, data),
 
 step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
                    abFrac0, abFrac, SIMPLIFY=FALSE)
-# Error in ordiR2step(x, scope = formula(y)) : the upper scope cannot be fitted (too many terms?)
 step.env # an rda model, with the final model predictor variables
 # focus on the environment that is the host
 print("Summary of environmental selection process - all OTUs")

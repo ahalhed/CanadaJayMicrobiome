@@ -1,0 +1,112 @@
+---
+title: "Jay Counts"
+author: "Alicia Halhed"
+date: "27/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Set up
+```{r}
+# load packages
+library(qiime2R)
+library(tidyverse)
+theme_set(theme_bw())
+```
+
+```{r}
+# set working directory
+setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/CanadaJayMicrobiome")
+# read in data
+jay <- read_tsv("data/jay-met.tsv")[-1,] %>%
+  filter(JayID != "BLANK")
+jay
+```
+
+## Counts by Breeding Status and Juvenile Status
+```{r}
+# group and count
+# breeding status
+jay %>%
+  group_by(BreedingStatus) %>%
+  count()
+# breeding status and juvenile status
+jay %>%
+  group_by(BreedingStatus, JuvenileStatus) %>%
+  count()
+# breeding status, juvenile status, and collection season
+jay %>%
+  group_by(BreedingStatus, JuvenileStatus, CollectionSeason) %>%
+  count()
+# breeding status, juvenile status, collection season, and collection year
+jay %>%
+  group_by(BreedingStatus, JuvenileStatus, CollectionSeason, CollectionYear) %>%
+  count()
+```
+
+```{r}
+ggplot(jay, aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
+                fill = interaction(BreedingStatus, JuvenileStatus))) +
+  geom_bar() +
+  # reorder x axis and angle of labels
+  scale_x_discrete(limits = c("Fall 2016", "Fall 2017", "Fall 2018", "Winter 2019", 
+                              "Spring 2019", "Winter 2020", "Spring 2020", "Fall 2020")) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  # changing the interaction legend
+  # also adds viridis color scheme (d for discrete as above)
+  scale_fill_viridis_d(labels = c("Breeder (Dominant Juvenile)", "Non-Breeder (Dominant Juvenile)", "Breeder (Ejectee)",
+                                  "Breeder (Unknown)", "Non-breeder (Unknown)", "Unknown")) +
+  # adjust axis and legend names
+  labs(x = "Collection Season and Year", y = "Number of Individuals", 
+       fill = "Breeding Status (Juvenile Status)") +
+  ggtitle("Seasonal Distribution of Collected Canada Jay Oral Microbiome Samples",
+          "All Individuals by Breeding and Juvenile Status")
+
+```
+
+## Breeding Pairs
+```{r}
+jay %>% filter(BreedingStatus == "Breeder") %>%
+  group_by(Territory, CollectionYear, CollectionSeason) %>%
+  count()
+```
+
+```{r}
+jay %>% filter(BreedingStatus == "Breeder") %>%
+  ggplot(aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
+             fill = Territory)) + geom_bar() +
+  scale_fill_viridis_d() +
+  # reorder x axis labels
+  scale_x_discrete(limits = c("Fall 2016", "Fall 2017", "Fall 2018", 
+                              "Winter 2020", "Spring 2020", "Fall 2020")) +
+  # adjust axis and legend names
+  labs(x = "Collection Season and Year", y = "Number of Individuals") +
+  ggtitle("Seasonal Distribution of Collected Canada Jay Oral Microbiome Samples",
+          "Breeding Individuals Only by Territory")
+```
+
+## Non Breeders
+```{r}
+jay %>% filter(BreedingStatus == "Non-breeder") %>%
+  group_by(Territory, CollectionYear, CollectionSeason) %>%
+  count()
+```
+
+```{r}
+jay %>% filter(BreedingStatus == "Non-breeder") %>%
+  ggplot(aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
+             fill = Territory)) + geom_bar() +
+  scale_fill_viridis_d() +
+  # reorder x axis and angle of labels
+  scale_x_discrete(limits = c("Fall 2017", "Fall 2018", "Winter 2019", "Spring 2019", "Spring 2020", "Fall 2020")) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  facet_grid(~JuvenileStatus) +
+  # adjust axis and legend names
+  labs(x = "Collection Season and Year", y = "Number of Individuals") +
+  ggtitle("Seasonal Distribution of Collected Canada Jay Oral Microbiome Samples",
+          "Non-breeders Only by Territory")
+```
+

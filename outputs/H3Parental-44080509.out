@@ -1,0 +1,31 @@
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.5-7
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+Joining, by = c("sampleid", "ExtractID", "JayID", "Sex", "BirthYear", "AgeAtCollection", "SampleType", "CollectionDate", "CollectionDay", "CollectionMonth", "CollectionSeason", "CollectionYear", "FoodSupplement", "Territory", "TerritoryQuality", "ProportionSpruceOnTerritory", "BreedingStatus", "JuvenileStatus", "SampledBreederMale", "SampledBreederFemale", "LatitudeOriginDD", "LongitudeOriginDD", "LatitudeSamplingDD", "LongitudeSamplingDD", "MaxTempC", "MinTempC", "MeanTempC", "TotalPrecipMM")
+Joining, by = "Sample1"
+null device 
+          1 
+Permutation test for adonis under reduced model
+Terms added sequentially (first to last)
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = dmAitchison ~ Territory + JuvenileStatus + BreedingStatus, data = offPar)
+               Df SumOfSqs      R2      F Pr(>F)
+Territory       9   31.951 0.32101 1.3574  0.179
+JuvenileStatus  1    4.506 0.04527 1.7228  0.174
+BreedingStatus  1    5.537 0.05563 2.1170  0.100
+Residual       22   57.539 0.57809              
+Total          33   99.532 1.00000              
+null device 
+          1 
+null device 
+          1 

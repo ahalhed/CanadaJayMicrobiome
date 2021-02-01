@@ -30,16 +30,28 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
   rownames_to_column(var = "SampleID") %>% # row names need to be a column to join
   left_join(ordiAitchison$data$Vectors,.) %>%
   remove_rownames()
-# read in aitchison distance matrix
-# aitchison distances
-dmAitchison <- read_qza("aitchison-distance.qza")
+# read in core data
+coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 
-## Territory Figure
-# Corresponds to figure 3-1 from proposal. 
-# Version 1 - plot PC1/PC2 by territory
-pdf("CanadaJayMicrobiome/plots/H1pc.pdf", width = 10)
+# save plot
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/coreSites.pdf")
+ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
+  geom_point() +
+  # log transform the x axis, set discrete viridis colour scheme
+  scale_x_log10() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
+       y = "Occupancy (Proportion of Samples)",
+       color = "OTU Type")
+dev.off()
+# clean up
+rm(coreTable)
+
+## PCA plot (closed reference)
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/PCA-cr.pdf", width = 10)
 # need to sort out NA thing
 ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = JayID)) + #, group = JayID
   geom_point() + #geom_line()
   labs(shape = "Collection Year")
 dev.off()
+## PCA plot (de novo) - need to do this

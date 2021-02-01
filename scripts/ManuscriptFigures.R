@@ -23,6 +23,10 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 
+# figure 1
+# created in PPT (jay hyp/pred)
+
+# figure 2
 # map of sampling locations
 # plot the locations (test run)
 ggplot(gj_meta, aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD,
@@ -52,17 +56,3 @@ ggmap(map_gj) +
        title = "Map of Canada Jay Sampling Locations",
        subtitle = "Algonquin Park, Ontario (2016-2020)")
 
-
-# core plot
-coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
-# save plot
-pdf("CanadaJayMicrobiome/plots/coreAllSites.pdf")
-ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
-  geom_point() +
-  # log transform the x axis, set discrete viridis colour scheme
-  scale_x_log10() + scale_colour_viridis_d() + 
-  # add axis labels
-  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
-       y = "Occupancy (Proportion of Samples)",
-       color = "OTU Type")
-dev.off()

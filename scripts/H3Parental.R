@@ -128,4 +128,4 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
               map_signif_level=TRUE)
 dev.off()
 # clean up
-rm(dm_dj, dm_within, dm_meta)
+rm(dm_between, dm_within, dm_meta)

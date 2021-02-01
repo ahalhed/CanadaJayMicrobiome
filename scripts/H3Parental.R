@@ -1,14 +1,12 @@
+# set working directory
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
-#if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
-#devtools::install_github("jbisanz/qiime2R")
+# load packages
 library(qiime2R)
 library(vegan)
-library(zCompositions)
-# devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
-library(CoDaSeq)
 library(phyloseq)
+library(ggsignif)
 library(tidyverse)
-
+# set plotting theme
 theme_set(theme_bw())
 
 ## Load in the required data
@@ -43,106 +41,91 @@ offParPS <- prune_samples(sample_names(gj_ps) %in% rownames(offPar), gj_ps)
 # clean up
 rm(gj_ps, parents, offspring)
 
-# read in Aitchison ordination data
-ordiAitchison <- read_qza("aitchison-ordination.qza")$data$Vectors %>%
-  # subset to include only samples in phyloseq object
-  # this needs final testing since we don't yet have sequence data for all samples
-  filter(SampleID %in% sample_names(offParPS)) %>%
-  # combined with filtered metadata
-  # this needs final testing since we don't yet have sequence data for all samples
-  full_join(rownames_to_column(offPar, var = "SampleID"))
-
-pdf("CanadaJayMicrobiome/plots/H3nestOrdi.pdf", width = 9)
-# plot ordination data
-# territory is a proxy for nest group
-ggplot(ordiAitchison, aes(x = PC1, y = PC2, colour = Territory)) + # , linetype = Territory, group = Territory
-  geom_point(aes(shape = JuvenileStatus, size = BreedingStatus)) + 
-  stat_ellipse(type = "norm") +
-  scale_color_viridis_d()
-# working on the appearance of this one
-dev.off()
-
+# boxplots - data prep (to long)
 dmAitchison <- read_qza("H3-aitchison-distance.qza")$data
-dm_meta <- dmAitchison %>% as.matrix %>% as.data.frame %>%
+dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
   rownames_to_column(var = "Sample1") %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
   # remove same-sample comparisons
   .[-which(.$Sample1 == .$Sample2),] %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
-  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2") %>%
-  # remove across territory comparisons
-  .[-which(.$Territory.x == .$Territory.y),]
-# boxplot
-pdf("CanadaJayMicrobiome/plots/H3parentalBox.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory.x)) +
-  geom_boxplot() + labs(x = "Territory")
+  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
+
+# within territories (3A)
+# remove within territory comparisons
+dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
+  mutate(Group = "Between")
+# only within territory groups
+dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  mutate(Group = .$Territory.x)
+# put back together
+dm_meta <- rbind(dm_between, dm_within) %>% select(Group, everything())
+# save figure
+pdf("CanadaJayMicrobiome/plots/H3A.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
+  scale_x_discrete(limits = c("Between", "SWAir", "DaviesBog", "CamLkRd",
+                              "Mile36", "Arowhon", "NorthBog", "WolfHowl", "BatLake"))
 dev.off()
+# clean up
+rm(dm_between, dm_within, dm_meta)
+# need to find a test for determining if the within group variation is < than between
 # permanova
 adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus, data = offPar)
-# dbRDA
-gj_cap <- capscale(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus,
-                   data = offPar, comm = otu_table(offParPS), na.action = na.exclude)
-# look at summaries
-summary(gj_cap)
-# simple biplot
-pdf("CanadaJayMicrobiome/plots/H3Biplot.pdf")
-plot(gj_cap, main = "Aitchison Distance-based RDA")
+
+# dominant (3B)
+# only one dominant juvenile non-breeder
+# breeder (any) to non-breeder (dominant) in same territory
+dm_dj <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
+  .[which(.$JuvenileStatus.y == "DominantJuvenile" &
+                        .$BreedingStatus.y == "Non-breeder"),] %>%
+  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
+         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
+  mutate(Group = "Dominant")
+# non-breeder (not dominant juvenile) to breeder (any) in same territory
+dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
+  .[which(.$JuvenileStatus.y != "DominantJuvenile" &
+            .$BreedingStatus.y == "Non-breeder"),] %>%
+  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
+         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
+  mutate(Group = "Not Dominant")
+# put back together
+dm_meta <- rbind(dm_dj, dm_within) %>% select(Group, everything())
+# save figure
+pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance") +
+  geom_signif(comparisons = list(c("Dominant", "Not Dominant")), 
+              map_signif_level=TRUE)
 dev.off()
+# clean up
+rm(dm_dj, dm_within, dm_meta)
 
-# doing the PCNM here
-OTUclr <- cmultRepl(otu_table(offParPS), label=0, method="CZM") %>% # all OTUs
-  codaSeq.clr
-env <- sample_data(offParPS) %>% as.matrix() %>% as.data.frame() %>%
-  dplyr::select(Sex, BirthYear, Territory, ProportionSpruceOnTerritory, BreedingStatus, JuvenileStatus)
-
-
-# compute the possible spatial patterns
-pcnm1 <- sample_data(offParPS) %>% as.matrix() %>% as.data.frame() %>% 
-  dplyr::select(LatitudeSamplingDD, LongitudeSamplingDD) %>%
-  dist %>% pcnm
-
-mod <- varpart(OTUclr, ~ ., scores(pcnm1), data = env)
-mod
-
-pdf("CanadaJayMicrobiome/plots/H3Mod.pdf")
-plot(mod)
+# own offspring vs other offspring (3C)
+# breeders with non-breeders on same territory (does not include between breeders)
+dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
+  .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
+  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
+         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
+  mutate(Group = "Same Territory")
+# breeders with non-breeders on different territory (does not include between breeders)
+dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
+  .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
+  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
+         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
+  mutate(Group = "Different Territory")
+# put back together
+dm_meta <- rbind(dm_between, dm_within) %>% select(Group, everything())
+# save figure
+pdf("CanadaJayMicrobiome/plots/H3C.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + labs(x = "Territory of Non-Breeder", y = "Aitchison Distance") +
+  geom_signif(comparisons = list(c("Different Territory", "Same Territory")), 
+              map_signif_level=TRUE)
 dev.off()
-
-# Test fraction [a+b], total environment, using RDA:
-abFrac <- rda(OTUclr ~ ., env)
-anova(abFrac, step=200, perm.max=1000)
-# RsquareAdj gives the same result as component [a] of varpart
-RsquareAdj(abFrac)
-
-# Test fraction [a] using partial RDA:
-aFrac <- rda(OTUclr ~ . + Condition(scores(pcnm1)), data = env)
-anova(aFrac, step=200, perm.max=1000)
-# RsquareAdj gives the same result as component [a] of varpart
-RsquareAdj(aFrac)
-
-# forward selection for parsimonious model
-# env variables
-print("Environmental Variables")
-abFrac # Full model
-abFrac0 <- rda(OTUclr ~ 1, env) # Reduced model
-# Here is where the magic happens, but almost automatically!
-step.env <- ordiR2step(abFrac0, scope = formula(abFrac))
-step.env
-# anova
-anova(step.env)
-step.env$anova
-# plot
-pdf("CanadaJayMicrobiome/plots/H3StepEnv.pdf")
-plot(step.env)
-dev.off()
-
-# spatial variables
-print("Spatial Variables")
-OTUclr.pcnm <- as.data.frame(scores(pcnm1))
-bcFrac <- rda(OTUclr ~ ., OTUclr.pcnm) # Full model
-bcFrac0 <- rda(OTUclr ~ 1, OTUclr.pcnm) # Reduced model
-step.space <- ordiR2step(bcFrac0, scope = formula(bcFrac))
-step.space$anova
-pdf("CanadaJayMicrobiome/plots/H3StepSpatial.pdf")
-plot(step.space)
-dev.off()
+# clean up
+rm(dm_dj, dm_within, dm_meta)

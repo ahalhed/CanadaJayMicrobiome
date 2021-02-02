@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=00:30:00
+#SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 16G
 #SBATCH --job-name=ImportDemux
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out

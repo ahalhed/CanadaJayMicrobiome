@@ -3,6 +3,7 @@
 #SBATCH --time=00:30:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=deicode
+#SBATCH --dependency=afterok:44114231
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here

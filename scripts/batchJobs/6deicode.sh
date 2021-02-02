@@ -8,8 +8,15 @@
 
 #script starts here
 #----------------------------------
-# dependent on 6taxonomy.sh
+# dependent on 5taxonomy.sh
 
+# filtering out blanks
+qiime feature-table filter-samples \
+    --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --p-exclude-ids 'TRUE' \
+    --p-where "[JayID]='BLANK'" \
+    --o-filtered-table filtered-table-no-blanks.qza
 # rarefying to feed into core definition in R (needed nowhere else)
 # 344 retains all samples
 qiime feature-table rarefy \

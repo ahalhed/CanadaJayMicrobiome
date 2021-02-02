@@ -8,26 +8,119 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(vegan)
+library(lubridate)
 library(tidyverse)
 
 theme_set(theme_bw())
 
+# generate functions for analysis
+
+cacheGroup <- function(Data, Group, Date1, Date2) {
+  # Data is a dataframe with all weather data
+  # Group is the label assigned to the output
+  # Date1 and Date2 are the start/end dates of the group
+  df <- Data %>% mutate(Group = Group) %>% # labelling groups
+    subset(`Date/Time` > Date1 & `Date/Time` < Date2) %>%
+    # assign a number to each date in order
+    .[order(.$`Date/Time`), ] %>% mutate(Number = rep(1:(0.5*nrow(. )), each=2))
+  return(df)
+}
+
+eventCount <- function(column, station, event){
+  # station is the data from the weather station with freeze thaw & season information
+  # column is the data frame column containing the sampling dates of interest
+  # event is the weather event (freeze-thaw, warm, frozen)
+  df1 <- station %>% filter(`Date/Time` %in% seq(column - days(14), column - days(1), by="day"))
+  df2 <- df1 %>% select(FreezeThaw) %>% count(vars = FreezeThaw)
+  df3 <- df2 %>% filter(vars == event) %>% .$n
+  return(df3)
+}
+
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
-                         tree = "trees/rooted-tree.qza", 
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # read in the aitchison distance matrix
 dmAitchison <- read_qza("aitchison-distance.qza")
-# getting ready for boxplot
-# combine the aitchison distance data with metadata data
+
+# Prediction 2A - Freeze thaw
+# read in weather data
+weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
+  rbind(read_csv("CanadaJayMicrobiome/data/2019.csv")) %>% 
+  rbind(read_csv("CanadaJayMicrobiome/data/2018.csv")) %>% 
+  rbind(read_csv("CanadaJayMicrobiome/data/2017.csv")) %>% 
+  rbind(read_csv("CanadaJayMicrobiome/data/2016.csv"))
+# add new freeze-thaw column
+weather$FreezeThaw <- ifelse(weather$`Max Temp (°C)` > -1.9 & weather$`Min Temp (°C)` < -1.9, "Freeze-Thaw",
+                             ifelse(weather$`Max Temp (°C)` > -1.9 & weather$`Min Temp (°C)` > -1.9, "Warm", "Frozen"))
+# add new season type column
+weather$SeasonType <- ifelse(as.numeric(weather$Month) > 9, "Caching",
+                             ifelse(as.numeric(weather$Month) < 4, "Pre-breeding",
+                                    ifelse(as.numeric(weather$Month) < 6, "Breeding",
+                                           "Summer")))
+# fomatting columns
+# caching period = October-December
+# pre-breeding period = January-February
+longWeather <-  weather %>%
+  select(`Min Temp (°C)`, `Max Temp (°C)`,`Date/Time`, FreezeThaw, SeasonType) %>%
+  rename('Daily Minimum' = `Min Temp (°C)`, 
+         'Daily Maximum' = `Max Temp (°C)`) %>%
+  # long formatting (for making plot)
+  pivot_longer(-c(`Date/Time`, FreezeThaw, SeasonType), names_to = "Type", values_to = "Temperature")
+# select only caching period and pre-breeding period by annual season
+# 2016-2017
+weather1 <- cacheGroup(longWeather, "2016-2017", "2016-09-01", "2017-08-31")
+# 2017-2018
+weather2 <- cacheGroup(longWeather, "2017-2018", "2017-09-01", "2018-08-31")
+# 2018-2019
+weather3 <- cacheGroup(longWeather, "2018-2019", "2018-09-01", "2019-08-31")
+# 2019-2020
+weather4 <- cacheGroup(longWeather, "2019-2020", "2019-09-01", "2020-08-31")
+# 2020 Caching
+weather5 <-cacheGroup(longWeather, "Fall 2020", "2020-09-01", "2021-01-01")
+# combine groups
+plotWeather <- rbind(weather1, weather2) %>% rbind(., weather3) %>% rbind(., weather4) %>% rbind(., weather5)
+# clean up
+rm(longWeather, weather1, weather2, weather3, weather4, weather5)
+
+# select most relevant sample data
+dates <- gj_meta[!is.na(gj_meta$CollectionDate),] %>%
+  select(JayID, CollectionDate, CollectionDay, CollectionMonth,
+         CollectionSeason, CollectionYear, FoodSupplement,
+         TerritoryQuality, BreedingStatus) %>%
+  # modify the dates to match weather dates
+  mutate(CollectionDate = dmy(.$CollectionDate))
+# merge sample data with weather data
+metaWeather <- plotWeather %>%
+  rename("CollectionDate" = "Date/Time") %>%
+  select(CollectionDate, SeasonType, Group) %>% 
+  unique %>% right_join(dates)
+
+# Error: Problem with `filter()` input `..1`. x 'to' must be a finite number
+# count the number of freeze-thaw days in the 14 days prior to collection
+metaWeather$FreezeThaw <- sapply(metaWeather$CollectionDate, eventCount, 
+                                 station = weather, event = 'Freeze-Thaw')
+# count the number of warm days in the 14 days prior to collection
+metaWeather$Warm <- sapply(metaWeather$CollectionDate, eventCount, 
+                           station = weather, event = 'Warm')
+metaWeather$Warm[metaWeather$Warm== "integer(0)"] <- 0
+# count the number of cold days in the 14 days prior to collection
+metaWeather$Frozen <- sapply(metaWeather$CollectionDate, eventCount, 
+                             station = weather, event = 'Frozen')
+metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
+
+
+
+
+# Prediction 2B - Food supplementation
+# combine the aitchison distance data with metadata
 dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
   rownames_to_column(var = "Sample1") %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
@@ -43,8 +136,7 @@ dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
   # select only the variables of interest for the boxplot
   select(1:4, ExtractID.y, host, group)
 
-# save boxplot to PDF
-pdf("CanadaJayMicrobiome/plots/H2foodBox.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/H2BBox.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
   geom_boxplot() + labs(x = "Food Supplementation")
 dev.off()
@@ -56,7 +148,7 @@ aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%
   full_join(ordiAitchison$data$Vectors)
 
 # save ordination plot to PDF
-pdf("CanadaJayMicrobiome/plots/H2foodOrdi.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/H2BOrdi.pdf", width = 9)
 # ellipse by territory
 # shape by food
 # too few samples to get much meaningful from this

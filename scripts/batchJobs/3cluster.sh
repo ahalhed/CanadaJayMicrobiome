@@ -12,7 +12,7 @@
 
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
-wget -O "silva-138-99-seqs.qza" "https://data.qiime2.org/2020.11/common/silva-138-99-seqs.qza"
+#wget -O "references/silva-138-99-seqs.qza" "https://data.qiime2.org/2020.11/common/silva-138-99-seqs.qza"
 
 
 qiime vsearch cluster-features-closed-reference \

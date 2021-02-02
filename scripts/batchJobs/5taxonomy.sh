@@ -11,6 +11,9 @@
 #----------------------------------
 # depends on 4repSeqs.sh
 
+# loading the reference database before running taxonomy
+#wget -O "references/silva-138-99-seqs.qza" "https://data.qiime2.org/2020.11/common/silva-138-99-seqs.qza"
+
 # This has a high memory requirement (mem=128G,ntasks=16), but runs relatively quick (<30 min)
 # Classifying taxonomies (see 5taxonomyCR for closed reference)
 qiime feature-classifier classify-sklearn \

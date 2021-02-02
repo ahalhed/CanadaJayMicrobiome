@@ -9,9 +9,8 @@
 #script starts here
 #----------------------------------
 # depends on 1import.sh
-# ran out of time on first time (reset to 3hrs)
+
 # going to trim at 250 bp
-# this took just over two hours to run
 qiime dada2 denoise-single \
   --i-demultiplexed-seqs demux-paired-end.qza \
   --p-trim-left 0 \

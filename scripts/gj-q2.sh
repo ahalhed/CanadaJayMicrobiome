@@ -169,7 +169,7 @@ qiime taxa filter-table \
   --p-exclude mitochondria,chloroplast \
   --o-filtered-table filtered-table-no-singletons-mitochondria-chloroplast.qza
 
-# filtering out blanks (for H1 & H2)
+# filtering out blanks
 qiime feature-table filter-samples \
     --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
     --m-metadata-file input/jay-met.tsv \
@@ -186,7 +186,7 @@ qiime feature-table rarefy \
     --o-rarefied-table rarefied-table
 # ran gj-core.R here to produce a list of core and rare features
 
-# Hypothesis 1 & 2 - full dataset
+# Hypothesis 1
 # compute aitchison distance matrix 
 qiime deicode rpca \
     --i-table filtered-table-no-blanks.qza \
@@ -199,37 +199,52 @@ qiime emperor biplot \
     --i-biplot aitchison-ordination.qza \
     --m-sample-metadata-file input/jay-met.tsv \
     --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
-    --o-visualization aitchison-biplot.qzv \
+    --o-visualization H1biplot.qzv \
     --p-number-of-features 8
 
-# Hypothesis 3 - spring 2020 samples (nest groups)
-# using this i-table since we're filtering, so blanks will be dropped anyways
+# Hypothesis 2
+# Prediction 2B
 qiime feature-table filter-samples \
-  --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
+  --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
-  --o-filtered-table H3-filtered-table.qza
+  --p-where "[CollectionYear] IN ('2017', '2018')" \
+  --o-filtered-table H2filtered-table.qza
 
 qiime deicode rpca \
-    --i-table H3-filtered-table.qza \
+    --i-table H2filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot H3-aitchison-ordination.qza \
-    --o-distance-matrix H3-aitchison-distance.qza
+    --o-biplot H2aitchison-ordination.qza \
+    --o-distance-matrix H2aitchison-distance.qza
+
+
+# Hypothesis 3 - spring 2020 samples (nest groups)
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
+  --o-filtered-table H3filtered-table.qza
+
+qiime deicode rpca \
+    --i-table H3filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot H3aitchison-ordination.qza \
+    --o-distance-matrix H3aitchison-distance.qza
 
 # Hypothesis 4 - only samples with origin data
 # H4-samples.tsv is a list of sampleid's to keep
 qiime feature-table filter-samples \
-  --i-table filtered-table-no-singletons-mitochondria-chloroplast.qza \
+  --i-table filtered-table-no-blanks.qza \
   --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
-  --o-filtered-table H4-filtered-table.qza
+  --o-filtered-table H4filtered-table.qza
 
 qiime deicode rpca \
-    --i-table H4-filtered-table.qza \
+    --i-table H4filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot H4-aitchison-ordination.qza \
-    --o-distance-matrix H4-aitchison-distance.qza
+    --o-biplot H4aitchison-ordination.qza \
+    --o-distance-matrix H4aitchison-distance.qza
 
 # Close QIIME2
 conda deactivate

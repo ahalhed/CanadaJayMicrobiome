@@ -3,7 +3,6 @@
 #SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=vsearch
-#SBATCH --dependency=afterok:41736679
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out
 
 #script starts here
@@ -12,8 +11,7 @@
 
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
-#wget -O "silva-138-99-seqs.qza" "https://data.qiime2.org/2020.8/common/silva-138-99-seqs.qza"
-# switch 2020.8 to 2020.11 if updating q2 version
+wget -O "silva-138-99-seqs.qza" "https://data.qiime2.org/2020.11/common/silva-138-99-seqs.qza"
 
 
 qiime vsearch cluster-features-closed-reference \

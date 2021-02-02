@@ -8,6 +8,7 @@
 #script starts here
 #----------------------------------
 
+# must be in conda environment for QIIME2
 # import the sequence data
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \

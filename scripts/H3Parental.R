@@ -94,7 +94,7 @@ dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
 # put back together
 dm_meta <- rbind(dm_dj, dm_within) %>% select(Group, everything())
 # save figure
-pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/H3B.pdf")
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance") +
   geom_signif(comparisons = list(c("Dominant", "Not Dominant")), 
@@ -108,24 +108,32 @@ rm(dm_dj, dm_within, dm_meta)
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
   .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
-  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
-         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
-  mutate(Group = "Same as Breeder")
+  mutate(Group = "Non-breeder (Same Territory)")
+# breeders with breeders on same territory (does not include between non-breeders)
+dm_withinB <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$BreedingStatus.x == .$BreedingStatus.y),] %>%
+  .[which(.$BreedingStatus.y == "Breeder"),] %>%
+  mutate(Group = "Breeder (Same Territory)")
 # breeders with non-breeders on different territory (does not include between breeders)
 dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
   .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
-  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
-         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
-  mutate(Group = "Different From Breeder")
+  mutate(Group = "Non-breeder (Different Territory)")
+# breeders with breeders on different territory (does not include between non-breeders)
+dm_breeders <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$BreedingStatus.x == .$BreedingStatus.y),] %>%
+  .[which(.$BreedingStatus.y == "Breeder"),] %>%
+  mutate(Group = "Breeder (Different Territory)")
 # put back together
-dm_meta <- rbind(dm_between, dm_within) %>% select(Group, everything())
+dm_meta <- rbind(dm_between, dm_within) %>%
+  rbind(., dm_breeders) %>% rbind(., dm_withinB) %>%
+  select(Group, everything())
 # save figure
 pdf("CanadaJayMicrobiome/plots/H3C.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Territory of Non-Breeder", y = "Aitchison Distance") +
+  geom_boxplot() + labs(x = "Focal Breeder Compared to...", y = "Aitchison Distance") #+
   geom_signif(comparisons = list(c("Different From Breeder", "Same as Breeder")), 
               map_signif_level=TRUE)
 dev.off()
 # clean up
-rm(dm_between, dm_within, dm_meta)
+rm(dm_between, dm_within, dm_meta, dm_breeders, dm_withinB)

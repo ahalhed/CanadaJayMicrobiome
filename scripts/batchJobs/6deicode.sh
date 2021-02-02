@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=00:30:00
+#SBATCH --time=00:15:00
 #SBATCH --mem-per-cpu 8G
 #SBATCH --job-name=deicode
 #SBATCH --dependency=afterok:44114231

@@ -1,0 +1,14 @@
+Saved FeatureTable[Frequency] to: filtered-table-no-blanks.qza
+Saved FeatureTable[Frequency] to: rarefied-table.qza
+Saved PCoAResults % Properties('biplot') to: aitchison-ordination.qza
+Saved DistanceMatrix to: aitchison-distance.qza
+Saved Visualization to: H1biplot.qzv
+Saved FeatureTable[Frequency] to: H2filtered-table.qza
+Saved PCoAResults % Properties('biplot') to: H2aitchison-ordination.qza
+Saved DistanceMatrix to: H2aitchison-distance.qza
+Saved FeatureTable[Frequency] to: H3filtered-table.qza
+Saved PCoAResults % Properties('biplot') to: H3aitchison-ordination.qza
+Saved DistanceMatrix to: H3aitchison-distance.qza
+Saved FeatureTable[Frequency] to: H4filtered-table.qza
+Saved PCoAResults % Properties('biplot') to: H4aitchison-ordination.qza
+Saved DistanceMatrix to: H4aitchison-distance.qza

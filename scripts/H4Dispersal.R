@@ -50,7 +50,6 @@ ordiDF <- gj_meta %>%
   full_join(oriDistCol) %>% full_join(ordiAitchison$data$Vectors)
 
 ## Prediction 4A
-
 # Make an ordination plot
 pdf("CanadaJayMicrobiome/plots/H4pc.pdf")
 ggplot(ordiDF, aes(x = PC1, y = PC2, size = DistanceFromOrigin, color = AgeAtCollection)) +
@@ -64,3 +63,73 @@ dev.off()
 dmAitchison <- read_qza("H4aitchison-distance.qza")$data
 adonis2(dmAitchison ~ DistanceFromOrigin + JayID + AgeAtCollection + CollectionYear,
         data = ordiDF)
+
+## Prediction 4B
+# Pairing off samples from the same collection year. 
+# Determining least distance from origin of one sample to current location of another
+mixed <- distm(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,] %>%
+                 select(LongitudeSamplingDD, LatitudeSamplingDD), 
+               gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,] %>%
+                 select(LongitudeOriginDD, LatitudeOriginDD), 
+               fun = distHaversine) %>% as.data.frame
+# add extract labels to distances
+rownames(mixed) <- rownames(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,])
+colnames(mixed) <- rownames(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,])
+# pivot to longer (proper formatting for plotting)
+mixedLong <- mixed %>% rownames_to_column(var = "SampleID") %>%
+  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
+  .[which(.$SampleID != .$SampleID2),]
+# collect only metadata of interest
+meta_sub <- gj_meta %>%
+  select(CollectionYear, CollectionSeason, Territory, JayID) %>%
+  rownames_to_column(var = "SampleID") %>%
+  .[.$SampleID %in% oriDistCol$SampleID,]
+# samples collected within the same year and season only
+# sample data
+mixedMeta <- left_join(mixedLong, meta_sub) %>%
+  left_join(meta_sub, suffix = c("", "2"), by = c("SampleID2" = "SampleID")) %>%
+  .[.$CollectionYear==.$CollectionYear2,] %>%
+  .[.$CollectionSeason==.$CollectionSeason2,] %>%
+  .[.$CollectionSeason=="Fall",] %>% # omitting spring b/c of nest thing
+  select(JayID, JayID2, DistanceFromOrigin, CollectionYear,SampleID,SampleID2)
+# distance data
+AitchisonLong <- dmAitchison %>% 
+  as.matrix %>% as.data.frame %>% 
+  rownames_to_column(var = "SampleID") %>%
+  # pivot to longer (proper formatting for plotting)
+  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "AitchisonDistance")
+# combined
+plotDFall <- left_join(AitchisonLong, mixedMeta, by = c("SampleID", "SampleID2")) %>%
+  .[!is.na(.$JayID),]
+
+# all distances within the same year and season only
+pdf("CanadaJayMicrobiome/plots/H4B.pdf")
+ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance,
+                      colour = CollectionYear)) +
+  geom_point() + scale_color_viridis_c() +
+  geom_smooth(method='lm', formula= y~x, color="black") +
+  #facet_grid(~CollectionYear) +
+  labs(y = "Aitchison Distance",
+       x = "Distance from Origin of Focal Individual (m)")
+dev.off()
+
+# stats on linear model
+# linear regression on all samples
+print("All years")
+lm(AitchisonDistance~DistanceFromOrigin, data = plotDFall) %>%
+  summary
+# 2017
+print("2017 Only")
+lm(AitchisonDistance~DistanceFromOrigin, 
+   data=filter(plotDFall,CollectionYear == 2017)) %>%
+  summary
+# 2018
+print("2018 Only")
+lm(AitchisonDistance~DistanceFromOrigin, 
+   data=filter(plotDFall,CollectionYear == 2018)) %>%
+  summary
+# 2020
+print("2020 Only")
+lm(AitchisonDistance~DistanceFromOrigin, 
+   data=filter(plotDFall,CollectionYear == 2020)) %>%
+  summary

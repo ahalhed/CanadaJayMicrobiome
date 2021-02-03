@@ -14,7 +14,6 @@ library(tidyverse)
 theme_set(theme_bw())
 
 # generate functions for analysis
-
 cacheGroup <- function(Data, Group, Date1, Date2) {
   # Data is a dataframe with all weather data
   # Group is the label assigned to the output
@@ -47,8 +46,6 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
-# read in the aitchison distance matrix
-dmAitchison <- read_qza("aitchison-distance.qza")
 
 # Prediction 2A - Freeze thaw
 # read in weather data
@@ -86,24 +83,25 @@ weather4 <- cacheGroup(longWeather, "2019-2020", "2019-09-01", "2020-08-31")
 # 2020 Caching
 weather5 <-cacheGroup(longWeather, "Fall 2020", "2020-09-01", "2021-01-01")
 # combine groups
-plotWeather <- rbind(weather1, weather2) %>% rbind(., weather3) %>% rbind(., weather4) %>% rbind(., weather5)
+weatherCombo <- rbind(weather1, weather2) %>% rbind(., weather3) %>%
+  rbind(., weather4) %>% rbind(., weather5)
 # clean up
 rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 
 # select most relevant sample data
-dates <- gj_meta[!is.na(gj_meta$CollectionDate),] %>%
+dates <- gj_meta %>%
   select(JayID, CollectionDate, CollectionDay, CollectionMonth,
          CollectionSeason, CollectionYear, FoodSupplement,
          TerritoryQuality, BreedingStatus) %>%
   # modify the dates to match weather dates
-  mutate(CollectionDate = dmy(.$CollectionDate))
+  mutate(CollectionDate = dmy(.$CollectionDate)) %>%
+  .[!is.na(.$CollectionDate),] # remove any missing dates
 # merge sample data with weather data
-metaWeather <- plotWeather %>%
+metaWeather <- weatherCombo %>%
   rename("CollectionDate" = "Date/Time") %>%
   select(CollectionDate, SeasonType, Group) %>% 
   unique %>% right_join(dates)
 
-# Error: Problem with `filter()` input `..1`. x 'to' must be a finite number
 # count the number of freeze-thaw days in the 14 days prior to collection
 metaWeather$FreezeThaw <- sapply(metaWeather$CollectionDate, eventCount, 
                                  station = weather, event = 'Freeze-Thaw')
@@ -116,12 +114,24 @@ metaWeather$Frozen <- sapply(metaWeather$CollectionDate, eventCount,
                              station = weather, event = 'Frozen')
 metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 
+# read in the FULL aitchison distance matrix
+dmAitchison <- read_qza("aitchison-distance.qza")$data %>%
+  as.matrix() %>% # remove row without date information
+  .[!rownames(.) %in% "G0", !colnames(.) %in% "G0"]
 
+# PERMANOVA
+adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
+        data = metaWeather, na.action = na.exclude)
 
+# clean up
+rm(cacheGroup, eventCount, dates, metaWeather, weatherCombo, weather, dmAitchison)
 
 # Prediction 2B - Food supplementation
+# Read in 2017-2018 distance matrix
+dmAitchisonB <- read_qza("H2aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata
-dm_meta <- dmAitchison$data %>% as.matrix %>% as.data.frame %>%
+dm_meta <- dmAitchisonB %>%
+  as.matrix %>% as.data.frame %>%
   rownames_to_column(var = "Sample1") %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
   # remove same-sample comparisons
@@ -142,23 +152,22 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
 dev.off()
 
 # read in the aitchison ordination (probs won't keep this)
-ordiAitchison <- read_qza("aitchison-ordination.qza")
+ordiAitchison <- read_qza("H2aitchison-ordination.qza")
 # combine aitchison vectors with environmental data
 aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%
-  full_join(ordiAitchison$data$Vectors)
+  right_join(ordiAitchison$data$Vectors)
 
 # save ordination plot to PDF
-pdf("CanadaJayMicrobiome/plots/H2BOrdi.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/H2BOrdi.pdf", width = 8)
 # ellipse by territory
 # shape by food
 # too few samples to get much meaningful from this
 ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplement)) + 
   geom_point() + # points are samples
   stat_ellipse(type = "norm") + 
-  coord_fixed(ylim = c(-0.6, 0.4), xlim = c(-0.6, 0.4)) +
+  coord_fixed(ylim = c(-0.8, 0.8), xlim = c(-0.8, 0.8)) +
   labs(shape = "Food Supplementation", linetype = "Food Supplementation")
 # turn off graphics device
 dev.off()
 
-# PERMANOVA
-adonis2(dmAitchison$data ~ FoodSupplement + JayID + CollectionYear, data = gj_meta)
+# need to pick a statistical test that's not PERMANOVA

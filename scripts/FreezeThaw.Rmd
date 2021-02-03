@@ -89,8 +89,9 @@ rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 # need to adjust labels for full year
 ggplot(plotWeather, aes(x=Number,y=Temperature, group=Type)) + # could add in colour = FreezeThaw
   geom_line() + facet_grid(Group~.) +
-  scale_x_continuous(breaks=c(1, 32, 62, 93, 124),
-                     labels = c("October", "November", "December", "January", "February")) +
+  scale_x_continuous(breaks=c(1, 32, 62, 93, 124, 155, 185, 216, 246, 277, 308, 339),
+                     labels = c("October", "November", "December", "January", "February", "March",
+                                "April", "May", "June", "July", "August", "September")) +
   geom_hline(yintercept = -1.9, linetype = "dashed") +
   theme(axis.text.x = element_text(hjust = 0, vjust = 0.5)) +
   labs(x = "Month", y = "Daily Temperature Range (°C)")
@@ -121,7 +122,7 @@ metaWeather <- plotWeather %>%
   unique %>% right_join(dates)
 # read in aitchison DM
 dmAitchison <- qiime2R::read_qza("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome/aitchison-distance.qza")$data %>%
-  as.matrix %>% .[rownames(metaWeather), rownames(metaWeather)]
+  as.matrix %>% .[metaWeather$sampleid, metaWeather$sampleid]
 ```
 
 ```{r}
@@ -135,12 +136,12 @@ eventCount <- function(column, station, event){
   return(df3)
 }
 
-eventCount(metaWeather$CollectionDate[4], weather, 'Freeze-Thaw')
+#eventCount(metaWeather$CollectionDate[4], weather, 'Freeze-Thaw')
 ```
 
 ```{r}
 # count the number of freeze-thaw days in the 14 days prior to collection
-metaWeather$FreezeThaw <- mapply(eventCount, metaWeather$CollectionDate, 
+metaWeather$FreezeThaw <- sapply(metaWeather$CollectionDate, eventCount,
                                  station = weather, event = 'Freeze-Thaw')
 # count the number of warm days in the 14 days prior to collection
 metaWeather$Warm <- sapply(metaWeather$CollectionDate, eventCount, 
@@ -156,7 +157,7 @@ metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 ```{r}
 # need to put in counts above to include here
 # PERMANOVA
-vegan::adonis2(dmAitchison ~ FreezeThaw + Behaviour + Group,
+vegan::adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
         data = metaWeather, na.action = na.exclude)
 ```
 

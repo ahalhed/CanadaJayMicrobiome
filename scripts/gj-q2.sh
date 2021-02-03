@@ -48,7 +48,7 @@ qiime metadata tabulate \
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
 wget -O "references/silva-138-99-seqs.qza" \
-  "https://data.qiime2.org/2018.4/common/silva-128-99-seqs.qza"
+  "https://data.qiime2.org/2020.11/common/silva-138-99-seqs.qza"
 # switch 2020.8 to 2020.11 if updating q2 version
 
 # using closed reference clustering to account for the two different runs
@@ -103,9 +103,7 @@ qiime feature-table filter-seqs \
 # Obtaining SILVA reference database 
 # need this to do closed reference otu picking
 wget -O "references/silva-138-99-nb-classifier.qza" \
-  "https://data.qiime2.org/2020.8/common/silva-138-99-nb-classifier.qza"
-# if switching to 2020.11, use below link
-#https://data.qiime2.org/2020.11/common/silva-138-99-nb-classifier.qza
+  "https://data.qiime2.org/2020.11/common/silva-138-99-nb-classifier.qza"
 # classifier ref
 # Bokulich, N.A., Robeson, M., Dillon, M.R. bokulich-lab/RESCRIPt. Zenodo. http://doi.org/10.5281/zenodo.3891931
 # Bokulich, N.A., Kaehler, B.D., Rideout, J.R. et al. Optimizing taxonomic classification of marker-gene amplicon sequences with QIIME 2’s q2-feature-classifier plugin. Microbiome 6, 90 (2018). https://doi.org/10.1186/s40168-018-0470-z

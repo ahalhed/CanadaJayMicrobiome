@@ -11,7 +11,7 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-singletons-mitochondria-chloroplast.qza",
+gj_ps <- qza_to_phyloseq(features = "H3filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
@@ -22,26 +22,8 @@ gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
   mutate_all(na_if,"")
 rownames(gj_meta) <- sample_names(gj_ps)
 
-# select only offspring with parent information
-offspring <- gj_meta %>% rownames_to_column('sampleid') %>%
-  subset(CollectionYear == 2020) %>% subset(CollectionSeason == "Spring")
-# retain parents identified in nestlings rows
-parents <- gj_meta %>% rownames_to_column('sampleid') %>%
-  subset(JayID %in% unique(offspring$SampledBreederMale) | JayID %in% unique(offspring$SampledBreederFemale)) %>%
-  subset(CollectionYear == 2020) %>% subset(CollectionSeason == "Spring")
-# join parent and offspring together
-offPar <- full_join(offspring, parents) %>%
-  # dropping offspring where parent was only sampled in past seasons
-  #subset(Territory != "SundayCreek") %>%
-  remove_rownames() %>% column_to_rownames('sampleid')
-# subset the phyloseq object accordingly
-# this needs final testing since we don't yet have sequence data for all samples
-offParPS <- prune_samples(sample_names(gj_ps) %in% rownames(offPar), gj_ps)
-# clean up
-rm(gj_ps, parents, offspring)
-
 # boxplots - data prep (to long)
-dmAitchison <- read_qza("H3-aitchison-distance.qza")$data
+dmAitchison <- read_qza("H3aitchison-distance.qza")$data
 dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
   rownames_to_column(var = "Sample1") %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
@@ -70,7 +52,7 @@ dev.off()
 rm(dm_between, dm_within, dm_meta)
 # need to find a test for determining if the within group variation is < than between
 # permanova
-adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus, data = offPar)
+adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus, data = gj_meta)
 
 # dominant (3B)
 # only one dominant juvenile non-breeder
@@ -130,8 +112,9 @@ dm_meta <- rbind(dm_between, dm_within) %>%
 # save figure
 pdf("CanadaJayMicrobiome/plots/H3C.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Focal Breeder Compared to...", y = "Aitchison Distance") #+
-  geom_signif(comparisons = list(c("Different From Breeder", "Same as Breeder")), 
+  geom_boxplot() + labs(x = "Focal Breeder Compared to...", y = "Aitchison Distance") +
+  geom_signif(comparisons = list(c("Breeder (Different Territory)", "Breeder (Same Territory)"),
+                                 c("Non-breeder (Different Territory)", "Non-breeder (Same Territory)")), 
               map_signif_level=TRUE)
 dev.off()
 # clean up

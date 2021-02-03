@@ -132,15 +132,18 @@ lapply(dist_list, max_dist)
 print("Build the community object (OTU table) for season")
 commFull <- lapply(XY_list, comm_obj, c=OTUclr)
 
-# cleanup
-rm(OTUclr, comm_obj, max_dist, met_filter, XY_list)
-
-## Analysis time!
 # unweighted PCNM
 print("Unweighted PCNM - for use with all OTU tables")
 pcnm_list <- lapply(dist_list, pcnm)
 lapply(pcnm_list, function(x) x$vectors)
 
+# put ordisurfs here
+# ordisurf(XY_list[["xyFall2017"]], scores(pcnm_list[["xyFall2017"]], choi=5), bubble = 4, col = "black", main = "PCNM 5")
+# ordisurf(XY_list[["xySpring2020"]], scores(pcnm_list[["xySpring2020"]], choi=8), bubble = 4, col = "black", main = "PCNM 8")
+# cleanup
+rm(OTUclr, comm_obj, max_dist, met_filter, XY_list)
+
+# analysis really starts here
 print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
 # analysis for all OTUs

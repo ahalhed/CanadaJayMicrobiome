@@ -15,7 +15,7 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
+gj_ps <- qza_to_phyloseq(features = "H4filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
@@ -25,7 +25,7 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # read in the ordination aitchison matrix (only samples with origins)
-ordiAitchison <- read_qza("H4-aitchison-ordination.qza")
+ordiAitchison <- read_qza("H4aitchison-ordination.qza")
 
 ## Calculate distance between origin and sampling locations
 # this uses the Haversine to calculate half circle distance
@@ -43,26 +43,24 @@ oriDistCol <- oriDist %>% rownames_to_column(var = "SampleID") %>%
   # drop NAs from the Distance From Origin Column
   subset(!is.na(DistanceFromOrigin)) 
 
-## Combine data from 3 above sources to plots
 # select columns of interest from meta (no location or extraction info)
 ordiDF <- gj_meta %>%
   rownames_to_column(var = "SampleID") %>%
   # distance from origin and principle component axes
   full_join(oriDistCol) %>% full_join(ordiAitchison$data$Vectors)
 
+## Prediction 4A
 
-## Make an ordination plot
-pdf("CanadaJayMicrobiome/plots/H4DistanceFromOrigin.pdf")
-ggplot(ordiDF, aes(x = PC1, y = PC2, color = DistanceFromOrigin, size = AgeAtCollection)) +
-  geom_point() + labs(size = "Age at Collection", shape = "Distance from Origin (m)") +
-  coord_fixed(ylim = c(-0.3, 1), xlim = c(-0.3, 1)) + scale_color_viridis_c()
+# Make an ordination plot
+pdf("CanadaJayMicrobiome/plots/H4pc.pdf")
+ggplot(ordiDF, aes(x = PC1, y = PC2, size = DistanceFromOrigin, color = AgeAtCollection)) +
+  geom_point() + labs(color = "Age at Collection", size = "Distance from Origin (m)") +
+  coord_fixed(ylim = c(-0.35, 1), xlim = c(-0.35, 1)) +
+  #stat_ellipse() +
+  scale_color_viridis_c()
 dev.off()
 
-
-ggplot(ordiDF, aes(x=PC1, size= DistanceFromOrigin, y = AgeAtCollection)) + 
-  geom_point() + labs(size = "Distance From Origin", y = "Age at Collection")
-
 # permanova
-dmAitchison <- read_qza("H4-aitchison-distance.qza")$data
+dmAitchison <- read_qza("H4aitchison-distance.qza")$data
 adonis2(dmAitchison ~ DistanceFromOrigin + JayID + AgeAtCollection + CollectionYear,
         data = ordiDF)

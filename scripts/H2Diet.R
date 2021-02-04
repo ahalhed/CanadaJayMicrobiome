@@ -89,13 +89,16 @@ weatherCombo <- rbind(weather1, weather2) %>% rbind(., weather3) %>%
 rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 
 # select most relevant sample data
-dates <- gj_meta %>%
-  select(JayID, CollectionDate, CollectionDay, CollectionMonth,
-         CollectionSeason, CollectionYear, FoodSupplement,
+# get only those who did not receive food supplementation
+dates <- gj_meta[gj_meta$FoodSupplement == "N",] %>%
+  rownames_to_column(var = "sampleID") %>%
+  select(JayID, CollectionDate, CollectionDay, sampleID,
+         CollectionMonth, CollectionSeason, CollectionYear,
          TerritoryQuality, BreedingStatus) %>%
   # modify the dates to match weather dates
   mutate(CollectionDate = dmy(.$CollectionDate)) %>%
-  .[!is.na(.$CollectionDate),] # remove any missing dates
+  .[!is.na(.$CollectionDate),] %>% # remove any missing dates
+  remove_rownames() %>% column_to_rownames(var = "sampleID")
 # merge sample data with weather data
 metaWeather <- weatherCombo %>%
   rename("CollectionDate" = "Date/Time") %>%
@@ -117,7 +120,7 @@ metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 # read in the FULL aitchison distance matrix
 dmAitchison <- read_qza("aitchison-distance.qza")$data %>%
   as.matrix() %>% # remove row without date information
-  .[!rownames(.) %in% "G0", !colnames(.) %in% "G0"]
+  .[rownames(.) %in% rownames(dates), colnames(.) %in% rownames(dates)]
 
 # PERMANOVA
 adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,

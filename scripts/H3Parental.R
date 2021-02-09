@@ -70,16 +70,16 @@ print("Dominant Juveniles (3B)")
 # breeder (any) to non-breeder (dominant) in same territory
 dm_dj <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
-  .[which(.$JuvenileStatus.y == "DominantJuvenile" &
-                        .$BreedingStatus.y == "Non-breeder"),] %>%
+  .[which(.$JuvenileStatus.x == "DominantJuvenile" &
+                        .$BreedingStatus.x == "Non-breeder"),] %>%
   select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
          JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
   mutate(Group = "Dominant")
 # non-breeder (not dominant juvenile) to breeder (any) in same territory
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
-  .[which(.$JuvenileStatus.y != "DominantJuvenile" &
-            .$BreedingStatus.y == "Non-breeder"),] %>%
+  .[which(.$JuvenileStatus.x != "DominantJuvenile" &
+            .$BreedingStatus.x == "Non-breeder"),] %>%
   select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
          JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
   mutate(Group = "Not Dominant")
@@ -90,8 +90,10 @@ pdf("CanadaJayMicrobiome/plots/H3B.pdf")
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance") +
   geom_signif(comparisons = list(c("Dominant", "Not Dominant")), 
-              map_signif_level=TRUE)
+              map_signif_level=TRUE, test = wilcox.test)
 dev.off()
+# wilcox-test
+wilcox.test(dm_dj$AitchisonDistance, dm_within$AitchisonDistance)
 # clean up
 rm(dm_dj, dm_within, dm_meta)
 
@@ -100,22 +102,22 @@ print("Own offspring vs other offspring (3C)")
 # breeders with non-breeders on same territory (does not include between breeders)
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
-  .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
+  .[which(.$BreedingStatus.x == "Non-breeder"),] %>% # y's will be non-breeders
   mutate(Group = "Non-breeder (Same Territory)")
 # breeders with breeders on same territory (does not include between non-breeders)
 dm_withinB <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x == .$BreedingStatus.y),] %>%
-  .[which(.$BreedingStatus.y == "Breeder"),] %>%
+  .[which(.$BreedingStatus.x == "Breeder"),] %>%
   mutate(Group = "Breeder (Same Territory)")
 # breeders with non-breeders on different territory (does not include between breeders)
 dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
-  .[which(.$BreedingStatus.y == "Non-breeder"),] %>% # y's will be non-breeders
+  .[which(.$BreedingStatus.x == "Non-breeder"),] %>% # y's will be non-breeders
   mutate(Group = "Non-breeder (Different Territory)")
 # breeders with breeders on different territory (does not include between non-breeders)
 dm_breeders <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x == .$BreedingStatus.y),] %>%
-  .[which(.$BreedingStatus.y == "Breeder"),] %>%
+  .[which(.$BreedingStatus.x == "Breeder"),] %>%
   mutate(Group = "Breeder (Different Territory)")
 # put back together
 dm_meta <- rbind(dm_between, dm_within) %>%
@@ -127,7 +129,12 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Focal Breeder Compared to...", y = "Aitchison Distance") +
   geom_signif(comparisons = list(c("Breeder (Different Territory)", "Breeder (Same Territory)"),
                                  c("Non-breeder (Different Territory)", "Non-breeder (Same Territory)")), 
-              map_signif_level=TRUE)
+              map_signif_level=TRUE, test = wilcox.test)
 dev.off()
+# Mann-Whitney test
+print("Non-breeder Mann-Whitney")
+wilcox.test(dm_between$AitchisonDistance, dm_within$AitchisonDistance)
+print("Breeder Mann-Whitney")
+wilcox.test(dm_breeders$AitchisonDistance, dm_withinB$AitchisonDistance)
 # clean up
 rm(dm_between, dm_within, dm_meta, dm_breeders, dm_withinB)

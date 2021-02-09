@@ -8,6 +8,7 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(vegan)
+library(car)
 library(lubridate)
 library(tidyverse)
 
@@ -47,7 +48,7 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 
-# Prediction 2A - Freeze thaw
+print("Prediction 2A - Freeze thaw")
 # read in weather data
 weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
   rbind(read_csv("CanadaJayMicrobiome/data/2019.csv")) %>% 
@@ -129,16 +130,19 @@ adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
 # clean up
 rm(cacheGroup, eventCount, dates, metaWeather, weatherCombo, weather, dmAitchison)
 
-# Prediction 2B - Food supplementation
+print("Prediction 2B - Food supplementation")
 # Read in 2017-2018 distance matrix
 dmAitchisonB <- read_qza("H2aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata
-dm_meta <- dmAitchisonB %>%
-  as.matrix %>% as.data.frame %>%
+dm_meta <- dmAitchisonB %>% as.matrix %>% as.data.frame %>%
   rownames_to_column(var = "Sample1") %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
-  # remove same-sample comparisons
-  .[-which(.$Sample1 == .$Sample2),] %>%
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
+         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
+  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
+         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
   left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2") %>%
   # add shared food information
@@ -154,12 +158,20 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
   geom_boxplot() + labs(x = "Food Supplementation")
 dev.off()
 
+dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance
+dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance
+# Mann-Whitney test
+print("2b Mann-Whitney")
+wilcox.test(dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance,
+            dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance)
+print("2b t-test")
+t.test(dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance,
+       dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance)
 # read in the aitchison ordination (probs won't keep this)
 ordiAitchison <- read_qza("H2aitchison-ordination.qza")
 # combine aitchison vectors with environmental data
 aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%
   right_join(ordiAitchison$data$Vectors)
-
 # save ordination plot to PDF
 pdf("CanadaJayMicrobiome/plots/H2BOrdi.pdf", width = 8)
 # ellipse by territory
@@ -172,5 +184,3 @@ ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplemen
   labs(shape = "Food Supplementation", linetype = "Food Supplementation")
 # turn off graphics device
 dev.off()
-
-# need to pick a statistical test that's not PERMANOVA

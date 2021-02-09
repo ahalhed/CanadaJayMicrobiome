@@ -1,0 +1,63 @@
+[1] "Set up - working directory, packages, data"
+Loading required package: carData
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.5-7
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+✖ dplyr::recode() masks car::recode()
+✖ purrr::some()   masks car::some()
+Joining, by = "Sample1"
+[1] "Within territories (3A)"
+null device 
+          1 
+[1] "Levene's test"
+[1] "Within or between"
+Levene's Test for Homogeneity of Variance (center = median)
+       Df F value Pr(>F)
+group   1  0.4542 0.5006
+      559               
+Warning message:
+In leveneTest.default(y = y, group = group, ...) : group coerced to factor.
+[1] "Individual territories"
+Levene's Test for Homogeneity of Variance (center = median)
+       Df F value   Pr(>F)   
+group  81  1.4588 0.009137 **
+      479                    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+[1] "Dominant Juveniles (3B)"
+null device 
+          1 
+
+	Wilcoxon rank sum exact test
+
+data:  dm_dj$AitchisonDistance and dm_within$AitchisonDistance
+W = 41, p-value = 0.1231
+alternative hypothesis: true location shift is not equal to 0
+
+[1] "Own offspring vs other offspring (3C)"
+null device 
+          1 
+[1] "Non-breeder Mann-Whitney"
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  dm_between$AitchisonDistance and dm_within$AitchisonDistance
+W = 3135, p-value = 0.9128
+alternative hypothesis: true location shift is not equal to 0
+
+[1] "Breeder Mann-Whitney"
+
+	Wilcoxon rank sum test with continuity correction
+
+data:  dm_breeders$AitchisonDistance and dm_withinB$AitchisonDistance
+W = 104, p-value = 0.6003
+alternative hypothesis: true location shift is not equal to 0
+

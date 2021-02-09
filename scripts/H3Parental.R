@@ -1,6 +1,8 @@
+print("Set up - working directory, packages, data")
 # set working directory
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 # load packages
+library(car)
 library(qiime2R)
 library(vegan)
 library(phyloseq)
@@ -24,37 +26,46 @@ rownames(gj_meta) <- sample_names(gj_ps)
 
 # boxplots - data prep (to long)
 dmAitchison <- read_qza("H3aitchison-distance.qza")$data
+# need to remove duplicate comparisons
 dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
   rownames_to_column(var = "Sample1") %>%
   pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
-  # remove same-sample comparisons
-  .[-which(.$Sample1 == .$Sample2),] %>%
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
+         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
+  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
+         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
   left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
   left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
 
-# within territories (3A)
+print("Within territories (3A)")
 # remove within territory comparisons
 dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
-  mutate(Group = "Between")
+  mutate(Territory = "Between", Group = "Between")
 # only within territory groups
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  mutate(Group = .$Territory.x)
+  mutate(Territory = .$Territory.x, Group = "Within")
 # put back together
-dm_meta <- rbind(dm_between, dm_within) %>% select(Group, everything())
+dm_meta <- rbind(dm_between, dm_within) %>% select(Group, Territory, everything())
 # save figure
 pdf("CanadaJayMicrobiome/plots/H3A.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory)) +
   geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
   scale_x_discrete(limits = c("Between", "SWAir", "DaviesBog", "CamLkRd",
                               "Mile36", "Arowhon", "NorthBog", "WolfHowl", "BatLake"))
 dev.off()
+# need to find a test for determining if the within group variation is < than between
+# levene's test (car package)
+print("Levene's test")
+print("Within or between")
+leveneTest(AitchisonDistance ~ Group, data = dm_meta)
+print("Individual territories")
+leveneTest(AitchisonDistance ~ Territory.x*Territory.y, data = dm_meta)
 # clean up
 rm(dm_between, dm_within, dm_meta)
-# need to find a test for determining if the within group variation is < than between
-# permanova
-adonis2(dmAitchison ~ Territory + JuvenileStatus + BreedingStatus, data = gj_meta)
 
-# dominant (3B)
+print("Dominant Juveniles (3B)")
 # only one dominant juvenile non-breeder
 # breeder (any) to non-breeder (dominant) in same territory
 dm_dj <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
@@ -84,7 +95,8 @@ dev.off()
 # clean up
 rm(dm_dj, dm_within, dm_meta)
 
-# own offspring vs other offspring (3C)
+
+print("Own offspring vs other offspring (3C)")
 # breeders with non-breeders on same territory (does not include between breeders)
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%

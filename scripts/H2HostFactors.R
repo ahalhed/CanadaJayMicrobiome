@@ -207,23 +207,9 @@ print("ANOVA on full spatial selection")
 lapply(step.space, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/H1StepSpace.pdf")
-# make plot
-lapply(step.space, plot)
-dev.off()
 
-print("Partition Bray-Curtis dissimilarities")
-vdist <- lapply(commFull, dist) # euclidean dist on clr = aitchison
-pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
-               vdist, scores_list, sea_list, SIMPLIFY=FALSE)
-pbcd
 
-# clean up
-rm(pcnm_list, scores_list)
-
-print("Prediction 1B")
-# env variables
-print("Environmental variables")
+print("Prediction 2A - Host associated factors")
 # create a tiny anonymous function to include formula syntax in call
 abFrac0 <- mapply(function(x,data) rda(x~1, data), 
                   commFull, sea_list, SIMPLIFY=FALSE) # Reduced model

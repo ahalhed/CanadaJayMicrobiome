@@ -185,64 +185,99 @@ qiime feature-table rarefy \
 # ran gj-core.R here to produce a list of core and rare features
 
 # Hypothesis 1
-# compute aitchison distance matrix 
-qiime deicode rpca \
-    --i-table filtered-table-no-blanks.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot aitchison-ordination.qza \
-    --o-distance-matrix aitchison-distance.qza
-
-qiime emperor biplot \
-    --i-biplot aitchison-ordination.qza \
-    --m-sample-metadata-file input/jay-met.tsv \
-    --m-feature-metadata-file taxonomy/SILVA-taxonomy.qza \
-    --o-visualization H1biplot.qzv \
-    --p-number-of-features 8
-
-# Hypothesis 2
-# Prediction 2B
+# Prediction 1A & B - only breeders
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionYear] IN ('2017', '2018')" \
-  --o-filtered-table H2filtered-table.qza
-
+  --p-where "[BreedingStatus]='Breeder'" \
+  --o-filtered-table P1AB-filtered-table.qza
 qiime deicode rpca \
-    --i-table H2filtered-table.qza \
+    --i-table P1AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot H2aitchison-ordination.qza \
-    --o-distance-matrix H2aitchison-distance.qza
-
-
-# Hypothesis 3 - spring 2020 samples (nest groups)
+    --o-biplot P1AB-aitchison-ordination.qza \
+    --o-distance-matrix P1AB-aitchison-distance.qza
+# Prediction 1C - nest groups
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
-  --o-filtered-table H3filtered-table.qza
+  --o-filtered-table P1C-filtered-table.qza
 
 qiime deicode rpca \
-    --i-table H3filtered-table.qza \
+    --i-table P1C-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot H3aitchison-ordination.qza \
-    --o-distance-matrix H3aitchison-distance.qza
+    --o-biplot P1C-aitchison-ordination.qza \
+    --o-distance-matrix P1C-aitchison-distance.qza
 
-# Hypothesis 4 - only samples with origin data
-# H4-samples.tsv is a list of sampleid's to keep
+# Hypothesis 2
+# Prediction 2A - host associated factors (all samples)
+qiime deicode rpca \
+    --i-table filtered-table-no-blanks.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot P2A-aitchison-ordination.qza \
+    --o-distance-matrix P2A-aitchison-distance.qza
+
+
+# Hypothesis 3
+# Prediction 3A/B - food caching (winter and spring only)
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file CanadaJayMicrobiome/data/H4-samples.tsv \
-  --o-filtered-table H4filtered-table.qza
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
+  --o-filtered-table P3AB-filtered-table.qza
 
 qiime deicode rpca \
-    --i-table H4filtered-table.qza \
+    --i-table P3AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot H4aitchison-ordination.qza \
-    --o-distance-matrix H4aitchison-distance.qza
+    --o-biplot P3AB-aitchison-ordination.qza \
+    --o-distance-matrix P3AB-aitchison-distance.qza
+
+# Prediction 3C/D - food supplementation
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionYear] IN ('2017', '2018') AND [BreedingStatus]='Breeder'" \
+  --o-filtered-table P3CD-filtered-table.qza
+
+qiime deicode rpca \
+    --i-table P3CD-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot P3CD-aitchison-ordination.qza \
+    --o-distance-matrix P3CD-aitchison-distance.qza
+
+# Hypothesis 4 - parental care
+# all predictions
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
+  --o-filtered-table P4ABCD-filtered-table.qza
+
+qiime deicode rpca \
+    --i-table P4ABCD-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot P4ABCD-aitchison-ordination.qza \
+    --o-distance-matrix P4ABCD-aitchison-distance.qza
+
+# Hypothesis 5 - only samples with origin data
+# H5-samples.tsv is a list of sampleid's to keep
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file CanadaJayMicrobiome/data/H5-samples.tsv \
+  --o-filtered-table P5AB-filtered-table.qza
+
+qiime deicode rpca \
+    --i-table P5AB-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot P5AB-aitchison-ordination.qza \
+    --o-distance-matrix P5AB-aitchison-distance.qza
 
 # Close QIIME2
 conda deactivate

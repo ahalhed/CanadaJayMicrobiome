@@ -29,39 +29,62 @@ max_dist <- function(dm) {
   return(m)
 }
 # community object
-comm_obj <- function(XY, c) {
+comm_obj <- function(n, c) {
   # subset the OTUs (c is OTU table being subset)
-  # XY is the location metadata
+  # n is sample data with rownames to be subset
   comm <- c %>%
-    subset(., rownames(.) %in% rownames(XY)) %>%
+    subset(., rownames(.) %in% rownames(n)) %>%
     .[ , colSums(.)>0 ]
   return(comm)
 }
 # subset full metadata by season (placed inside for loop)
-met_filter <- function(meta, season, year) {
+met_filter <- function(meta, season, year, te=FALSE) {
   # meta is the full metadata table
-  met <- rownames_to_column(meta, var = "SampleID")
-  df1 <- subset(met, CollectionSeason == season) %>%
-    subset(., CollectionYear == year) %>%
-    # may need to fiddle with the env data been uses
-    # not including JayID b/c it fully constrains models
-    select("SampleID", "Sex", "BirthYear", "CollectionSeason", 
-           "CollectionYear", "BreedingStatus", "JuvenileStatus") # make sure this is dplyr select
-  df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-  # select columns with more than one level
-  df4 <- df2[sapply(df2, function(x) length(unique(x))>1)]
-  return(df4)
+  # season is the sampling season of interest
+  # year is the sampling year of interest
+  # te indicates whether to select territory data or not
+  if(missing(te)){
+    met <- rownames_to_column(meta, var = "SampleID")
+    df1 <- subset(met, CollectionSeason == season) %>%
+      subset(., CollectionYear == year)
+    df2 <- df1 %>%
+      select("SampleID", "Sex", "BirthYear", "CollectionSeason",
+             "CollectionYear", "JuvenileStatus") # make sure this is dplyr select
+    df3 <- column_to_rownames(remove_rownames(df2), var = "SampleID")
+    # select columns with more than one level
+    df4 <- df3[sapply(df3, function(x) length(unique(x))>1)]
+    return(df4)
+  } else {
+    met <- rownames_to_column(meta, var = "SampleID")
+    df1 <- subset(met, CollectionSeason == season) %>%
+      subset(., CollectionYear == year)
+    df5 <- df1 %>% select("SampleID", "ProportionSpruceOnTerritory", "MeanTempC",
+                          "CollectionSeason", "CollectionYear") # make sure this is dplyr select
+    df6 <- column_to_rownames(remove_rownames(df5), var = "SampleID") %>%
+      .[sapply(., function(x) length(unique(x))>1)]
+    return(df6)
+  }
+}
+
+dmFilter <- function(data, dm) {
+  # dm is the distance matrix
+  # data is the community object whose row names in the DM labels
+  # filtering based on the row names present in data
+  mat <- dm %>% as.matrix %>%
+    .[rownames(.) %in% rownames(data),
+      colnames(.) %in% rownames(data)]
+  d <- as.dist(mat)
+  return(d)
 }
 
 print("Prediction 1A - Spatial distribution")
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1AB-filtered-table.qza",
-                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
+gj_ps <- qza_to_phyloseq(features = "P1A-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
 
 # based on the meta function from the microbiome package
 print("Extract the metadata")
@@ -93,8 +116,7 @@ sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
 # clean up individual data frames, now that the list is there
 rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
    # not enough samples in these ones
-   seaFall2016, seaSpring2016, seaSpring2017, seaSpring2018,
-   seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2020)
+   seaSpring2017, seaSpring2018, seaWinter2017, seaWinter2018, seaWinter2020)
 
 print("Accessing the XY metadata by season")
 # loop to create individual season/year data frames
@@ -118,8 +140,7 @@ XY_list <- list(xyFall2017 = xyFall2017, xyFall2018 = xyFall2018,
 # clean up individual data frames, now that the list is there
 rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020,
    # not in list b/c not enough samples for this analysis
-   xyFall2016, xySpring2016, xySpring2017, xySpring2018,
-   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2020)
+   xySpring2017, xySpring2018, xyWinter2017, xyWinter2018, xyWinter2020)
 
 print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters
@@ -128,20 +149,15 @@ dist_list <- lapply(XY_list, function(x) distm(x, x, fun = distHaversine))
 print("Maximum Distance (m) by Collection Season")
 lapply(dist_list, max_dist)
 
-
 print("Build the community objects (OTU table) for season")
 commFull <- lapply(XY_list, comm_obj, c=OTUclr)
 
-# unweighted PCNM
 print("Unweighted PCNM - for use with all OTU tables")
 pcnm_list <- lapply(dist_list, pcnm)
 lapply(pcnm_list, function(x) x$vectors)
 
-# put ordisurfs here
-# ordisurf(XY_list[["xyFall2017"]], scores(pcnm_list[["xyFall2017"]], choi=5), bubble = 4, col = "black", main = "PCNM 5")
-# ordisurf(XY_list[["xySpring2020"]], scores(pcnm_list[["xySpring2020"]], choi=8), bubble = 4, col = "black", main = "PCNM 8")
 # cleanup
-rm(OTUclr, comm_obj, max_dist, met_filter, XY_list)
+rm(OTUclr, max_dist, XY_list)
 
 # analysis really starts here
 print("Acessing PCNM scores")
@@ -154,7 +170,7 @@ vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list,
                        SIMPLIFY = FALSE)
 vp_mod1_list
 # plot the partitioning
-pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/H1VPmod1.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/P1AVPmod1.pdf")
 # make plot
 # plotted in numerical order by month
 lapply(vp_mod1_list, plot)
@@ -204,7 +220,7 @@ print("ANOVA on full spatial selection")
 lapply(step.space, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/H1StepSpace.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/P1AStepSpace.pdf")
 # make plot
 lapply(step.space, plot)
 dev.off()
@@ -216,29 +232,103 @@ pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
 pbcd
 
 # clean up
-rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df,
-   pcnm_list, scores_list, step.space, vdist)
+rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, gj_meta, commFull,
+   gj_ps, pcnm_list, scores_list, step.space, vdist, sea_list)
 
 print("Prediction 1B - territory quality")
-dmFilter <- function(data, dm) {
-  # dm is the distance matrix
-  # data is the community object whose row names in the DM labels
-  # filtering based on the row names present in data
-  mat <- dm %>% as.matrix %>%
-    .[rownames(.) %in% rownames(data),
-      colnames(.) %in% rownames(data)]
-  d <- as.dist(mat)
-  return(d)
+print("Read in the Data")
+print("Building phyloseq object")
+gj_ps <- qza_to_phyloseq(features = "P1B-filtered-table.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+
+# based on the meta function from the microbiome package
+print("Extract the metadata")
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+gj_meta[is.na(gj_meta)] <- "" # putting blanks instead of NA to fix complete case issue
+
+print("Accessing the metadata by season/year")
+# loop to create individual season data frames
+for (YeaR in unique(gj_meta$CollectionYear)) {
+  for (SeaSon in unique(gj_meta$CollectionSeason)) {
+    met <- met_filter(gj_meta, SeaSon, YeaR, te=TRUE)
+    assign(paste0("sea",SeaSon,YeaR),met)
+    rm(met)
+  }
 }
+# make a list of the season data frames generated from the loop
+sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
+                 seaFall2020 = seaFall2020, seaSpring2020 = seaSpring2020)
+# clean up individual data frames, now that the list is there
+rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
+   # not enough samples in these ones
+   seaSpring2017, seaSpring2018, seaWinter2017, seaWinter2018, seaWinter2020)
+
+print("CLR transformation")
+# rows are OTUs, then transposed to OTUs as column
+# impute the OTU table
+OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
+  codaSeq.clr # compute the CLR values
+print("Build the community objects (OTU table) for season")
+commFull <- lapply(sea_list, comm_obj, c=OTUclr)
 # read in aitchison distance matrix
-dmAitchison <- read_qza("P1AB-aitchison-distance.qza")$data
+dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
 # filter distance matrix by year/season
 dmYear <- lapply(commFull, dmFilter, dmAitchison)
-# might switch to the phyloseq implementation
+# non transformed OTUs
+# working on looping the capscale below
 mapply(capscale, dmYear, comm = commFull, data=sea_list, 
        MoreArgs = list(~ProportionSpruceOnTerritory + MeanTempC),
        SIMPLIFY = FALSE)
-gj_cap <- capscale(dmYear[["xyFall2017"]] ~ ProportionSpruceOnTerritory + MeanTempC,
-                   data = sea_list[["xyFall2017"]], comm = commFull[["xyFall2017"]], na.action = na.exclude)
+gj_cap <- capscale(dmYear[["seaFall2017"]] ~ ProportionSpruceOnTerritory + MeanTempC,
+         data = sea_list[["seaFall2017"]], comm = commFull[["xyFall2017"]], na.action = na.exclude)
 # look at summaries
 summary(gj_cap)
+#clean up
+rm(commFull, dmYear, gj_cap, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
+   comm_obj, dmFilter, met_filter)
+
+print("Prediction 1C - Territorial distribution")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "P1C-filtered-table.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
+  mutate_all(na_if,"")
+rownames(gj_meta) <- sample_names(gj_ps)
+
+# boxplots - data prep (to long)
+dmAitchison <- read_qza("P1C-aitchison-distance.qza")$data
+# need to remove duplicate comparisons
+dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
+  rownames_to_column(var = "Sample1") %>%
+  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
+         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
+  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
+         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
+  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
+  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
+
+# remove within territory comparisons
+dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
+  mutate(Territory = "Between", Group = "Between")
+# only within territory groups
+dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  mutate(Territory = .$Territory.x, Group = "Within")
+# put back together
+dm_meta <- rbind(dm_between, dm_within) %>% select(Group, Territory, everything())
+# save figure
+pdf("CanadaJayMicrobiome/plots/P1C.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory)) +
+  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
+  scale_x_discrete(limits = c("Between", "SWAir", "DaviesBog", "CamLkRd",
+                              "Mile36", "Arowhon", "NorthBog", "WolfHowl", "BatLake"))
+dev.off()

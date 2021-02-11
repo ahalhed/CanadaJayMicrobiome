@@ -185,18 +185,26 @@ qiime feature-table rarefy \
 # ran gj-core.R here to produce a list of core and rare features
 
 # Hypothesis 1
-# Prediction 1A & B - only breeders
+# Prediction 1A - only breeders without supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
-  --o-filtered-table P1AB-filtered-table.qza
+  --o-filtered-table P1A-filtered-table.qza
+
+# Prediction 1B - only breeders without supplementation and with territory infor
+qiime feature-table filter-samples \
+  --i-table P1A-filtered-table.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
+  --o-filtered-table P1B-filtered-table.qza
 qiime deicode rpca \
-    --i-table P1AB-filtered-table.qza \
+    --i-table P1B-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P1AB-aitchison-ordination.qza \
-    --o-distance-matrix P1AB-aitchison-distance.qza
+    --o-biplot P1B-aitchison-ordination.qza \
+    --o-distance-matrix P1B-aitchison-distance.qza
+
 # Prediction 1C - nest groups
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \

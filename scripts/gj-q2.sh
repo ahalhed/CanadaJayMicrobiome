@@ -189,7 +189,7 @@ qiime feature-table rarefy \
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
-  --p-where "[BreedingStatus]='Breeder'" \
+  --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
   --o-filtered-table P1AB-filtered-table.qza
 qiime deicode rpca \
     --i-table P1AB-filtered-table.qza \

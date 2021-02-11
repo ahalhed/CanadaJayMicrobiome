@@ -53,10 +53,11 @@ met_filter <- function(meta, season, year) {
   return(df4)
 }
 
+print("Prediction 1A - Spatial distribution")
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
+gj_ps <- qza_to_phyloseq(features = "P1AB-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -92,8 +93,8 @@ sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
 # clean up individual data frames, now that the list is there
 rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
    # not enough samples in these ones
-   seaFall2016, seaFall2019, seaSpring2016, seaSpring2017, seaSpring2018, seaSpring2019,
-   seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2019, seaWinter2020)
+   seaFall2016, seaSpring2016, seaSpring2017, seaSpring2018,
+   seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2020)
 
 print("Accessing the XY metadata by season")
 # loop to create individual season/year data frames
@@ -117,8 +118,8 @@ XY_list <- list(xyFall2017 = xyFall2017, xyFall2018 = xyFall2018,
 # clean up individual data frames, now that the list is there
 rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020,
    # not in list b/c not enough samples for this analysis
-   xyFall2016, xyFall2019, xySpring2016, xySpring2017, xySpring2018, xySpring2019,
-   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2019, xyWinter2020)
+   xyFall2016, xySpring2016, xySpring2017, xySpring2018,
+   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2020)
 
 print("Computing Haversine Distances")
 # using Haversine distance to get distance between sampling locations in meters
@@ -128,12 +129,8 @@ print("Maximum Distance (m) by Collection Season")
 lapply(dist_list, max_dist)
 
 
-## community objects
-# subset the samples from the core microbiome
-print("Build the community object (OTU table) for season")
+print("Build the community objects (OTU table) for season")
 commFull <- lapply(XY_list, comm_obj, c=OTUclr)
-
-print("Prediction 1A - Spatial distribution")
 
 # unweighted PCNM
 print("Unweighted PCNM - for use with all OTU tables")
@@ -170,7 +167,6 @@ print("Testing with RDA (full model)")
 # create a tiny anonymous function to include formula syntax in call
 abFrac <- mapply(function(x,data) rda(x~., data), 
                  commFull, sea_list, SIMPLIFY=FALSE)
-
 abFrac # Full model
 
 lapply(abFrac, anova, step=200, perm.max=1000)
@@ -190,7 +186,6 @@ lapply(aFrac, RsquareAdj)
 
 # forward selection for parsimonious model
 print("Forward selection for parsimonious model")
-
 # spatial variables
 print("Spatial variables")
 pcnm_df <- lapply(pcnm_list, function(x) as.data.frame(scores(x)))
@@ -221,4 +216,29 @@ pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
 pbcd
 
 # clean up
-rm(pcnm_list, scores_list)
+rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df,
+   pcnm_list, scores_list, step.space, vdist)
+
+print("Prediction 1B - territory quality")
+dmFilter <- function(data, dm) {
+  # dm is the distance matrix
+  # data is the community object whose row names in the DM labels
+  # filtering based on the row names present in data
+  mat <- dm %>% as.matrix %>%
+    .[rownames(.) %in% rownames(data),
+      colnames(.) %in% rownames(data)]
+  d <- as.dist(mat)
+  return(d)
+}
+# read in aitchison distance matrix
+dmAitchison <- read_qza("P1AB-aitchison-distance.qza")$data
+# filter distance matrix by year/season
+dmYear <- lapply(commFull, dmFilter, dmAitchison)
+# might switch to the phyloseq implementation
+mapply(capscale, dmYear, comm = commFull, data=sea_list, 
+       MoreArgs = list(~ProportionSpruceOnTerritory + MeanTempC),
+       SIMPLIFY = FALSE)
+gj_cap <- capscale(dmYear[["xyFall2017"]] ~ ProportionSpruceOnTerritory + MeanTempC,
+                   data = sea_list[["xyFall2017"]], comm = commFull[["xyFall2017"]], na.action = na.exclude)
+# look at summaries
+summary(gj_cap)

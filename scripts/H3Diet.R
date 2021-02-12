@@ -36,9 +36,10 @@ eventCount <- function(column, station, event){
   return(df3)
 }
 
+print("Prediction 3A + B - Data for freeze thaw")
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
+gj_ps <- qza_to_phyloseq(features = "P3AB-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
@@ -48,7 +49,6 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 
-print("Prediction 2A - Freeze thaw")
 # read in weather data
 weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
   rbind(read_csv("CanadaJayMicrobiome/data/2019.csv")) %>% 
@@ -89,6 +89,7 @@ weatherCombo <- rbind(weather1, weather2) %>% rbind(., weather3) %>%
 # clean up
 rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 
+print("Prediction 3A - Freeze thaw variation")
 # select most relevant sample data
 # get only those who did not receive food supplementation
 dates <- gj_meta[gj_meta$FoodSupplement == "N",] %>%

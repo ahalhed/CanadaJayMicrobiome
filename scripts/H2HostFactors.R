@@ -41,7 +41,16 @@ met_filter <- function(meta, season, year) {
   df4 <- df2[sapply(df2, function(x) length(unique(x))>1)]
   return(df4)
 }
-
+dmFilter <- function(data, dm) {
+  # dm is the distance matrix
+  # data is the community object whose row names in the DM labels
+  # filtering based on the row names present in data
+  mat <- dm %>% as.matrix %>%
+    .[rownames(.) %in% rownames(data),
+      colnames(.) %in% rownames(data)]
+  d <- as.dist(mat)
+  return(d)
+}
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
@@ -149,32 +158,51 @@ print("ANOVA on full environmental selection")
 lapply(step.env, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/H1StepEnv.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/P2AStepEnv.pdf")
 # make plot
 lapply(step.env, plot)
 dev.off()
 
 #cleanup
 # remove objects to be replaced/no longer needed
-rm(commFull, sea_list, abFrac, abFrac0, step.env)
-
+rm(abFrac, abFrac0, step.env, dist_list, gj_meta, gj_ps, scores_list, pcnm_list)
 
 # distance based RDA using aitchison distance matrix
-
 # read in aitchison distance matrix
-dmAitchison <- read_qza("P2A-aitchison-distance.qza")
+dmAitchison <- read_qza("P2A-aitchison-distance.qza")$data
+# filter dm by year/season
+dmYear <- lapply(commFull, dmFilter, dmAitchison)
+
 # might switch to the phyloseq implementation
-gj_cap <- capscale(dmAitchison$data ~ Sex + BirthYear + BreedingStatus + JuvenileStatus,
-                   data = gj_meta, comm = otu_table(gj_ps), na.action = na.exclude)
+for (i in names(dmYear)) {
+  cap <- capscale(dmYear[[i]] ~ Sex + BirthYear + BreedingStatus + JuvenileStatus,
+           data = sea_list[[i]], comm = commFull[[i]])
+  assign(paste0("cap",i),cap)
+  rm(i, cap)
+}
+
+# make a list of the capscale data generated from the loop
+cap_list <- list(capseaFall2017 = capseaFall2017, capseaFall2018 = capseaFall2018, 
+                 capseaFall2020 = capseaFall2020, capseaSpring2020 = capseaSpring2020)
+# clean up individual data frames, now that the list is there
+rm(capseaFall2017, capseaFall2018, capseaFall2020, capseaSpring2020)
+
 # look at summaries
-summary(gj_cap)
+cap_list
+lapply(cap_list, summary)
+
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/H1envBiplot.pdf")
-plot(gj_cap, main = "Aitchison Distance-based RDA")
+pdf("CanadaJayMicrobiome/plots/P2AenvBiplot.pdf", width = 14)
+lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 
 # PERMANOVA
-adonis2(dmAitchison$data ~ Sex + BirthYear + BreedingStatus + JuvenileStatus,
-        data = gj_meta, na.action = na.exclude)
+for (i in names(dmYear)) {
+  p <- adonis2(dmYear[[i]] ~ BreedingStatus + JuvenileStatus + BirthYear + Sex,
+          data = sea_list[[i]])
+  print(i)
+  print(p)
+  rm(i, p)
+}
 # clean up
-rm(gj_meta, gj_ps, dmAitchison, gj_cap)
+rm(dmAitchison, dmYear, dmFilter, sea_list, cap_list, commFull)

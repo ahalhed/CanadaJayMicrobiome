@@ -279,19 +279,35 @@ dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
 dmYear <- lapply(commFull, dmFilter, dmAitchison)
 # non transformed OTUs
 # working on looping the capscale below
-mapply(capscale, dmYear, comm = commFull, data=sea_list, 
-       MoreArgs = list(~ProportionSpruceOnTerritory + MeanTempC),
-       SIMPLIFY = FALSE)
-gj_cap <- capscale(dmYear[["seaFall2017"]] ~ ProportionSpruceOnTerritory + MeanTempC,
-         data = sea_list[["seaFall2017"]], comm = commFull[["xyFall2017"]], na.action = na.exclude)
+# might switch to the phyloseq implementation
+for (i in names(dmYear)) {
+  cap <- capscale(dmYear[[i]] ~ ProportionSpruceOnTerritory + MeanTempC,
+                  data = sea_list[[i]], comm = commFull[[i]])
+  assign(paste0("cap",i),cap)
+  rm(i, cap)
+}
+
+# make a list of the capscale data generated from the loop
+cap_list <- list(capseaFall2017 = capseaFall2017, capseaFall2018 = capseaFall2018, 
+                 capseaFall2020 = capseaFall2020, capseaSpring2020 = capseaSpring2020)
+# clean up individual data frames, now that the list is there
+rm(capseaFall2017, capseaFall2018, capseaFall2020, capseaSpring2020)
+
 # look at summaries
-summary(gj_cap)
+cap_list
+lapply(cap_list, summary)
+
+# simple biplot
+pdf("CanadaJayMicrobiome/plots/P1BterBiplot.pdf", width = 12)
+lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
+dev.off()
+
 #clean up
-rm(commFull, dmYear, gj_cap, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
+rm(commFull, dmYear, cap_list, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
    comm_obj, dmFilter, met_filter)
 
 print("Prediction 1C - Territorial distribution")
-## Load in the required data
+## Load in the required data - only samples within spring 2020
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P1C-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%

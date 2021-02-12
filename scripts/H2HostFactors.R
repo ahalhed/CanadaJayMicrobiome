@@ -158,7 +158,7 @@ print("ANOVA on full environmental selection")
 lapply(step.env, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/P2AStepEnv.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/P2AStepEnv.pdf", width = 10)
 # make plot
 lapply(step.env, plot)
 dev.off()
@@ -192,7 +192,7 @@ cap_list
 lapply(cap_list, summary)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P2AenvBiplot.pdf", width = 14)
+pdf("CanadaJayMicrobiome/plots/P2AenvBiplot.pdf", width = 12)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 

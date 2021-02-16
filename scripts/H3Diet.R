@@ -41,6 +41,7 @@ print("Prediction 3A + B - Data for freeze thaw")
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P3AB-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         tree = "trees/insertion-tree.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)

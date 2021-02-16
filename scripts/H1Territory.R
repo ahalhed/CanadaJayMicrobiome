@@ -322,6 +322,7 @@ pdf("CanadaJayMicrobiome/plots/P1Bheatmap.pdf", height = 75)
 plot_heatmap(psH, "RDA", "euclidean", "TerritoryQuality",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
+
 #clean up
 rm(commFull, dmYear, cap_list, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
    comm_obj, dmFilter, met_filter, bH, psH, psH50)

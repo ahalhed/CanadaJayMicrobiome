@@ -237,11 +237,15 @@ rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, gj_meta, commFull,
 
 print("Prediction 1B - territory quality")
 print("Read in the Data")
+# bring in gneiss heirarchy
+bH <- read_qza("P1B-gradient-hierarchy.qza")$data
 print("Building phyloseq object")
 gj_ps <- qza_to_phyloseq(features = "P1B-filtered-table.qza",
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F),
+           sample_data(.), phy_tree(bH), tax_table(.))
 
 # based on the meta function from the microbiome package
 print("Extract the metadata")
@@ -302,9 +306,25 @@ pdf("CanadaJayMicrobiome/plots/P1BterBiplot.pdf", width = 12)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 
+# heatmap
+# update phyloseq object with clr transformed OTUs
+psH <- phyloseq(otu_table(OTUclr, taxa_are_rows = F),
+                sample_data(gj_ps), phy_tree(bH),
+                tax_table(gj_ps))
+# test with 50 most common taxa
+psH50 <- prune_taxa(names(sort(taxa_sums(psH),TRUE)[1:50]), psH)
+pdf("CanadaJayMicrobiome/plots/P1Bheatmap50.pdf", height = 10)
+plot_heatmap(psH50, "RDA", "euclidean", "TerritoryQuality", "Genus",
+             low = "#440154FF", high = "#FDE725FF")
+dev.off()
+# with all
+pdf("CanadaJayMicrobiome/plots/P1Bheatmap.pdf", height = 75)
+plot_heatmap(psH, "RDA", "euclidean", "TerritoryQuality",
+             low = "#440154FF", high = "#FDE725FF")
+dev.off()
 #clean up
 rm(commFull, dmYear, cap_list, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
-   comm_obj, dmFilter, met_filter)
+   comm_obj, dmFilter, met_filter, bH, psH, psH50)
 
 print("Prediction 1C - Territorial distribution")
 ## Load in the required data - only samples within spring 2020

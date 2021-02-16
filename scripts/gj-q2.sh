@@ -192,7 +192,7 @@ qiime feature-table filter-samples \
   --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
   --o-filtered-table P1A-filtered-table.qza
 
-# Prediction 1B - only breeders without supplementation and with territory infor
+# Prediction 1B - only breeders without supplementation and with territory information
 qiime feature-table filter-samples \
   --i-table P1A-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -204,6 +204,22 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot P1B-aitchison-ordination.qza \
     --o-distance-matrix P1B-aitchison-distance.qza
+
+# differential abundance testing
+qiime gneiss gradient-clustering \
+  --i-table P1B-filtered-table.qza \
+  --m-gradient-file input/jay-met.tsv \
+  --m-gradient-column ProportionSpruceOnTerritory \
+  --o-clustering P1B-gradient-hierarchy.qza
+# dendrogram-heatmap is deprecated and will be removed in a future version of this plugin.
+qiime gneiss dendrogram-heatmap \
+  --i-table P1B-filtered-table.qza \
+  --i-tree P1B-gradient-hierarchy.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --m-metadata-column TerritoryQuality \
+  --p-color-map viridis \
+  --o-visualization P1B-heatmap.qzv
+
 
 # Prediction 1C - nest groups
 qiime feature-table filter-samples \
@@ -236,13 +252,16 @@ qiime feature-table filter-samples \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
   --o-filtered-table P3AB-filtered-table.qza
-
+#may need to change this to being just A (b may not need ordination/distance)
 qiime deicode rpca \
     --i-table P3AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot P3AB-aitchison-ordination.qza \
     --o-distance-matrix P3AB-aitchison-distance.qza
+
+# Prediction 3B
+
 
 # Prediction 3C/D - food supplementation
 qiime feature-table filter-samples \

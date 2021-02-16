@@ -119,8 +119,8 @@ metaWeather$Frozen <- sapply(metaWeather$CollectionDate, eventCount,
                              station = weather, event = 'Frozen')
 metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 
-# read in the FULL aitchison distance matrix
-dmAitchison <- read_qza("aitchison-distance.qza")$data %>%
+# read in the aitchison distance matrix
+dmAitchison <- read_qza("P3AB-aitchison-distance.qza")$data %>%
   as.matrix() %>% # remove row without date information
   .[rownames(.) %in% rownames(dates), colnames(.) %in% rownames(dates)]
 
@@ -131,7 +131,13 @@ adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
 # clean up
 rm(cacheGroup, eventCount, dates, metaWeather, weatherCombo, weather, dmAitchison)
 
-print("Prediction 2B - Food supplementation")
+print("Prediction 3B - Shared OTUs")
+
+
+# clean up - removing 3A+B data
+rm(gj_meta, gj_ps)
+
+print("Prediction 3C - Food supplementation")
 # Read in 2017-2018 distance matrix
 dmAitchisonB <- read_qza("H2aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata

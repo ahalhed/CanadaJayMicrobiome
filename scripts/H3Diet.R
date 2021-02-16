@@ -41,7 +41,7 @@ print("Prediction 3A + B - Data for freeze thaw")
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P3AB-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         tree = "trees/insertion-tree.qza",
+                         tree = "trees/rooted_tree.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -133,7 +133,7 @@ adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
 rm(cacheGroup, eventCount, dates, metaWeather, weatherCombo, weather, dmAitchison)
 
 print("Prediction 3B - Shared OTUs")
-
+#going to put heatmap?
 
 # clean up - removing 3A+B data
 rm(gj_meta, gj_ps)

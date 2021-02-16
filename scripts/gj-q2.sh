@@ -172,17 +172,11 @@ qiime taxa filter-seqs \
   --p-exclude mitochondria,chloroplast \
   --o-filtered-sequences rep-seqs-no-singletons-mitochondria-chloroplast.qza
 
-# insert tree
-# using old release of silva (128) since that's what's available for this plugin
-wget -O "references/sepp-refs-silva-128.qza" \
-  "https://data.qiime2.org/2020.11/common/sepp-refs-silva-128.qza"
-#mkdir trees
-# generate tree
-qiime fragment-insertion sepp \
-  --i-representative-sequences rep-seqs-no-singletons-mitochondria-chloroplast.qza \
-  --i-reference-database references/sepp-refs-silva-128.qza \
-  --o-tree trees/insertion-tree.qza \
-  --o-placements trees/insertion-placements.qza
+# make phylogenetic tree (wanted to do insertion but ref was dif version so nah)
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs-no-singletons-mitochondria-chloroplast.qza \
+  --p-n-threads 'auto' \
+  --output-dir trees
 
 # filtering out blanks
 qiime feature-table filter-samples \

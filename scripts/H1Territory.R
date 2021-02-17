@@ -108,7 +108,7 @@ for (YeaR in unique(gj_meta$CollectionYear)) {
     rm(met)
   }
 }
-
+# try using group_split instead of loop
 # need to fix something with sex in above loop
 # make a list of the season data frames generated from the loop
 sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
@@ -344,7 +344,7 @@ cap_list
 lapply(cap_list, summary)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P1CterBiplot.pdf", width = 15, height = 9)
+pdf("CanadaJayMicrobiome/plots/P1CterBiplot.pdf", width = 17.5, height = 9)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 

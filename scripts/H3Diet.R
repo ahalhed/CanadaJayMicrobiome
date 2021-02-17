@@ -167,39 +167,37 @@ adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
 # clean up
 rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison)
 
-print("Prediction 3B - Shared OTUs")
-# scatter - x is freeze thaw events, y is % total OTUs shared
+print("Prediction 3B - Shared microbiota")
+# extract taxonomy (was thinking I would collapse by this)
+tax <- as(tax_table(gj_ps), "matrix") %>% as.data.frame %>%
+  rownames_to_column(var = "OTU")
+# scatter - x is freeze thaw events, y is % total microbiota shared
 otu_df <- as(otu_table(gj_ps), "matrix") %>%
   as.data.frame %>% rownames_to_column(var = "sampleID") %>%
   pivot_longer(-sampleID, names_to = "OTU", values_to = "Count") %>%
   select(sampleID, OTU, Count) %>%
   .[which(.$Count > 0),] # select only those present
 
-# from https://stackoverflow.com/questions/53756030/how-to-calculate-common-values-across-different-groups
-otuShared <- otu_df %>% group_by(OTU) %>% 
-  summarise(combos = list(unique(c(unique(sampleID),
-                                   paste(unique(sampleID), collapse = '_'))))) %>%
-  unnest(cols = c(combos)) %>% group_by(combos) %>% count() %>%
-  right_join(data.frame(combos = c(unique(otu_df$sampleID),
-                                   combn(unique(otu_df$sampleID), 2, paste, collapse = '_'))))
-plot3B <- otuShared %>% ungroup %>%
-  mutate(shared = replace_na(n, 0),
-         Sample1 = word(combos, 2, sep = "_"),
-         Sample2 = word(combos, 1, sep = "_")) %>%
-  select(shared, Sample1, Sample2) %>%
-  left_join(plot3A) %>% # join shared with weather data
-  na.omit # remove single sample tallies
+# combine samples by shared OTUs
+plot3B <- full_join(otu_df, otu_df, by = "OTU") %>%
+  .[-which(.$sampleID.x == .$sampleID.y),] %>%
+  select(sampleID.x, sampleID.y) %>%
+  group_by(sampleID.x, sampleID.y) %>% # group by samples
+  rename(Sample1 = sampleID.x, Sample2 = sampleID.y) %>%
+  count %>% # count the number of times the groups occur
+  left_join(plot3A) %>% # add sample data for plotting
+  na.omit() %>% ungroup # tidy data for plotting
 
 pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
-ggplot(plot3B, aes(x = FreezeThaw, y = shared)) +
+ggplot(plot3B, aes(x = FreezeThaw, y = n)) +
   geom_point() + facet_grid(CollectionSeason~Year) +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
-       y = "Number of Shared OTUs")
+       y = "Number of Shared Taxa")
 dev.off()
 
 # clean up - removing 3A+B data
 rm(metaWeather, gj_ps, plot3A, plot3B,
-   otu_df, otuShared)
+   otu_df)
 
 print("Prediction 3C + D - Data for Supplementation")
 ## Load in the required data

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=0-00:05:00
-#SBATCH --mem-per-cpu 1G
+#SBATCH --time=0-00:01:00
+#SBATCH --mem-per-cpu 500M
 #SBATCH --job-name=H1Territory
 #SBATCH --output=outputs/%x-%j.out
 

@@ -201,50 +201,43 @@ qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
-  --o-filtered-table P1A-filtered-table.qza
+  --o-filtered-table P1AB-filtered-table.qza
 
-# Prediction 1B - only breeders without supplementation and with territory information
-qiime feature-table filter-samples \
-  --i-table P1A-filtered-table.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
-  --o-filtered-table P1B-filtered-table.qza
+# Prediction 1C - territory groups (all breeding statuses, without food supplementation)
 qiime deicode rpca \
-    --i-table P1B-filtered-table.qza \
+    --i-table P1AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot P1B-aitchison-ordination.qza \
     --o-distance-matrix P1B-aitchison-distance.qza
-
-# differential abundance testing
-qiime gneiss gradient-clustering \
-  --i-table P1B-filtered-table.qza \
-  --m-gradient-file input/jay-met.tsv \
-  --m-gradient-column ProportionSpruceOnTerritory \
-  --o-clustering P1B-gradient-hierarchy.qza
-# dendrogram-heatmap is deprecated and will be removed in a future version of this plugin.
-qiime gneiss dendrogram-heatmap \
-  --i-table P1B-filtered-table.qza \
-  --i-tree P1B-gradient-hierarchy.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column TerritoryQuality \
-  --p-color-map viridis \
-  --o-visualization P1B-heatmap.qzv
-
-
-# Prediction 1C - territory groups (all breeding statuses, without food supplementation)
+  
+# Prediction 1C - only breeders without supplementation and with territory information
 qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
+  --i-table P1AB-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
-  --p-where "[FoodSupplement]='N'" \
+  --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
   --o-filtered-table P1C-filtered-table.qza
-
 qiime deicode rpca \
     --i-table P1C-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot P1C-aitchison-ordination.qza \
     --o-distance-matrix P1C-aitchison-distance.qza
+
+# differential abundance testing
+qiime gneiss gradient-clustering \
+  --i-table P1C-filtered-table.qza \
+  --m-gradient-file input/jay-met.tsv \
+  --m-gradient-column ProportionSpruceOnTerritory \
+  --o-clustering P1C-gradient-hierarchy.qza
+# dendrogram-heatmap is deprecated and will be removed in a future version of this plugin.
+qiime gneiss dendrogram-heatmap \
+  --i-table P1C-filtered-table.qza \
+  --i-tree P1C-gradient-hierarchy.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --m-metadata-column TerritoryQuality \
+  --p-color-map viridis \
+  --o-visualization P1C-heatmap.qzv
 
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)

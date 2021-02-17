@@ -58,7 +58,7 @@ met_filter <- function(meta, season, year, te=FALSE) {
     met <- rownames_to_column(meta, var = "SampleID")
     df1 <- subset(met, CollectionSeason == season) %>%
       subset(., CollectionYear == year)
-    df5 <- df1 %>% select("SampleID", "ProportionSpruceOnTerritory", "MeanTempC",
+    df5 <- df1 %>% select("SampleID", "ProportionSpruceOnTerritory", "TerritoryQuality",
                           "CollectionSeason", "CollectionYear") # make sure this is dplyr select
     df6 <- column_to_rownames(remove_rownames(df5), var = "SampleID") %>%
       .[sapply(., function(x) length(unique(x))>1)]
@@ -81,7 +81,7 @@ print("Prediction 1A - Spatial distribution")
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1A-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P1AB-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -232,15 +232,57 @@ pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
 pbcd
 
 # clean up
-rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, gj_meta, commFull,
+rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, commFull,
    gj_ps, pcnm_list, scores_list, step.space, vdist, sea_list)
 
-print("Prediction 1B - territory quality")
+print("Prediction 1B - Territorial distribution")
+# boxplots - data prep (to long)
+dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
+# need to remove duplicate comparisons
+dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
+  rownames_to_column(var = "Sample1") %>%
+  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
+         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
+  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
+         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
+  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
+  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
+
+# remove within territory comparisons
+dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
+  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
+  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
+  mutate(Territory = "Between", Group = "Between",
+         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
+# only within territory groups
+dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
+  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
+  mutate(Territory = .$Territory.x, Group = "Within",
+         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
+# put back together
+dm_meta <- rbind(dm_between, dm_within) %>%
+  select(Group, Territory, CollectionYear, everything())
+# save figure
+pdf("CanadaJayMicrobiome/plots/P1B.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
+  facet_grid(CollectionYear~CollectionSeason) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+dev.off()
+# clean up
+rm(dm_all, dm_between, dm_meta, dm_within, gj_meta, dmAitchison)
+
+
+print("Prediction 1C - territory quality")
 print("Read in the Data")
 # bring in gneiss heirarchy
-bH <- read_qza("P1B-gradient-hierarchy.qza")$data
+bH <- read_qza("P1C-gradient-hierarchy.qza")$data
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1B-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P1C-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -278,14 +320,14 @@ OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
 print("Build the community objects (OTU table) for season")
 commFull <- lapply(sea_list, comm_obj, c=OTUclr)
 # read in aitchison distance matrix
-dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
+dmAitchison <- read_qza("P1C-aitchison-distance.qza")$data
 # filter distance matrix by year/season
 dmYear <- lapply(commFull, dmFilter, dmAitchison)
 # non transformed OTUs
 # working on looping the capscale below
 # might switch to the phyloseq implementation
 for (i in names(dmYear)) {
-  cap <- capscale(dmYear[[i]] ~ ProportionSpruceOnTerritory + MeanTempC,
+  cap <- capscale(dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality,
                   data = sea_list[[i]], comm = commFull[[i]])
   assign(paste0("cap",i),cap)
   rm(i, cap)
@@ -302,7 +344,7 @@ cap_list
 lapply(cap_list, summary)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P1BterBiplot.pdf", width = 12)
+pdf("CanadaJayMicrobiome/plots/P1CterBiplot.pdf", width = 12, height = 12)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 
@@ -313,12 +355,12 @@ psH <- phyloseq(otu_table(OTUclr, taxa_are_rows = F),
                 tax_table(gj_ps))
 # test with 50 most common taxa
 psH50 <- prune_taxa(names(sort(taxa_sums(psH),TRUE)[1:50]), psH)
-pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Bheatmap50.pdf", height = 10)
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Cheatmap50.pdf", height = 10)
 plot_heatmap(psH50, "RDA", "euclidean", "TerritoryQuality", "Genus",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
 # with all
-pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Bheatmap.pdf", height = 75)
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Cheatmap.pdf", height = 75)
 plot_heatmap(psH, "RDA", "euclidean", "TerritoryQuality",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
@@ -326,57 +368,3 @@ dev.off()
 #clean up
 rm(commFull, dmYear, cap_list, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
    comm_obj, dmFilter, met_filter, bH, psH, psH50)
-
-print("Prediction 1C - Territorial distribution")
-## Load in the required data - only samples within spring 2020
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P1C-filtered-table.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
-  mutate_all(na_if,"")
-rownames(gj_meta) <- sample_names(gj_ps)
-
-# boxplots - data prep (to long)
-dmAitchison <- read_qza("P1C-aitchison-distance.qza")$data
-# need to remove duplicate comparisons
-dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
-  rownames_to_column(var = "Sample1") %>%
-  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
-  # filter out duplicated comparisons (taling "lower" part of dm df)
-  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
-         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
-  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
-  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
-         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
-  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
-  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
-
-# remove within territory comparisons
-dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
-  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
-  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
-  mutate(Territory = "Between", Group = "Between",
-         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
-# only within territory groups
-dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
-  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
-  mutate(Territory = .$Territory.x, Group = "Within",
-         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
-# put back together
-dm_meta <- rbind(dm_between, dm_within) %>%
-  select(Group, Territory, CollectionYear, everything())
-# save figure
-pdf("CanadaJayMicrobiome/plots/P1C.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory)) +
-  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
-  facet_grid(CollectionYear~CollectionSeason) +
-  scale_x_discrete(limits = c("Between", "Arowhon", "BatLake", "CamLkRd",
-                              "ClarkeLake", "Cliff", "DaviesBog", "HeadCreek",
-                              "Mile36", "NorthBog", "OpeoTurn", "SWAir",
-                              "WestRose", "WolfHowl")) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
-dev.off()

@@ -318,7 +318,7 @@ plot_heatmap(psH50, "RDA", "euclidean", "TerritoryQuality", "Genus",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
 # with all
-pdf("CanadaJayMicrobiome/plots/P1Bheatmap.pdf", height = 75)
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Bheatmap.pdf", height = 75)
 plot_heatmap(psH, "RDA", "euclidean", "TerritoryQuality",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()

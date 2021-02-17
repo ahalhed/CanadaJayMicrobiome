@@ -36,6 +36,24 @@ eventCount <- function(column, station, event){
   return(df3)
 }
 
+longDM <- function(dm, metric){
+  # dm is a distance matrix of interest
+  # metric is the name of the distance metric in matrix
+  df1 <- dm %>% as.matrix %>% as.data.frame %>%
+    rownames_to_column(var = "Sample1")
+  df2 <- df1 %>% pivot_longer(-Sample1, names_to = "Sample2", values_to = metric)
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  df3 <- df2 %>%
+    mutate(Sample1 = gsub("G", "",as.character(factor(.$Sample1))) %>% as.numeric(), 
+           Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+    .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ]
+  df4 <- df3 %>% mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample names
+                        Sample2 = paste0("G", as.character(Sample2)))
+  df5 <- left_join(df4, rownames_to_column(gj_meta, var = "Sample1")) %>% # joining with sample data
+    left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
+  return(df5)
+}
+
 print("Prediction 3A + B - Data for freeze thaw")
 ## Load in the required data
 # build the phyloseq object
@@ -124,6 +142,24 @@ dmAitchison <- read_qza("P3AB-aitchison-distance.qza")$data %>%
   as.matrix() %>% # remove row without date information
   .[rownames(.) %in% dates$sampleID, colnames(.) %in% dates$sampleID]
 
+# get data frame with sames collected on the same date
+plot3A <- longDM(dmAitchison, "AitchisonDistance") %>%
+  .[which(.$CollectionDate.x == .$CollectionDate.y),] %>%
+  mutate(CollectionDate = dmy(CollectionDate.x),
+         Year = CollectionYear.x) %>%
+  select(CollectionDate, AitchisonDistance, Year, Sample1, Sample2) %>%
+  left_join(metaWeather %>% select(CollectionDate, FreezeThaw, CollectionSeason),
+            by="CollectionDate") %>%
+  unique() # remove duplicate rows
+
+# make figure
+pdf("CanadaJayMicrobiome/plots/H3ABox.pdf", width = 9)
+ggplot(plot3A, aes(y = AitchisonDistance, x = as.factor(FreezeThaw))) +
+  geom_boxplot() +
+  facet_grid(CollectionSeason~Year) +
+  labs(x = "Number of Freeze Thaw Events (14 days prior to sampling)")
+dev.off()
+
 # PERMANOVA
 adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
         data = metaWeather, na.action = na.exclude)
@@ -136,10 +172,28 @@ print("Prediction 3B - Shared OTUs")
 otu_df <- as(otu_table(gj_ps), "matrix") %>%
   as.data.frame %>% rownames_to_column(var = "sampleID") %>%
   pivot_longer(-sampleID, names_to = "OTU", values_to = "Count") %>%
-  # 1 is present, 0 is absent
-  mutate(Presence = replace(Count, Count > 0, 1)) %>%
-  left_join(metaWeather) %>%
-  select(sampleID, OTU, Presence, FreezeThaw, everything())
+  select(sampleID, OTU, Count) %>%
+  .[which(.$Count > 0),] # select only those present
+
+# from https://stackoverflow.com/questions/53756030/how-to-calculate-common-values-across-different-groups
+otuShared <- otu_df %>% group_by(OTU) %>% 
+  summarise(combos = list(unique(c(unique(sampleID),
+                                   paste(unique(sampleID), collapse = '_'))))) %>%
+  unnest(cols = c(combos)) %>% group_by(combos) %>% count() %>%
+  right_join(data.frame(combos = c(unique(otu_df$sampleID),
+                                   combn(unique(otu_df$sampleID), 2, paste, collapse = '_'))))
+plot3B <- otuShared %>% ungroup %>%
+  mutate(shared = replace_na(n, 0),
+         Sample1 = word(combos, 2, sep = "_"),
+         Sample2 = word(combos, 1, sep = "_")) %>%
+  select(shared, Sample1, Sample2) %>%
+  left_join(plot3A) %>% # join shared with weather data
+  na.omit # remove single sample tallies
+
+ggplot(plot3B, aes(x = FreezeThaw, y = shared)) +
+  geom_point() + facet_grid(CollectionSeason~Year) +
+  labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
+       y = "Number of Shared OTUs")
 
 # clean up - removing 3A+B data
 rm(metaWeather, gj_ps)
@@ -148,17 +202,7 @@ print("Prediction 3C - Food supplementation")
 # Read in 2017-2018 distance matrix
 dmAitchisonB <- read_qza("H2aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata
-dm_meta <- dmAitchisonB %>% as.matrix %>% as.data.frame %>%
-  rownames_to_column(var = "Sample1") %>%
-  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
-  # filter out duplicated comparisons (taling "lower" part of dm df)
-  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
-         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
-  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
-  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
-         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
-  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
-  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2") %>%
+dm_meta <- longDM(dmAitchison, "AitchisonDistance") %>%
   # add shared food information
   mutate(host = ifelse(.$JayID.x == .$JayID.y, "Same Bird", "Different Bird"),
          group = ifelse(.$`FoodSupplement.x` == "Y" & .$`FoodSupplement.y` == "Y", "Yes",

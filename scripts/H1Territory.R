@@ -344,7 +344,7 @@ cap_list
 lapply(cap_list, summary)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P1CterBiplot.pdf", width = 12, height = 12)
+pdf("CanadaJayMicrobiome/plots/P1CterBiplot.pdf", width = 12, height = 9)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 

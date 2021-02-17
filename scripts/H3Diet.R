@@ -36,9 +36,10 @@ eventCount <- function(column, station, event){
   return(df3)
 }
 
-longDM <- function(dm, metric){
+longDM <- function(dm, metric, samp){
   # dm is a distance matrix of interest
   # metric is the name of the distance metric in matrix
+  # samp is the data frame containing the sample data
   df1 <- dm %>% as.matrix %>% as.data.frame %>%
     rownames_to_column(var = "Sample1")
   df2 <- df1 %>% pivot_longer(-Sample1, names_to = "Sample2", values_to = metric)
@@ -49,8 +50,8 @@ longDM <- function(dm, metric){
     .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ]
   df4 <- df3 %>% mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample names
                         Sample2 = paste0("G", as.character(Sample2)))
-  df5 <- left_join(df4, rownames_to_column(gj_meta, var = "Sample1")) %>% # joining with sample data
-    left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
+  df5 <- left_join(df4, rownames_to_column(samp, var = "Sample1")) %>% # joining with sample data
+    left_join(., rownames_to_column(samp, var = "Sample2"), by = "Sample2")
   return(df5)
 }
 
@@ -59,7 +60,6 @@ print("Prediction 3A + B - Data for freeze thaw")
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P3AB-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         tree = "trees/rooted_tree.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -143,7 +143,7 @@ dmAitchison <- read_qza("P3AB-aitchison-distance.qza")$data %>%
   .[rownames(.) %in% dates$sampleID, colnames(.) %in% dates$sampleID]
 
 # get data frame with sames collected on the same date
-plot3A <- longDM(dmAitchison, "AitchisonDistance") %>%
+plot3A <- longDM(dmAitchison, "AitchisonDistance", gj_meta) %>%
   .[which(.$CollectionDate.x == .$CollectionDate.y),] %>%
   mutate(CollectionDate = dmy(CollectionDate.x),
          Year = CollectionYear.x) %>%
@@ -190,55 +190,56 @@ plot3B <- otuShared %>% ungroup %>%
   left_join(plot3A) %>% # join shared with weather data
   na.omit # remove single sample tallies
 
+pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
 ggplot(plot3B, aes(x = FreezeThaw, y = shared)) +
   geom_point() + facet_grid(CollectionSeason~Year) +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
        y = "Number of Shared OTUs")
+dev.off()
 
 # clean up - removing 3A+B data
-rm(metaWeather, gj_ps)
+rm(metaWeather, gj_ps, plot3A, plot3B,
+   otu_df, otuShared)
+
+print("Prediction 3C + D - Data for Supplementation")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "P3CD-filtered-table.qza",
+                         # q2 types line causes issues (so removed in the tsv file input here)
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
 
 print("Prediction 3C - Food supplementation")
 # Read in 2017-2018 distance matrix
-dmAitchisonB <- read_qza("H2aitchison-distance.qza")$data 
+dmAitchisonB <- read_qza("P3CD-aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata
-dm_meta <- longDM(dmAitchison, "AitchisonDistance") %>%
+dm_meta <- longDM(dmAitchisonB, "AitchisonDistance", gj_meta) %>%
   # add shared food information
   mutate(host = ifelse(.$JayID.x == .$JayID.y, "Same Bird", "Different Bird"),
          group = ifelse(.$`FoodSupplement.x` == "Y" & .$`FoodSupplement.y` == "Y", "Yes",
                         ifelse(.$`FoodSupplement.x` == "N" & .$`FoodSupplement.y` == "N",
-                               "No", "Either"))) %>%
+                               "No", "Either")),
+         Year = word(ExtractID.x, 2, sep = "-")) %>%
   # select only the variables of interest for the boxplot
-  select(1:4, ExtractID.y, host, group)
+  select(1:4, ExtractID.y, host, group, Year)
 
-pdf("CanadaJayMicrobiome/plots/H2BBox.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/H3CDBox.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
-  geom_boxplot() + labs(x = "Food Supplementation")
+  geom_boxplot() + labs(x = "Food Supplementation") +
+  facet_grid(~Year)
 dev.off()
 
 dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance
 dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance
 # Mann-Whitney test
-print("2b Mann-Whitney")
+print("Mann-Whitney")
 wilcox.test(dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance,
             dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance)
-print("2b t-test")
+print("t-test")
 t.test(dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance,
        dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance)
-# read in the aitchison ordination (probs won't keep this)
-ordiAitchison <- read_qza("H2aitchison-ordination.qza")
-# combine aitchison vectors with environmental data
-aitch <- gj_meta %>% rownames_to_column(var = "SampleID") %>%
-  right_join(ordiAitchison$data$Vectors)
-# save ordination plot to PDF
-pdf("CanadaJayMicrobiome/plots/H2BOrdi.pdf", width = 8)
-# ellipse by territory
-# shape by food
-# too few samples to get much meaningful from this
-ggplot(aitch, aes(x=PC1, y=PC2, shape = FoodSupplement, linetype = FoodSupplement)) + 
-  geom_point() + # points are samples
-  stat_ellipse(type = "norm") + 
-  coord_fixed(ylim = c(-0.8, 0.8), xlim = c(-0.8, 0.8)) +
-  labs(shape = "Food Supplementation", linetype = "Food Supplementation")
-# turn off graphics device
-dev.off()
+

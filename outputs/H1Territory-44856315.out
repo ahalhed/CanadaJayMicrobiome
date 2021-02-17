@@ -521,7 +521,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance     F Pr(>F)
-Model     3   246.92 0.781  0.884
+Model     3   246.92 0.781  0.893
 Residual  4   421.54             
 
 $xyFall2018
@@ -531,7 +531,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     4   155.53 1.2281  0.292
+Model     4   155.53 1.2281  0.322
 Residual  4   126.64              
 
 $xyFall2020
@@ -541,7 +541,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     3   304.18 1.1279  0.204
+Model     3   304.18 1.1279  0.211
 Residual 12  1078.76              
 
 $xySpring2020
@@ -551,7 +551,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     3   289.51 0.9294  0.569
+Model     3   289.51 0.9294  0.554
 Residual  8   830.72              
 
 $xyFall2017
@@ -684,7 +684,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus + Condition(scores(y)), data = data)
          Df Variance      F Pr(>F)
-Model     3   294.10 1.0277  0.438
+Model     3   294.10 1.0277  0.457
 Residual  6   572.36              
 
 $xySpring2020
@@ -694,7 +694,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus + Condition(scores(y)), data = data)
          Df Variance     F Pr(>F)
-Model     3   319.05 0.853  0.645
+Model     3   319.05 0.853  0.653
 Residual  3   374.04             
 
 $xyFall2017
@@ -744,7 +744,7 @@ Call: x ~ 1
 + PCNM2         -0.034114875
 
         Df    AIC      F Pr(>F)
-+ PCNM5  1 53.407 1.2963   0.22
++ PCNM5  1 53.407 1.2963  0.218
 
 Step: R2.adj= 0 
 Call: x ~ 1 

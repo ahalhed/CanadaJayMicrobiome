@@ -174,14 +174,12 @@ Number of permutations: 999
 
 adonis2(formula = dmAitchison ~ FreezeThaw + SeasonType + Group, data = metaWeather, na.action = na.exclude)
            Df SumOfSqs      R2      F Pr(>F)
-FreezeThaw  1    5.868 0.04955 1.9460  0.130
-SeasonType  2    1.866 0.01575 0.3094  0.906
-Group       1    8.168 0.06897 2.7089  0.105
+FreezeThaw  1    5.868 0.04955 1.9460  0.138
+SeasonType  2    1.866 0.01575 0.3094  0.909
+Group       1    8.168 0.06897 2.7089  0.106
 Residual   34  102.517 0.86572              
 Total      38  118.417 1.00000              
-[1] "Prediction 3B - Shared OTUs"
-`summarise()` ungrouping output (override with `.groups` argument)
-Joining, by = "combos"
+[1] "Prediction 3B - Shared microbiota"
 Joining, by = c("Sample1", "Sample2")
 null device 
           1 

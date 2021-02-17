@@ -313,7 +313,7 @@ psH <- phyloseq(otu_table(OTUclr, taxa_are_rows = F),
                 tax_table(gj_ps))
 # test with 50 most common taxa
 psH50 <- prune_taxa(names(sort(taxa_sums(psH),TRUE)[1:50]), psH)
-pdf("CanadaJayMicrobiome/plots/P1Bheatmap50.pdf", height = 10)
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Bheatmap50.pdf", height = 10)
 plot_heatmap(psH50, "RDA", "euclidean", "TerritoryQuality", "Genus",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
@@ -356,16 +356,27 @@ dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
 
 # remove within territory comparisons
 dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
-  mutate(Territory = "Between", Group = "Between")
+  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
+  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
+  mutate(Territory = "Between", Group = "Between",
+         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
 # only within territory groups
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  mutate(Territory = .$Territory.x, Group = "Within")
+  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
+  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
+  mutate(Territory = .$Territory.x, Group = "Within",
+         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
 # put back together
-dm_meta <- rbind(dm_between, dm_within) %>% select(Group, Territory, everything())
+dm_meta <- rbind(dm_between, dm_within) %>%
+  select(Group, Territory, CollectionYear, everything())
 # save figure
 pdf("CanadaJayMicrobiome/plots/P1C.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory)) +
   geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
-  scale_x_discrete(limits = c("Between", "SWAir", "DaviesBog", "CamLkRd",
-                              "Mile36", "Arowhon", "NorthBog", "WolfHowl", "BatLake"))
+  facet_grid(CollectionYear~CollectionSeason) +
+  scale_x_discrete(limits = c("Between", "Arowhon", "BatLake", "CamLkRd",
+                              "ClarkeLake", "Cliff", "DaviesBog", "HeadCreek",
+                              "Mile36", "NorthBog", "OpeoTurn", "SWAir",
+                              "WestRose", "WolfHowl")) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 dev.off()

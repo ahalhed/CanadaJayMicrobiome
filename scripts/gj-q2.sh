@@ -16,7 +16,7 @@ cd /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome
 # load miniconda
 module load miniconda3
 # Activate QIIME2
-conda activate qiime2-2020.8
+conda activate qiime2-2020.11
 
 # import the sequence data
 # the raw files directory includes sequences from all samples
@@ -232,11 +232,11 @@ qiime gneiss dendrogram-heatmap \
   --o-visualization P1B-heatmap.qzv
 
 
-# Prediction 1C - nest groups
+# Prediction 1C - territory groups (all breeding statuses, without food supplementation)
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
+  --p-where "[FoodSupplement]='N'" \
   --o-filtered-table P1C-filtered-table.qza
 
 qiime deicode rpca \

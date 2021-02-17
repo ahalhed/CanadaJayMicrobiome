@@ -100,8 +100,7 @@ dates <- gj_meta[gj_meta$FoodSupplement == "N",] %>%
          TerritoryQuality, BreedingStatus) %>%
   # modify the dates to match weather dates
   mutate(CollectionDate = dmy(.$CollectionDate)) %>%
-  .[!is.na(.$CollectionDate),] %>% # remove any missing dates
-  remove_rownames() %>% column_to_rownames(var = "sampleID")
+  .[!is.na(.$CollectionDate),] # remove any missing dates
 # merge sample data with weather data
 metaWeather <- weatherCombo %>%
   rename("CollectionDate" = "Date/Time") %>%
@@ -123,20 +122,27 @@ metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 # read in the aitchison distance matrix
 dmAitchison <- read_qza("P3AB-aitchison-distance.qza")$data %>%
   as.matrix() %>% # remove row without date information
-  .[rownames(.) %in% rownames(dates), colnames(.) %in% rownames(dates)]
+  .[rownames(.) %in% dates$sampleID, colnames(.) %in% dates$sampleID]
 
 # PERMANOVA
 adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
         data = metaWeather, na.action = na.exclude)
 
 # clean up
-rm(cacheGroup, eventCount, dates, metaWeather, weatherCombo, weather, dmAitchison)
+rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison)
 
 print("Prediction 3B - Shared OTUs")
-#going to put heatmap?
+# scatter - x is freeze thaw events, y is % total OTUs shared
+otu_df <- as(otu_table(gj_ps), "matrix") %>%
+  as.data.frame %>% rownames_to_column(var = "sampleID") %>%
+  pivot_longer(-sampleID, names_to = "OTU", values_to = "Count") %>%
+  # 1 is present, 0 is absent
+  mutate(Presence = replace(Count, Count > 0, 1)) %>%
+  left_join(metaWeather) %>%
+  select(sampleID, OTU, Presence, FreezeThaw, everything())
 
 # clean up - removing 3A+B data
-rm(gj_meta, gj_ps)
+rm(metaWeather, gj_ps)
 
 print("Prediction 3C - Food supplementation")
 # Read in 2017-2018 distance matrix

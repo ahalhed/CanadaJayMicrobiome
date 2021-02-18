@@ -1,8 +1,7 @@
-print("Set up - working directory, packages, data")
+print("Set up - working directory, packages, functions, data")
 # set working directory
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 # load packages
-library(car)
 library(qiime2R)
 library(vegan)
 library(phyloseq)
@@ -11,9 +10,29 @@ library(tidyverse)
 # set plotting theme
 theme_set(theme_bw())
 
+#functions
+longDM <- function(dm, metric, samp){
+  # dm is a distance matrix of interest
+  # metric is the name of the distance metric in matrix
+  # samp is the data frame containing the sample data
+  df1 <- dm %>% as.matrix %>% as.data.frame %>%
+    rownames_to_column(var = "Sample1")
+  df2 <- df1 %>% pivot_longer(-Sample1, names_to = "Sample2", values_to = metric)
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  df3 <- df2 %>%
+    mutate(Sample1 = gsub("G", "",as.character(factor(.$Sample1))) %>% as.numeric(), 
+           Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+    .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ]
+  df4 <- df3 %>% mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample names
+                        Sample2 = paste0("G", as.character(Sample2)))
+  df5 <- left_join(df4, rownames_to_column(samp, var = "Sample1")) %>% # joining with sample data
+    left_join(., rownames_to_column(samp, var = "Sample2"), by = "Sample2")
+  return(df5)
+}
+
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "H4filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P4ABCD-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
@@ -25,47 +44,11 @@ gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
 rownames(gj_meta) <- sample_names(gj_ps)
 
 # boxplots - data prep (to long)
-dmAitchison <- read_qza("H3aitchison-distance.qza")$data
+dmAitchison <- read_qza("P4ABCD-aitchison-distance.qza")$data
 # need to remove duplicate comparisons
-dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
-  rownames_to_column(var = "Sample1") %>%
-  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
-  # filter out duplicated comparisons (taling "lower" part of dm df)
-  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
-         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
-  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
-  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
-         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
-  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
-  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
+dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)
 
-print("Within territories (3A)")
-# remove within territory comparisons
-dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
-  mutate(Territory = "Between", Group = "Between")
-# only within territory groups
-dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  mutate(Territory = .$Territory.x, Group = "Within")
-# put back together
-dm_meta <- rbind(dm_between, dm_within) %>% select(Group, Territory, everything())
-# save figure
-pdf("CanadaJayMicrobiome/plots/H3A.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Territory)) +
-  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
-  scale_x_discrete(limits = c("Between", "SWAir", "DaviesBog", "CamLkRd",
-                              "Mile36", "Arowhon", "NorthBog", "WolfHowl", "BatLake"))
-dev.off()
-# need to find a test for determining if the within group variation is < than between
-# levene's test (car package)
-print("Levene's test")
-print("Within or between")
-leveneTest(AitchisonDistance ~ Group, data = dm_meta)
-print("Individual territories")
-leveneTest(AitchisonDistance ~ Territory.x*Territory.y, data = dm_meta)
-# clean up
-rm(dm_between, dm_within, dm_meta)
-
-print("Dominant Juveniles (3B)")
+print("Dominant Juveniles (4A)")
 # only one dominant juvenile non-breeder
 # breeder (any) to non-breeder (dominant) in same territory
 dm_dj <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
@@ -86,7 +69,7 @@ dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
 # put back together
 dm_meta <- rbind(dm_dj, dm_within) %>% select(Group, everything())
 # save figure
-pdf("CanadaJayMicrobiome/plots/H3B.pdf")
+pdf("CanadaJayMicrobiome/plots/P4A.pdf")
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance") +
   geom_signif(comparisons = list(c("Dominant", "Not Dominant")), 
@@ -97,44 +80,67 @@ wilcox.test(dm_dj$AitchisonDistance, dm_within$AitchisonDistance)
 # clean up
 rm(dm_dj, dm_within, dm_meta)
 
-
-print("Own offspring vs other offspring (3C)")
+print("Own offspring vs other offspring (3B)")
 # breeders with non-breeders on same territory (does not include between breeders)
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
   .[which(.$BreedingStatus.x == "Non-breeder"),] %>% # y's will be non-breeders
-  mutate(Group = "Non-breeder (Same Territory)")
-# breeders with breeders on same territory (does not include between non-breeders)
-dm_withinB <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  .[which(.$BreedingStatus.x == .$BreedingStatus.y),] %>%
-  .[which(.$BreedingStatus.x == "Breeder"),] %>%
-  mutate(Group = "Breeder (Same Territory)")
+  mutate(Group = "Same Territory")
 # breeders with non-breeders on different territory (does not include between breeders)
 dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
   .[which(.$BreedingStatus.x == "Non-breeder"),] %>% # y's will be non-breeders
-  mutate(Group = "Non-breeder (Different Territory)")
-# breeders with breeders on different territory (does not include between non-breeders)
-dm_breeders <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  .[which(.$BreedingStatus.x == .$BreedingStatus.y),] %>%
-  .[which(.$BreedingStatus.x == "Breeder"),] %>%
-  mutate(Group = "Breeder (Different Territory)")
+  mutate(Group = "Different Territory")
 # put back together
 dm_meta <- rbind(dm_between, dm_within) %>%
-  rbind(., dm_breeders) %>% rbind(., dm_withinB) %>%
   select(Group, everything())
 # save figure
-pdf("CanadaJayMicrobiome/plots/H3C.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/P4B.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Focal Breeder Compared to...", y = "Aitchison Distance") +
-  geom_signif(comparisons = list(c("Breeder (Different Territory)", "Breeder (Same Territory)"),
-                                 c("Non-breeder (Different Territory)", "Non-breeder (Same Territory)")), 
+  geom_boxplot() + labs(x = "Non-Breeder Location", y = "Aitchison Distance") +
+  geom_signif(comparisons = list(c("Different Territory", "Same Territory")), 
               map_signif_level=TRUE, test = wilcox.test)
 dev.off()
 # Mann-Whitney test
 print("Non-breeder Mann-Whitney")
 wilcox.test(dm_between$AitchisonDistance, dm_within$AitchisonDistance)
-print("Breeder Mann-Whitney")
-wilcox.test(dm_breeders$AitchisonDistance, dm_withinB$AitchisonDistance)
 # clean up
-rm(dm_between, dm_within, dm_meta, dm_breeders, dm_withinB)
+rm(dm_between, dm_within, dm_meta)
+
+print("Counts of Genera (4C+D)")
+# looking at the number of genera that occur per sample
+genfac <- factor(tax_table(gj_ps)[, "Genus"])
+# Tabulate the counts for each genera in each sample
+gentab <- apply(otu_table(gj_ps), MARGIN = 1, function(x) {
+  tapply(x, INDEX = genfac, FUN = sum, na.rm = TRUE, simplify = TRUE)
+})
+
+print("Juvenile Diversity (4C)")
+# count the number of genera that occur
+plot4C <- apply(gentab > 1, 2, sum) %>%
+  data.frame() %>%
+  rename("NumberOfGenera" = ".") %>%
+  # join with sample data
+  merge(gj_meta, by=0, all=TRUE)
+
+pdf("CanadaJayMicrobiome/plots/P4C.pdf")
+# make a scatter plot
+ggplot(plot4C, aes(x = NumberOfGenera, y = Territory,
+                   color = BreedingStatus)) + # could switch to shape here (or do facets only)
+  geom_point() + scale_color_viridis_d() + facet_grid(BreedingStatus~.) +
+  labs(x = "Number of Genera", color = "Breeding Status")
+dev.off()
+
+# group summary
+aggregate(plot4C$NumberOfGenera, list(plot4C$BreedingStatus), summary)
+# are the means different?
+br <- plot4C[plot4C$BreedingStatus=="Breeder",] %>% .$NumberOfGenera
+nb <- plot4C[plot4C$BreedingStatus=="Non-breeder",] %>% .$NumberOfGenera
+wilcox.test(br,nb)
+
+#clean up
+rm(plot4C, nb, br)
+
+print("Shared Microbiota (4D)")
+
+

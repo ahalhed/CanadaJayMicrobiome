@@ -125,10 +125,9 @@ plot4C <- apply(gentab > 1, 2, sum) %>%
 
 pdf("CanadaJayMicrobiome/plots/P4C.pdf")
 # make a scatter plot
-ggplot(plot4C, aes(x = NumberOfGenera, y = Territory,
-                   color = BreedingStatus)) + # could switch to shape here (or do facets only)
-  geom_point() + scale_color_viridis_d() + facet_grid(BreedingStatus~.) +
-  labs(x = "Number of Genera", color = "Breeding Status")
+ggplot(plot4C, aes(y = NumberOfGenera, x = BreedingStatus)) +
+  geom_violin() + geom_jitter(width = 0.09, height = 0) + #scale_color_viridis_d() +
+  labs(y = "Number of Genera", x = "Breeding Status")
 dev.off()
 
 # group summary
@@ -139,8 +138,24 @@ nb <- plot4C[plot4C$BreedingStatus=="Non-breeder",] %>% .$NumberOfGenera
 wilcox.test(br,nb)
 
 #clean up
-rm(plot4C, nb, br)
+rm(plot4C, nb, br, gentab)
 
 print("Shared Microbiota (4D)")
+OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
+# get sample ID's
+br <- gj_meta[which(gj_meta$BreedingStatus == "Breeder"),] %>% rownames()
+nb <- gj_meta[which(gj_meta$BreedingStatus == "Non-breeder"),] %>% rownames()
+# replace counts with rownames
+rep <- which(OTUs>0, arr.ind=TRUE)
+OTUs[rep] <- rownames(rep)
+OTUs[OTUs == 0] <- NA
 
+# get genera for sample ID's
+otu_br <- OTUs[, colnames(OTUs) %in% br] %>% as.data.frame()
+otu_nb <- OTUs[, colnames(OTUs) %in% nb] %>% as.data.frame()
 
+# need to work on iteracting this one
+intersect(otu_br$G31, otu_nb$G48)
+mapply(intersect, otu_br, otu_nb, SIMPLIFY = F)
+
+rm(br, nb, rep, gn_br, gn_nb)

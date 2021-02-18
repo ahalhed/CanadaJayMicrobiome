@@ -81,56 +81,51 @@ adonis2(dmAitchison ~ DistanceFromOrigin + CollectionYear,
 rm(gj_meta, gj_ps, OTUs, oriDF, dmAitchison)
 
 ## Prediction 5B
-# Breeders established in a specific territory will have microbial communities unique from their natal territory.
-mixed <- distm(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,] %>%
-                 select(LongitudeSamplingDD, LatitudeSamplingDD), 
-               gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,] %>%
-                 select(LongitudeOriginDD, LatitudeOriginDD), 
-               fun = distHaversine) %>% as.data.frame
-# add extract labels to distances
-rownames(mixed) <- rownames(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,])
-colnames(mixed) <- rownames(gj_meta[rownames(gj_meta) %in% oriDistCol$SampleID,])
-# pivot to longer (proper formatting for plotting)
-mixedLong <- mixed %>% rownames_to_column(var = "SampleID") %>%
-  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "DistanceFromOrigin") %>%
-  .[which(.$SampleID != .$SampleID2),]
-# collect only metadata of interest
-meta_sub <- gj_meta %>%
-  select(CollectionYear, CollectionSeason, Territory, JayID) %>%
-  rownames_to_column(var = "SampleID") %>%
-  .[.$SampleID %in% oriDistCol$SampleID,]
-# samples collected within the same year and season only
-# sample data
-mixedMeta <- left_join(mixedLong, meta_sub) %>%
-  left_join(meta_sub, suffix = c("", "2"), by = c("SampleID2" = "SampleID")) %>%
-  .[.$CollectionYear==.$CollectionYear2,] %>%
-  .[.$CollectionSeason==.$CollectionSeason2,] %>%
-  .[.$CollectionSeason=="Fall",] %>% # omitting spring b/c of nest thing
-  select(JayID, JayID2, DistanceFromOrigin, CollectionYear,SampleID,SampleID2)
-# distance data
-AitchisonLong <- dmAitchison %>% 
-  as.matrix %>% as.data.frame %>% 
-  rownames_to_column(var = "SampleID") %>%
-  # pivot to longer (proper formatting for plotting)
-  pivot_longer(-SampleID, names_to = "SampleID2", values_to = "AitchisonDistance")
-# combined
-plotDFall <- left_join(AitchisonLong, mixedMeta, by = c("SampleID", "SampleID2")) %>%
-  .[!is.na(.$JayID),]
+# Breeders established in a specific territory closer to their natal territory will have less diverse microbial communities.
+gj_ps <- qza_to_phyloseq(features = "P5B-filtered-table.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
 
-# all distances within the same year and season only
-pdf("CanadaJayMicrobiome/plots/H4B.pdf")
-ggplot(plotDFall, aes(x = DistanceFromOrigin, y = AitchisonDistance,
-                      colour = CollectionYear)) +
-  geom_point() + scale_color_viridis_c() +
-  geom_smooth(method='lm', formula= y~x, color="black") +
-  #facet_grid(~CollectionYear) +
-  labs(y = "Aitchison Distance",
-       x = "Distance from Origin of Focal Individual (m)")
+# convert OTU table to presence/absences
+OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
+OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
+
+oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
+                            DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
+
+# all fall samples
+pdf("CanadaJayMicrobiome/plots/P5B.pdf")
+ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
+                      shape = as.factor(CollectionYear))) +
+  geom_point() +
+  #facet_grid(CollectionYear~.) +
+  labs(y = "Number of OTUs", shape = "Collection Year",
+       x = "Distance from Origin (m)")
 dev.off()
 
-
+# stats on linear models
+# linear regression on all samples
+print("All years")
+lm(OTUs~CollectionYear+DistanceFromOrigin, data = oriDF) %>%
+  summary
+lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
+  summary
+# 2017
+print("2017 Only")
+lm(OTUs~DistanceFromOrigin, 
+   data=filter(oriDF,CollectionYear == 2017)) %>%
+  summary
+# 2018
+print("2018 Only")
+lm(OTUs~DistanceFromOrigin, 
+   data=filter(oriDF,CollectionYear == 2018)) %>%
+  summary
 # 2020
 print("2020 Only")
-lm(AitchisonDistance~DistanceFromOrigin, 
-   data=filter(plotDFall,CollectionYear == 2020)) %>%
+lm(OTUs~DistanceFromOrigin, 
+   data=filter(oriDF,CollectionYear == 2020)) %>%
   summary

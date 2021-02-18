@@ -298,17 +298,40 @@ qiime deicode rpca \
 
 # Hypothesis 5 - only samples with origin data
 # H5-samples.tsv is a list of sampleid's to keep
+# no nestlings from S20 were resampled in F20
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file CanadaJayMicrobiome/data/H5-samples.tsv \
-  --o-filtered-table P5AB-filtered-table.qza
+  --o-filtered-table H5-filtered-table.qza
+# might make a dm for all here (if needed)
 
+# P5A - non-breeders with origin information
+qiime feature-table filter-samples \
+  --i-table H5-filtered-table.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[BreedingStatus]='Non-breeder'" \
+  --o-filtered-table P5A-filtered-table.qza
+# may remove (don't need distances if no doing PERMANOVA - TBC)
 qiime deicode rpca \
-    --i-table P5AB-filtered-table.qza \
+    --i-table P5A-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P5AB-aitchison-ordination.qza \
-    --o-distance-matrix P5AB-aitchison-distance.qza
+    --o-biplot P5A-aitchison-ordination.qza \
+    --o-distance-matrix P5A-aitchison-distance.qza
+
+# P5A - breeders with origin information
+qiime feature-table filter-samples \
+  --i-table H5-filtered-table.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[BreedingStatus]='Breeder'" \
+  --o-filtered-table P5B-filtered-table.qza
+  
+qiime deicode rpca \
+    --i-table P5B-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot P5B-aitchison-ordination.qza \
+    --o-distance-matrix P5B-aitchison-distance.qza
 
 # Close QIIME2
 conda deactivate

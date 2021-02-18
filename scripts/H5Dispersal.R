@@ -1,4 +1,4 @@
-# Testing Hypothesis 4 - host dispersal
+# Testing Hypothesis 5 - host dispersal
 # to load R on interactive graham
 # module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 ## Script set up
@@ -8,7 +8,6 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(geosphere)
-library(vegan)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -56,9 +55,9 @@ oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                    DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
 # Make an ordination plot
-pdf("CanadaJayMicrobiome/plots/P5A.pdf")
-ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin,
-                  shape = as.factor(CollectionYear))) +
+pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 10)
+ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin, shape = as.factor(CollectionYear))) +
+  ggtitle("Microbiota Observed in Non-Breeding Canada Jay Oral Microbiomes") +
   labs(x = "Distance From Origin (m)",
        y = "Number of OTUs Observed",
        shape = "Collection Year") +
@@ -69,6 +68,8 @@ dev.off()
 # stats on linear model
 # linear regression on all samples
 print("All years") # can't do year by year b/c of low sample number
+lm(OTUs~CollectionYear+DistanceFromOrigin, data = oriDF) %>%
+  summary
 lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
   summary
 
@@ -93,11 +94,11 @@ oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                             DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
 # all fall samples
-pdf("CanadaJayMicrobiome/plots/P5B.pdf")
+pdf("CanadaJayMicrobiome/plots/P5B.pdf", width = 10)
 ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
                       shape = as.factor(CollectionYear))) +
   geom_point() +
-  #facet_grid(CollectionYear~.) +
+  ggtitle("Microbiota Observed in Breeding Canada Jay Oral Microbiomes") +
   labs(y = "Number of OTUs", shape = "Collection Year",
        x = "Distance from Origin (m)")
 dev.off()
@@ -124,3 +125,6 @@ print("2020 Only")
 lm(OTUs~DistanceFromOrigin, 
    data=filter(oriDF,CollectionYear == 2020)) %>%
   summary
+
+# clean up
+rm(gj_meta, gj_ps, OTUs, oriDF)

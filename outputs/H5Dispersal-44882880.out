@@ -11,9 +11,6 @@ Due to MODULEPATH changes, the following have been reloaded:
 The following have been reloaded with a version change:
   1) gcccore/.5.4.0 => gcccore/.7.3.0     2) imkl/11.3.4.258 => imkl/2018.3.222
 
-Loading required package: permute
-Loading required package: lattice
-This is vegan 2.5-7
 ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
 ✔ ggplot2 3.3.3     ✔ purrr   0.3.4
 ✔ tibble  3.0.5     ✔ dplyr   1.0.2
@@ -25,6 +22,24 @@ This is vegan 2.5-7
 null device 
           1 
 [1] "All years"
+
+Call:
+lm(formula = OTUs ~ CollectionYear + DistanceFromOrigin, data = oriDF)
+
+Residuals:
+      1       2       3       4 
+ -3.908  10.576 -10.576   3.908 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)
+(Intercept)         3.330e+04  3.486e+04   0.955    0.515
+CollectionYear     -1.648e+01  1.728e+01  -0.954    0.515
+DistanceFromOrigin -4.047e-02  2.836e-02  -1.427    0.389
+
+Residual standard error: 15.95 on 1 degrees of freedom
+Multiple R-squared:  0.8244,	Adjusted R-squared:  0.4732 
+F-statistic: 2.348 on 2 and 1 DF,  p-value: 0.419
+
 
 Call:
 lm(formula = OTUs ~ DistanceFromOrigin, data = oriDF)

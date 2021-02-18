@@ -57,7 +57,6 @@ oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
 # Make an ordination plot
 pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 10)
 ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin, shape = as.factor(CollectionYear))) +
-  ggtitle("Microbiota Observed in Non-Breeding Canada Jay Oral Microbiomes") +
   labs(x = "Distance From Origin (m)",
        y = "Number of OTUs Observed",
        shape = "Collection Year") +
@@ -98,7 +97,6 @@ pdf("CanadaJayMicrobiome/plots/P5B.pdf", width = 10)
 ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
                       shape = as.factor(CollectionYear))) +
   geom_point() +
-  ggtitle("Microbiota Observed in Breeding Canada Jay Oral Microbiomes") +
   labs(y = "Number of OTUs", shape = "Collection Year",
        x = "Distance from Origin (m)")
 dev.off()

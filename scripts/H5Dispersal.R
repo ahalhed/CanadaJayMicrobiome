@@ -72,13 +72,8 @@ print("All years") # can't do year by year b/c of low sample number
 lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
   summary
 
-# permanova
-dmAitchison <- read_qza("P5A-aitchison-distance.qza")$data
-adonis2(dmAitchison ~ DistanceFromOrigin + CollectionYear,
-        data = oriDF)
-
 # clean up
-rm(gj_meta, gj_ps, OTUs, oriDF, dmAitchison)
+rm(gj_meta, gj_ps, OTUs, oriDF)
 
 ## Prediction 5B
 # Breeders established in a specific territory closer to their natal territory will have less diverse microbial communities.

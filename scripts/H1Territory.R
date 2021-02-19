@@ -13,6 +13,7 @@ library(zCompositions)
 # devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
 library(CoDaSeq)
 library(geosphere) # using to compute greater circle distance
+library(ggpubr)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -132,12 +133,26 @@ dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
 # put back together
 dm_meta <- rbind(dm_between, dm_within) %>%
   select(Group, Territory, CollectionYear, everything())
+# separate plot for each season/year
+F17 <- dm_meta[which(dm_meta$CollectionSeason == "Fall" & dm_meta$CollectionYear == 2017),] %>%
+  ggplot(aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + rremove("xylab")
+F18 <- dm_meta[which(dm_meta$CollectionSeason == "Fall" & dm_meta$CollectionYear == 2018),] %>%
+  ggplot(aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + rremove("xylab")
+F20 <- dm_meta[which(dm_meta$CollectionSeason == "Fall" & dm_meta$CollectionYear == 2020),] %>%
+  ggplot(aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + rremove("xylab")
+S20 <- dm_meta[which(dm_meta$CollectionSeason == "Spring" & dm_meta$CollectionYear == 2020),] %>%
+  ggplot(aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + rremove("xylab")
+
 # save figure
-pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
-  facet_grid(CollectionYear~CollectionSeason) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 12, height = 6)
+fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 0.5, font.label = list(size = 10),
+                 labels = c("Fall 2017", "Fall 2018", "Fall 2020", "Spring 2020"))
+annotate_figure(fig, bottom = text_grob("Territory Group"),
+                left = text_grob("Aitchison Distance", rot = 90))
 dev.off()
 # clean up
 rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison)

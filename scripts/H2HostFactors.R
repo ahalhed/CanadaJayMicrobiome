@@ -34,7 +34,7 @@ met_filter <- function(meta, season, year) {
     subset(., CollectionYear == year) %>%
     # may need to fiddle with the env data been uses
     # not including JayID b/c it fully constrains models
-    select("SampleID", "Sex", "BirthYear", "CollectionSeason", 
+    select("SampleID", "Sex", "AgeAtCollection", "BirthYear", "CollectionSeason", 
            "CollectionYear", "BreedingStatus", "JuvenileStatus") # make sure this is dplyr select
   df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
   # select columns with more than one level
@@ -64,6 +64,14 @@ print("Extract the metadata")
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 gj_meta[is.na(gj_meta)] <- "" # putting blanks instead of NA to fix complete case issue
+# adding more specific age values (ensuring consistent calculation)
+gj_meta$AgeAtCollection <- ifelse(gj_meta$CollectionSeason == "Fall",
+                                  0.5 + gj_meta$CollectionYear - gj_meta$BirthYear,
+                                  ifelse(gj_meta$CollectionSeason == "Winter",
+                                         0.75 + gj_meta$CollectionYear - gj_meta$BirthYear,
+                                         gj_meta$CollectionYear - gj_meta$BirthYear))
+# making birth year categorical
+gj_meta$BirthYear <- as.character(gj_meta$BirthYear)
 
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
 print("CLR transformation")
@@ -140,7 +148,6 @@ print("Testing with RDA (full model)")
 # create a tiny anonymous function to include formula syntax in call
 abFrac <- mapply(function(x,data) rda(x~., data), 
                  commFull, sea_list, SIMPLIFY=FALSE)
-
 abFrac # Full model
 
 print("Prediction 2A - Host associated factors")
@@ -175,7 +182,7 @@ dmYear <- lapply(commFull, dmFilter, dmAitchison)
 
 # might switch to the phyloseq implementation
 for (i in names(dmYear)) {
-  cap <- capscale(dmYear[[i]] ~ Sex + BirthYear + BreedingStatus + JuvenileStatus,
+  cap <- capscale(dmYear[[i]] ~ AgeAtCollection + Sex + BirthYear + BreedingStatus + JuvenileStatus,
            data = sea_list[[i]], comm = commFull[[i]])
   assign(paste0("cap",i),cap)
   rm(i, cap)
@@ -198,7 +205,7 @@ dev.off()
 
 # PERMANOVA
 for (i in names(dmYear)) {
-  p <- adonis2(dmYear[[i]] ~ BreedingStatus + JuvenileStatus + BirthYear + Sex,
+  p <- adonis2(dmYear[[i]] ~ BreedingStatus + AgeAtCollection + JuvenileStatus + BirthYear + Sex,
           data = sea_list[[i]])
   print(i)
   print(p)

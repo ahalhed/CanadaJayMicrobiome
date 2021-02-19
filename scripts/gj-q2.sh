@@ -211,7 +211,7 @@ qiime deicode rpca \
     --o-biplot P1A-aitchison-ordination.qza \
     --o-distance-matrix P1A-aitchison-distance.qza
   
-# Prediction 1C - only breeders without supplementation and with territory qualityinformation
+# Prediction 1C - only breeders without supplementation and with territory quality information
 qiime feature-table filter-samples \
   --i-table P1AB-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -230,6 +230,14 @@ qiime gneiss gradient-clustering \
   --m-gradient-file input/jay-met.tsv \
   --m-gradient-column ProportionSpruceOnTerritory \
   --o-clustering P1C-gradient-hierarchy.qza
+qiime gneiss dendrogram-heatmap \
+  --i-table P1C-filtered-table.qza \
+  --i-tree P1C-gradient-hierarchy.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --m-metadata-column TerritoryQuality \
+  --p-color-map viridis \
+  --o-visualization P1C-heatmap.qzv
+  
 
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)

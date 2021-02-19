@@ -149,13 +149,14 @@ S20 <- dm_meta[which(dm_meta$CollectionSeason == "Spring" & dm_meta$CollectionYe
 
 # save figure
 pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 12, height = 6)
-fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 0.5, font.label = list(size = 10),
+fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 10),
                  labels = c("Fall 2017", "Fall 2018", "Fall 2020", "Spring 2020"))
 annotate_figure(fig, bottom = text_grob("Territory Group"),
                 left = text_grob("Aitchison Distance", rot = 90))
 dev.off()
 # clean up
-rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison)
+rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison,
+   F17, F18, F20, S20)
 
 print("Prediction 1B - Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd

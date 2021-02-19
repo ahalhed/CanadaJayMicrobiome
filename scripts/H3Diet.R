@@ -96,21 +96,13 @@ weatherCombo <- rbind(weather1, weather2) %>% rbind(., weather3) %>%
 # clean up
 rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 
-print("Prediction 3A - Freeze thaw variation")
-## Load in the required data
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3A-filtered-table.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-
+# join with sample data
+samp <- read_q2metadata("input/jay-met.tsv") %>%
+  rename("sampleID"="SampleID")
 # select most relevant sample data
+# double check how this is running
 # get only those who did not receive food supplementation
-dates <- gj_meta[gj_meta$FoodSupplement == "N",] %>%
-  rownames_to_column(var = "sampleID") %>%
+dates <- samp[samp$FoodSupplement == "N",] %>%
   select(JayID, CollectionDate, CollectionDay, sampleID,
          CollectionMonth, CollectionSeason, CollectionYear,
          TerritoryQuality, BreedingStatus) %>%
@@ -134,11 +126,24 @@ metaWeather$Warm[metaWeather$Warm== "integer(0)"] <- 0
 metaWeather$Frozen <- sapply(metaWeather$CollectionDate, eventCount, 
                              station = weather, event = 'Frozen')
 metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
+#clean up
+rm(cacheGroup, eventCount, weatherCombo, weather)
 
+print("Prediction 3A - Freeze thaw variation")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "P3A-filtered-table.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+# double check the combination here
 # read in the aitchison distance matrix
 dmAitchison <- read_qza("P3A-aitchison-distance.qza")$data %>%
   as.matrix() %>% # remove row without date information
-  .[rownames(.) %in% dates$sampleID, colnames(.) %in% dates$sampleID]
+  .[rownames(.) %in% rownames(gj_meta), colnames(.) %in% rownames(gj_meta)]
 
 # get data frame with sames collected on the same date
 plot3A <- longDM(dmAitchison, "AitchisonDistance", gj_meta) %>%
@@ -171,11 +176,13 @@ ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw)))
 dev.off()
 
 # PERMANOVA
-adonis2(dmAitchison ~ FreezeThaw, data = metaWeather, na.action = na.exclude)
+adonis2(dmAitchison ~ FreezeThaw,
+        data = metaWeather[which(metaWeather$sampleID %in% rownames(gj_meta)),],
+        na.action = na.exclude)
 
-# clean up
+# clean up (double check items here)
 rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison,
-   gj_meta, gj_ps)
+   plot3A, gj_ps)
 
 print("Prediction 3B - Shared microbiota")
 ## Load in the required data

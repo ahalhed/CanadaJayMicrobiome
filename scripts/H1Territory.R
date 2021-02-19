@@ -140,7 +140,7 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
 dev.off()
 # clean up
-rm(dm_all, dm_between, dm_meta, dm_within, gj_meta, dmAitchison)
+rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison)
 
 print("Prediction 1B - Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
@@ -283,7 +283,7 @@ pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
 pbcd
 
 # clean up
-rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, commFull,
+rm(gj_meta, abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, commFull,
    gj_ps, pcnm_list, scores_list, step.space, vdist, sea_list)
 
 print("Prediction 1C - territory quality")

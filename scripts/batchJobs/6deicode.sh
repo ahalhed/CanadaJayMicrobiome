@@ -27,39 +27,48 @@ qiime feature-table rarefy \
 # ran gj-core.R here to produce a list of core and rare features
 
 # Hypothesis 1
-# Prediction 1A - only breeders without supplementation
+# Prediction 1A+B - only breeders without supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
-  --o-filtered-table P1A-filtered-table.qza
+  --o-filtered-table P1AB-filtered-table.qza
 
-# Prediction 1B - only breeders without supplementation and with territory infor
-qiime feature-table filter-samples \
-  --i-table P1A-filtered-table.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
-  --o-filtered-table P1B-filtered-table.qza
+# Prediction 1A - territory groups (all breeding statuses, without food supplementation)
 qiime deicode rpca \
-    --i-table P1B-filtered-table.qza \
+    --i-table P1AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P1B-aitchison-ordination.qza \
-    --o-distance-matrix P1B-aitchison-distance.qza
-
-# Prediction 1C - nest groups
+    --o-biplot P1A-aitchison-ordination.qza \
+    --o-distance-matrix P1A-aitchison-distance.qza
+  
+# Prediction 1C - only breeders without supplementation and with territory quality information
 qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
+  --i-table P1AB-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
+  --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
   --o-filtered-table P1C-filtered-table.qza
-
 qiime deicode rpca \
     --i-table P1C-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot P1C-aitchison-ordination.qza \
     --o-distance-matrix P1C-aitchison-distance.qza
+
+# differential abundance testing
+qiime gneiss gradient-clustering \
+  --i-table P1C-filtered-table.qza \
+  --m-gradient-file input/jay-met.tsv \
+  --m-gradient-column ProportionSpruceOnTerritory \
+  --o-clustering P1C-gradient-hierarchy.qza
+qiime gneiss dendrogram-heatmap \
+  --i-table P1C-filtered-table.qza \
+  --i-tree P1C-gradient-hierarchy.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --m-metadata-column TerritoryQuality \
+  --p-color-map viridis \
+  --o-visualization P1C-heatmap.qzv
+  
 
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)
@@ -78,13 +87,16 @@ qiime feature-table filter-samples \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
   --o-filtered-table P3AB-filtered-table.qza
-
+#may need to change this to being just A (b may not need ordination/distance)
 qiime deicode rpca \
     --i-table P3AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot P3AB-aitchison-ordination.qza \
     --o-distance-matrix P3AB-aitchison-distance.qza
+
+# Prediction 3B
+
 
 # Prediction 3C/D - food supplementation
 qiime feature-table filter-samples \
@@ -117,14 +129,22 @@ qiime deicode rpca \
 
 # Hypothesis 5 - only samples with origin data
 # H5-samples.tsv is a list of sampleid's to keep
+# no nestlings from S20 were resampled in F20
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file CanadaJayMicrobiome/data/H5-samples.tsv \
-  --o-filtered-table P5AB-filtered-table.qza
+  --o-filtered-table H5-filtered-table.qza
 
-qiime deicode rpca \
-    --i-table P5AB-filtered-table.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P5AB-aitchison-ordination.qza \
-    --o-distance-matrix P5AB-aitchison-distance.qza
+# P5A - non-breeders with origin information
+qiime feature-table filter-samples \
+  --i-table H5-filtered-table.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[BreedingStatus]='Non-breeder'" \
+  --o-filtered-table P5A-filtered-table.qza
+
+# P5A - breeders with origin information
+qiime feature-table filter-samples \
+  --i-table H5-filtered-table.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[BreedingStatus]='Breeder'" \
+  --o-filtered-table P5B-filtered-table.qza

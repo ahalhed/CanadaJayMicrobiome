@@ -27,8 +27,11 @@ comm_obj <- function(XY, c) {
   return(comm)
 }
 # subset full metadata by season (placed inside for loop)
-met_filter <- function(meta, season, year) {
+met_filter <- function(meta, season, year, status) {
   # meta is the full metadata table
+  # season is the collection season
+  # year is the collection year
+  # status is the breeding status of the individuals (optional)
   met <- rownames_to_column(meta, var = "SampleID")
   df1 <- subset(met, CollectionSeason == season) %>%
     subset(., CollectionYear == year) %>%
@@ -90,7 +93,6 @@ for (YeaR in unique(gj_meta$CollectionYear)) {
   }
 }
 
-# need to fix something with sex in above loop
 # make a list of the season data frames generated from the loop
 sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
                  seaFall2020 = seaFall2020, seaSpring2020 = seaSpring2020)
@@ -132,6 +134,9 @@ dist_list <- lapply(XY_list, function(x) distm(x, x, fun = distHaversine))
 ## community object
 print("Build the community object (OTU table) for season")
 commFull <- lapply(sea_list, comm_obj, c=OTUclr)
+# non-breeders only
+nb_list <- lapply(sea_list, function(x) x[which(x$BreedingStatus == "Non-breeder"),])
+commJ <- lapply(nb_list, comm_obj, c=OTUclr)
 
 # unweighted PCNM
 print("Unweighted PCNM - for use with all OTU tables")
@@ -211,5 +216,42 @@ for (i in names(dmYear)) {
   print(p)
   rm(i, p)
 }
+
 # clean up
-rm(dmAitchison, dmYear, dmFilter, sea_list, cap_list, commFull)
+rm(sea_list,dmYear, cap_list, commFull)
+
+# looking just within non-breeders for juvenile status
+print("non-breeders")
+dmYear <- lapply(commJ, dmFilter, dmAitchison)
+
+# might switch to the phyloseq implementation
+for (i in names(dmYear)) {
+  cap <- capscale(dmYear[[i]] ~ JuvenileStatus,
+                  data = nb_list[[i]], comm = commJ[[i]])
+  assign(paste0("cap",i),cap)
+  rm(i, cap)
+}
+
+# make a list of the capscale data generated from the loop
+cap_list <- list(capseaFall2017 = capseaFall2017, capseaFall2018 = capseaFall2018, 
+                 capseaFall2020 = capseaFall2020, capseaSpring2020 = capseaSpring2020)
+# clean up individual data frames, now that the list is there
+rm(capseaFall2017, capseaFall2018, capseaFall2020, capseaSpring2020)
+
+# look at summaries
+cap_list
+summary(cap_list[[1]])
+#summary(cap_list[[2]]) # number 2 acting up
+summary(cap_list[[3]])
+summary(cap_list[[4]])
+#lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
+
+print("F17 only has one level")
+#adonis2(dmYear[[1]] ~ JuvenileStatus, data = nb_list[[1]])
+adonis2(dmYear[[2]] ~ JuvenileStatus, data = nb_list[[2]])
+print("F20 only has one level")
+#adonis2(dmYear[[3]] ~ JuvenileStatus, data = nb_list[[3]])
+adonis2(dmYear[[4]] ~ JuvenileStatus, data = nb_list[[4]])
+
+# clean up
+rm(dmAitchison, sea_list, cap_list)

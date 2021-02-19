@@ -211,7 +211,7 @@ gj_ps <- qza_to_phyloseq(features = "P3CD-filtered-table.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 
-print("Prediction 3C - Food supplementation")
+print("Prediction 3CD - Food supplementation")
 # Read in 2017-2018 distance matrix
 dmAitchisonB <- read_qza("P3CD-aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata
@@ -220,7 +220,7 @@ dm_meta <- longDM(dmAitchisonB, "AitchisonDistance", gj_meta) %>%
   mutate(host = ifelse(.$JayID.x == .$JayID.y, "Same Bird", "Different Bird"),
          group = ifelse(.$`FoodSupplement.x` == "Y" & .$`FoodSupplement.y` == "Y", "Yes",
                         ifelse(.$`FoodSupplement.x` == "N" & .$`FoodSupplement.y` == "N",
-                               "No", "Either")),
+                               "No", "Between")),
          Year = word(ExtractID.x, 2, sep = "-")) %>%
   # select only the variables of interest for the boxplot
   select(1:4, ExtractID.y, host, group, Year)

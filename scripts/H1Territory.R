@@ -77,9 +77,28 @@ dmFilter <- function(data, dm) {
   return(d)
 }
 
-print("Prediction 1A - Spatial distribution")
+# make long data frame with sample data and distances
+longDM <- function(dm, metric, samp){
+  # dm is a distance matrix of interest
+  # metric is the name of the distance metric in matrix
+  # samp is the data frame containing the sample data
+  df1 <- dm %>% as.matrix %>% as.data.frame %>%
+    rownames_to_column(var = "Sample1")
+  df2 <- df1 %>% pivot_longer(-Sample1, names_to = "Sample2", values_to = metric)
+  # filter out duplicated comparisons (taling "lower" part of dm df)
+  df3 <- df2 %>%
+    mutate(Sample1 = gsub("G", "",as.character(factor(.$Sample1))) %>% as.numeric(), 
+           Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
+    .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ]
+  df4 <- df3 %>% mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample names
+                        Sample2 = paste0("G", as.character(Sample2)))
+  df5 <- left_join(df4, rownames_to_column(samp, var = "Sample1")) %>% # joining with sample data
+    left_join(., rownames_to_column(samp, var = "Sample2"), by = "Sample2")
+  return(df5)
+}
+
 # get the data
-print("Read in the Data")
+print("Read in the Data for A and B")
 print("Building phyloseq object")
 gj_ps <- qza_to_phyloseq(features = "P1AB-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
@@ -92,6 +111,38 @@ gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 gj_meta[is.na(gj_meta)] <- "" # putting blanks instead of NA to fix complete case issue
 
+print("Prediction 1A - Territorial distribution")
+# boxplots - data prep (to long)
+dmAitchison <- read_qza("P1A-aitchison-distance.qza")$data
+# need to remove duplicate comparisons
+dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)
+
+# remove within territory comparisons
+dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
+  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
+  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
+  mutate(Territory = "Between", Group = "Between",
+         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
+# only within territory groups
+dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
+  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
+  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
+  mutate(Territory = .$Territory.x, Group = "Within",
+         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
+# put back together
+dm_meta <- rbind(dm_between, dm_within) %>%
+  select(Group, Territory, CollectionYear, everything())
+# save figure
+pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 9)
+ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
+  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
+  facet_grid(CollectionYear~CollectionSeason) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
+dev.off()
+# clean up
+rm(dm_all, dm_between, dm_meta, dm_within, gj_meta, dmAitchison)
+
+print("Prediction 1B - Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
 print("CLR transformation")
 # rows are OTUs, then transposed to OTUs as column
@@ -170,7 +221,7 @@ vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list,
                        SIMPLIFY = FALSE)
 vp_mod1_list
 # plot the partitioning
-pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/P1AVPmod1.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/P1BVPmod1.pdf")
 # make plot
 # plotted in numerical order by month
 lapply(vp_mod1_list, plot)
@@ -220,7 +271,7 @@ print("ANOVA on full spatial selection")
 lapply(step.space, anova)
 
 # save plot
-pdf(file = "CanadaJayMicrobiome/plots/P1AStepSpace.pdf")
+pdf(file = "CanadaJayMicrobiome/plots/P1BStepSpace.pdf")
 # make plot
 lapply(step.space, plot)
 dev.off()
@@ -235,59 +286,16 @@ pbcd
 rm(abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, commFull,
    gj_ps, pcnm_list, scores_list, step.space, vdist, sea_list)
 
-print("Prediction 1B - Territorial distribution")
-# boxplots - data prep (to long)
-dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
-# need to remove duplicate comparisons
-dm_all <- dmAitchison %>% as.matrix %>% as.data.frame %>%
-  rownames_to_column(var = "Sample1") %>%
-  pivot_longer(-Sample1, names_to = "Sample2", values_to = "AitchisonDistance") %>%
-  # filter out duplicated comparisons (taling "lower" part of dm df)
-  mutate(Sample1 = gsub("G", "", as.character(factor(.$Sample1))) %>% as.numeric(), 
-         Sample2 = gsub("G", "", as.character(factor(.$Sample2))) %>% as.numeric()) %>%
-  .[as.numeric(.$Sample1) > as.numeric(.$Sample2), ] %>%
-  mutate(Sample1 = paste0("G", as.character(Sample1)), # Fixing sample namanes
-         Sample2 = paste0("G", as.character(Sample2))) %>% # joing with sample data
-  left_join(., rownames_to_column(gj_meta, var = "Sample1")) %>%
-  left_join(., rownames_to_column(gj_meta, var = "Sample2"), by = "Sample2")
-
-# remove within territory comparisons
-dm_between <- dm_all[-which(dm_all$Territory.x == dm_all$Territory.y),] %>%
-  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
-  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
-  mutate(Territory = "Between", Group = "Between",
-         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
-# only within territory groups
-dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  .[which(.$CollectionYear.x == .$CollectionYear.y),] %>%
-  .[which(.$CollectionSeason.x == .$CollectionSeason.y),] %>%
-  mutate(Territory = .$Territory.x, Group = "Within",
-         CollectionYear = CollectionYear.x, CollectionSeason = CollectionSeason.x)
-# put back together
-dm_meta <- rbind(dm_between, dm_within) %>%
-  select(Group, Territory, CollectionYear, everything())
-# save figure
-pdf("CanadaJayMicrobiome/plots/P1B.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Territory", y = "Aitchison Distance") +
-  facet_grid(CollectionYear~CollectionSeason) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, vjust = 1))
-dev.off()
-# clean up
-rm(dm_all, dm_between, dm_meta, dm_within, gj_meta, dmAitchison)
-
-
 print("Prediction 1C - territory quality")
 print("Read in the Data")
-# bring in gneiss heirarchy
-bH <- read_qza("P1C-gradient-hierarchy.qza")$data
 print("Building phyloseq object")
 gj_ps <- qza_to_phyloseq(features = "P1C-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         tree = "P1C-gradient-hierarchy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F),
-           sample_data(.), phy_tree(bH), tax_table(.))
+           sample_data(.), phy_tree(.), tax_table(.))
 
 # based on the meta function from the microbiome package
 print("Extract the metadata")
@@ -349,19 +357,15 @@ lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 
 # heatmap
-# update phyloseq object with clr transformed OTUs
-psH <- phyloseq(otu_table(OTUclr, taxa_are_rows = F),
-                sample_data(gj_ps), phy_tree(bH),
-                tax_table(gj_ps))
 # test with 50 most common taxa
-psH50 <- prune_taxa(names(sort(taxa_sums(psH),TRUE)[1:50]), psH)
+psH50 <- prune_taxa(names(sort(taxa_sums(gj_ps),TRUE)[1:50]), psH)
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Cheatmap50.pdf", height = 10)
 plot_heatmap(psH50, "RDA", "euclidean", "TerritoryQuality", "Genus",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
 # with all
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/P1Cheatmap.pdf", height = 75)
-plot_heatmap(psH, "RDA", "euclidean", "TerritoryQuality",
+plot_heatmap(gj_ps, "RDA", "euclidean", "TerritoryQuality",
              low = "#440154FF", high = "#FDE725FF")
 dev.off()
 

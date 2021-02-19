@@ -196,22 +196,22 @@ qiime feature-table rarefy \
 # ran gj-core.R here to produce a list of core and rare features
 
 # Hypothesis 1
-# Prediction 1A - only breeders without supplementation
+# Prediction 1A+B - only breeders without supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
   --o-filtered-table P1AB-filtered-table.qza
 
-# Prediction 1C - territory groups (all breeding statuses, without food supplementation)
+# Prediction 1A - territory groups (all breeding statuses, without food supplementation)
 qiime deicode rpca \
     --i-table P1AB-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P1B-aitchison-ordination.qza \
-    --o-distance-matrix P1B-aitchison-distance.qza
+    --o-biplot P1A-aitchison-ordination.qza \
+    --o-distance-matrix P1A-aitchison-distance.qza
   
-# Prediction 1C - only breeders without supplementation and with territory information
+# Prediction 1C - only breeders without supplementation and with territory qualityinformation
 qiime feature-table filter-samples \
   --i-table P1AB-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -230,14 +230,6 @@ qiime gneiss gradient-clustering \
   --m-gradient-file input/jay-met.tsv \
   --m-gradient-column ProportionSpruceOnTerritory \
   --o-clustering P1C-gradient-hierarchy.qza
-# dendrogram-heatmap is deprecated and will be removed in a future version of this plugin.
-qiime gneiss dendrogram-heatmap \
-  --i-table P1C-filtered-table.qza \
-  --i-tree P1C-gradient-hierarchy.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column TerritoryQuality \
-  --p-color-map viridis \
-  --o-visualization P1C-heatmap.qzv
 
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)

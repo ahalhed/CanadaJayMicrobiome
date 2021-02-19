@@ -116,7 +116,10 @@ dm_meta <- rbind(dm_between, dm_within) %>%
 # save figure
 pdf("CanadaJayMicrobiome/plots/P4B.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Non-Breeder Location", y = "Aitchison Distance") +
+  geom_boxplot() +
+  #geom_jitter(aes(color = interaction(Territory.x, Territory.y))) +
+  scale_color_viridis_d() +
+  labs(x = "Non-Breeder Location", y = "Aitchison Distance") +
   geom_signif(comparisons = list(c("Different Territory", "Same Territory")), 
               map_signif_level=TRUE, test = wilcox.test)
 dev.off()

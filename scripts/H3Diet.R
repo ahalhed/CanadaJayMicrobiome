@@ -55,19 +55,7 @@ longDM <- function(dm, metric, samp){
   return(df5)
 }
 
-print("Prediction 3A + B - Data for freeze thaw")
-## Load in the required data
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3AB-filtered-table.qza",
-                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         # q2 types line causes issues (so removed in the tsv file input here)
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-
+print("Prediction 3A + B - Weather data for freeze thaw")
 # read in weather data
 weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
   rbind(read_csv("CanadaJayMicrobiome/data/2019.csv")) %>% 
@@ -109,6 +97,16 @@ weatherCombo <- rbind(weather1, weather2) %>% rbind(., weather3) %>%
 rm(longWeather, weather1, weather2, weather3, weather4, weather5)
 
 print("Prediction 3A - Freeze thaw variation")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "P3A-filtered-table.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+
 # select most relevant sample data
 # get only those who did not receive food supplementation
 dates <- gj_meta[gj_meta$FoodSupplement == "N",] %>%
@@ -138,7 +136,7 @@ metaWeather$Frozen <- sapply(metaWeather$CollectionDate, eventCount,
 metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 
 # read in the aitchison distance matrix
-dmAitchison <- read_qza("P3AB-aitchison-distance.qza")$data %>%
+dmAitchison <- read_qza("P3A-aitchison-distance.qza")$data %>%
   as.matrix() %>% # remove row without date information
   .[rownames(.) %in% dates$sampleID, colnames(.) %in% dates$sampleID]
 
@@ -150,24 +148,47 @@ plot3A <- longDM(dmAitchison, "AitchisonDistance", gj_meta) %>%
   select(CollectionDate, AitchisonDistance, Year, Sample1, Sample2) %>%
   left_join(metaWeather %>% select(CollectionDate, FreezeThaw, CollectionSeason),
             by="CollectionDate") %>%
-  unique() # remove duplicate rows
+  unique() %>% # remove duplicate rows
+  # add in the breeding status information
+  left_join(metaWeather %>% select(sampleID, BreedingStatus),
+          by = c("Sample1" = "sampleID")) %>%
+  left_join(metaWeather %>% select(sampleID, BreedingStatus),
+            by = c("Sample2" = "sampleID"), suffix = c("1", "2"))
+plot3A$Group <- ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
+                         plot3A$BreedingStatus1 == "Breeder",
+                       "Breeder",
+                       ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
+                           plot3A$BreedingStatus1 == "Non-breeder",
+                         "Non-breeder", "Between"))
+
 
 # make figure
 pdf("CanadaJayMicrobiome/plots/H3ABox.pdf", width = 9)
-ggplot(plot3A, aes(y = AitchisonDistance, x = as.factor(FreezeThaw))) +
+ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw))) +
   geom_boxplot() +
-  facet_grid(CollectionSeason~Year) +
+  scale_fill_viridis_d() +
   labs(x = "Number of Freeze Thaw Events (14 days prior to sampling)")
 dev.off()
 
 # PERMANOVA
-adonis2(dmAitchison ~ FreezeThaw + SeasonType + Group,
-        data = metaWeather, na.action = na.exclude)
+adonis2(dmAitchison ~ FreezeThaw, data = metaWeather, na.action = na.exclude)
 
 # clean up
-rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison)
+rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison,
+   gj_meta, gj_ps)
 
 print("Prediction 3B - Shared microbiota")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "P3B-filtered-table.qza",
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+
 # extract taxonomy (was thinking I would collapse by this)
 tax <- as(tax_table(gj_ps), "matrix") %>% as.data.frame %>%
   rownames_to_column(var = "OTU")

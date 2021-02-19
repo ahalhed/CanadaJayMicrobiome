@@ -250,22 +250,26 @@ qiime deicode rpca \
 
 
 # Hypothesis 3
-# Prediction 3A/B - food caching (winter and spring only)
+# Prediction 3A - food caching (spring 2020 only)
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason] IN ('Spring') AND [CollectionYear] IN ('2020') " \
+  --o-filtered-table P3A-filtered-table.qza
+
+qiime deicode rpca \
+    --i-table P3A-filtered-table.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot P3A-aitchison-ordination.qza \
+    --o-distance-matrix P3A-aitchison-distance.qza
+
+# Prediction 3B  - food caching (winter and spring only)
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
-  --o-filtered-table P3AB-filtered-table.qza
-#may need to change this to being just A (b may not need ordination/distance)
-qiime deicode rpca \
-    --i-table P3AB-filtered-table.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P3AB-aitchison-ordination.qza \
-    --o-distance-matrix P3AB-aitchison-distance.qza
-
-# Prediction 3B
-
+  --o-filtered-table P3B-filtered-table.qza
 
 # Prediction 3C/D - food supplementation
 qiime feature-table filter-samples \

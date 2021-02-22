@@ -30,25 +30,26 @@ longDM <- function(dm, metric, samp){
   return(df5)
 }
 # in process - can't find phy within sample_names for whatever reason
-share <- function(ps, b, nb) {
-  # ps is the phyloseq object with all samples
+share <- function(otu, b, nb) {
+  # otu is the otu table with all samples where columns are OTUs
   # b is the sample ID for the breeder
   # nb is the sample ID for the non-breeder
-  phy1 <- subset_samples(ps, sample_names(ps) == b | sample_names(ps) == nb)
-  phy2 <- filter_taxa(phy1, function(x) sum(x >= 1) == (2), TRUE)
+  phy1 <- otu[which(rownames(otu) %in% c(b, nb)), ]
+  phy2 <- phy1[,colSums(phy1 >= 1) >=1]
   # breeder only
-  breeder <- subset_samples(phy1, sample_names(phy1) == b)
-  breeder2 <- filter_taxa(breeder, function(x) sum(x >= 1) == (1), TRUE)
+  breeder <- otu[which(rownames(otu) %in% b), ]
+  breeder2 <- breeder[,colSums(breeder >= 1) >=1]
   # non-breeder only
-  nbreed <- subset_samples(phy1, sample_names(phy1) == nb)
-  nbreed2 <- filter_taxa(nbreed, function(x) sum(x >= 1) == (1), TRUE)
+  nbreed <- otu[which(rownames(otu) %in% nb), ]
+  nbreed2 <- nbreed[,colSums(nbreed>= 1) >=1]
   # get the number of OTUs
-  shared <- otu_table(phy2) %>% ncol
-  Bonly <- otu_table(breeder2) %>% ncol
-  NBonly <- otu_table(nbreed2) %>% ncol
-  df <- data.frame(Bonly, shared, NBonly)
+  shared <- ncol(phy2) %>% as.numeric
+  Bonly <- ncol(breeder2) %>% as.numeric
+  NBonly <- ncol(nbreed2) %>% as.numeric
+  df <- data.frame(b, nb, Bonly, shared, NBonly)
   return(df)
 }
+
 ## Load in the required data
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P4ABCD-filtered-table.qza",
@@ -101,11 +102,12 @@ tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
             by = "Sample2") %>%
   rename("DominantDistance" = "AitchisonDistance", "NonBreederDJ" = "Sample1",
          "Breeder" = "Sample2") %>%
-  mutate(diff = NBDistance - DominantDistance) %>%
+  mutate(diff = DominantDistance - NBDistance) %>%
   select(Breeder, diff, everything()) %>% na.omit()
 # Step 0 - check assumptions (see Radziwill p 345-6)
 # Step 1 - null and alternative hypotheses
-# H0 - equal means (d = d0); HA - within mean lower than between mean (d < d0)
+print("H0 - equal mean distances (d = d0)")
+print("HA - dominant mean greater than not dominant mean (d > d0)")
 # Step 2 - significance (going to 0.05)
 # Step 3 - test statistic
 summary(tDist)
@@ -116,12 +118,14 @@ n <- as.numeric(nrow(tDist))
 t <- (meanA-meanN)/(sdA/sqrt(n))
 # Step 4 - draw a figure (gonna do this later)
 # Step 5 - find the p-value
-pt(t, df=n-1)
-#Step 6 - is p-val < a? yes
+print("p-value")
+1 - pt(t, df=n-1)
+#Step 6 - is p-val < a?
+print("alpha")
 qt(0.975, df=n-1)
 #Step 7 - CI and R check
-t.test(tDist$NBDistance, tDist$DominantDistance,
-       paired = TRUE, alternative = "less")
+t.test(tDist$DominantDistance, tDist$NBDistance,
+       paired = TRUE, alternative = "greater")
 # clean up
 rm(dm_dj, dm_within, dm_meta,
    sdA, meanA, meanN, n, t, tDist)
@@ -143,8 +147,9 @@ dm_meta <- rbind(dm_between, dm_within) %>%
 # save figure
 pdf("CanadaJayMicrobiome/plots/P4B.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + geom_jitter(width = 0.2, height = 0, aes(alpha = 0.5)) +
-  guides(alpha = FALSE) +
+  geom_boxplot() +
+  geom_dotplot(binaxis = "y", binwidth = 0.1,
+               stackdir = "center", fill = NA) +
   labs(x = "Non-Breeder Location", y = "Aitchison Distance")
 dev.off()
 
@@ -160,7 +165,8 @@ tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
   select(Breeder, diff, everything()) %>% na.omit()
 # Step 0 - check assumptions (see Radziwill p 345-6)
 # Step 1 - null and alternative hypotheses
-# H0 - equal means (d = d0); HA - within mean lower than between mean (d < d0)
+print("H0 - equal mean distances (d = d0)")
+print("HA - within territory mean less than between territory mean (d < d0)")
 # Step 2 - significance (going to 0.05)
 # Step 3 - test statistic
 summary(tDist)
@@ -171,8 +177,10 @@ n <- as.numeric(nrow(tDist))
 t <- (meanA-meanN)/(sdA/sqrt(n))
 # Step 4 - draw a figure (gonna do this later)
 # Step 5 - find the p-value
+print("p-value")
 pt(t, df=n-1)
-#Step 6 - is p-val < a? yes
+#Step 6 - is p-val < a?
+print("alpha")
 qt(0.975, df=n-1)
 #Step 7 - CI and R check
 t.test(tDist$WithinDistance, tDist$BetweenDistance,
@@ -198,7 +206,9 @@ plot4C <- colSums(OTUs) %>%
 pdf("CanadaJayMicrobiome/plots/P4C.pdf")
 # make a scatter plot
 ggplot(plot4C, aes(y = NumberOfOTUs, x = BreedingStatus)) +
-  geom_violin() + geom_jitter(width = 0.05, height = 0) +
+  geom_violin() +
+  geom_dotplot(binaxis = "y", binwidth = 10,
+               stackdir = "center", fill = NA) +
   labs(y = "Number of OTUs", x = "Breeding Status")
 dev.off()
 
@@ -211,7 +221,8 @@ tDist <- full_join(br, nb, by = "Territory") %>%
   mutate(diff = BreederOTUs - NonBreederOTUs) %>% na.omit()
 # Step 0 - check assumptions (see Radziwill p 345-6)
 # Step 1 - null and alternative hypotheses
-# H0 - equal means (d = d0); HA - breeder mean greater than non-breeder mean (d > d0)
+print("H0 - equal mean distances (d = d0)")
+print("HA - breeder mean greater than non-breeder mean (d > d0)")
 # Step 2 - significance (going to 0.05)
 # Step 3 - test statistic
 summary(tDist)
@@ -222,8 +233,10 @@ n <- as.numeric(nrow(tDist))
 t <- (meanA-meanN)/(sdA/sqrt(n))
 # Step 4 - draw a figure (gonna do this later)
 # Step 5 - find the p-value
+print("p-value")
 1 - pt(t, df=n-1)
-#Step 6 - is p-val < a? yes
+#Step 6 - is p-val < a?
+print("alpha")
 qt(0.975, df=n-1)
 #Step 7 - CI and R check
 t.test(tDist$BreederOTUs, tDist$NonBreederOTUs,
@@ -233,34 +246,84 @@ t.test(tDist$BreederOTUs, tDist$NonBreederOTUs,
 rm(plot4C, nb, br, OTUs, sdA, meanA, meanN, n, t, tDist)
 
 print("Shared Microbiota (4D)")
-OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
-# get sample ID's
-br <- gj_meta[which(gj_meta$BreedingStatus == "Breeder"),] %>% rownames()
-nb <- gj_meta[which(gj_meta$BreedingStatus == "Non-breeder"),] %>% rownames()
-# replace counts with rownames
-rep <- which(OTUs>0, arr.ind=TRUE)
-OTUs[rep] <- rownames(rep)
-OTUs[OTUs == 0] <- NA
+# otu and sample data
+OTUs <- otu_table(gj_ps) %>% as.matrix %>% as.data.frame()
+br <- gj_meta %>% rownames_to_column(var = "b") %>%
+  filter(BreedingStatus == "Breeder") %>%
+  select(b, JuvenileStatus, Territory)
+nb <- gj_meta %>% rownames_to_column(var = "nb") %>%
+  filter(BreedingStatus == "Non-breeder") %>%
+  select(nb, JuvenileStatus, Territory)
+# get grouped samples
+otu_br <- OTUs[rownames(OTUs) %in% br$b,]
+otu_nb <- OTUs[rownames(OTUs) %in% nb$nb,]
 
-# get genera for sample ID's
-otu_br <- OTUs[, colnames(OTUs) %in% br] %>% as.data.frame()
-otu_nb <- OTUs[, colnames(OTUs) %in% nb] %>% as.data.frame()
+# get shared OTUs
+pairedNames <- as.list(outer(rownames(otu_br), rownames(otu_nb), paste))
+shareOTUs <- mapply(share, word(pairedNames), word(pairedNames,2),
+                    MoreArgs = list(otu = OTUs)) %>% t %>%
+  as.data.frame %>% remove_rownames() %>%
+  mutate(b = as.character(b), nb = as.character(nb))
 
-# need to function or loop this
-phy1 <- subset_samples(gj_ps, sample_names(gj_ps) == "G31" | sample_names(gj_ps) == "G48")
-phy2 <- filter_taxa(phy1, function(x) sum(x >= 1) == (2), TRUE)
-# breeder only
-breeder <- subset_samples(phy1, sample_names(phy1) == "G31")
-breeder2 <- filter_taxa(breeder, function(x) sum(x >= 1) == (1), TRUE)
-# non-breeder only
-nbreed <- subset_samples(phy1, sample_names(phy1) == "G48")
-nbreed2 <- filter_taxa(nbreed, function(x) sum(x >= 1) == (1), TRUE)
-# get the number of OTUs
-otu_table(phy2) %>% ncol
-otu_table(breeder2) %>% ncol
-otu_table(nbreed2) %>% ncol
+# combine shareOTUs with sample data
+OTUsamples <- shareOTUs %>% left_join(br) %>%
+  left_join(nb, by = "nb", suffix = c(".b", ".nb")) %>%
+  mutate(Territory = ifelse(Territory.b == Territory.nb, "Within", "Between"))
 
-data.frame(Bonly, shared, NBonly)
+# for plotting
+plot4D <- OTUsamples %>%
+  select(Territory, Bonly, NBonly, shared) %>%
+  pivot_longer(-Territory, names_to = "Sharing", values_to = "NumberOfOTUs") %>%
+  filter(Territory == "Within")
 
+# make plot
+pdf("CanadaJayMicrobiome/plots/P4D.pdf")
+ggplot(plot4D, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
+  geom_boxplot() +
+  scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
+  labs(x = "Sample(s)", y = "Number of OTUs Present") +
+  ggtitle("Within Territory OTUs Shared Between Individuals")
+dev.off()
+
+print("Paired t-test")
+tDist <- OTUsamples %>% filter(Territory == "Within") %>%
+  mutate(Bonly = as.double(Bonly), NBonly = as.double(NBonly), shared = as.double(shared),
+         diffShared = as.numeric(shared) - as.numeric(NBonly),
+         diffUnique = as.numeric(Bonly) - as.numeric(NBonly)) %>%
+  select(Bonly, NBonly, shared, diffUnique, diffShared) %>% na.omit()
+# Step 0 - check assumptions (see Radziwill p 345-6)
+# Step 1 - null and alternative hypotheses
+print("H0 - equal mean un/shared OTUs (d = d0)")
+print("HA1 - more shared OTUs than unique non-breeder OTUs (d > d0)")
+print("HA2 - more unique breeders OTUs than unique non-breeder OTUs (d > d0)")
+# Step 2 - significance (going to 0.05)
+# Step 3 - test statistic
+summary(tDist)
+sdA1 <- sd(tDist$diffShared)
+meanA1 <- mean(tDist$diffShared)
+sdA2 <- sd(tDist$diffUnique)
+meanA2 <- mean(tDist$diffUnique)
+meanN <- 0
+n <- as.numeric(nrow(tDist))
+t1 <- (meanA1-meanN)/(sdA1/sqrt(n))
+t2 <- (meanA2-meanN)/(sdA2/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+print("HA1 - p-value")
+1 - pt(t1, df=n-1)
+print("HA2 - p-value")
+1 - pt(t2, df=n-1)
+#Step 6 - is p-val < a?
+print("alpha")
+qt(0.975, df=n-1)
+#Step 7 - CI and R check
+print("HA1 - t-test")
+t.test(tDist$shared, tDist$NBonly,
+       paired = TRUE, alternative = "greater")
+print("HA2 - t-test")
+t.test(tDist$Bonly, tDist$NBonly,
+       paired = TRUE, alternative = "greater")
 # section clean up
-rm(br, nb, rep, otu_br, otu_nb, OTUs)
+rm(br, nb, otu_br, otu_nb, OTUs, plot4D, shareOTUs, pairedNames, OTUsamples,
+   sdA1, meanA1, sdA2, meanA2, meanN, n, t1, t2, tDist,
+   gj_meta, gj_ps, longDM, share)

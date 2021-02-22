@@ -202,15 +202,35 @@ ggplot(plot4C, aes(y = NumberOfOTUs, x = BreedingStatus)) +
   labs(y = "Number of OTUs", x = "Breeding Status")
 dev.off()
 
-# group summary
-aggregate(plot4C$NumberOfOTUs, list(plot4C$BreedingStatus), summary)
-# are the means different?
-br <- plot4C[plot4C$BreedingStatus=="Breeder",] %>% .$NumberOfOTUs
-nb <- plot4C[plot4C$BreedingStatus=="Non-breeder",] %>% .$NumberOfOTUs
-wilcox.test(br,nb)
+print("Paired t-test")
+# get data
+br <- plot4C[plot4C$BreedingStatus=="Breeder",] %>% select(NumberOfOTUs, Territory)
+nb <- plot4C[plot4C$BreedingStatus=="Non-breeder",] %>% select(NumberOfOTUs, Territory)
+tDist <- full_join(br, nb, by = "Territory") %>%
+  rename("BreederOTUs" = "NumberOfOTUs.x", "NonBreederOTUs" = "NumberOfOTUs.y") %>%
+  mutate(diff = BreederOTUs - NonBreederOTUs) %>% na.omit()
+# Step 0 - check assumptions (see Radziwill p 345-6)
+# Step 1 - null and alternative hypotheses
+# H0 - equal means (d = d0); HA - breeder mean greater than non-breeder mean (d > d0)
+# Step 2 - significance (going to 0.05)
+# Step 3 - test statistic
+summary(tDist)
+sdA <- sd(tDist$diff)
+meanA <- mean(tDist$diff)
+meanN <- 0
+n <- as.numeric(nrow(tDist))
+t <- (meanA-meanN)/(sdA/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+1 - pt(t, df=n-1)
+#Step 6 - is p-val < a? yes
+qt(0.975, df=n-1)
+#Step 7 - CI and R check
+t.test(tDist$BreederOTUs, tDist$NonBreederOTUs,
+       paired = TRUE, alternative = "greater")
 
 #clean up
-rm(plot4C, nb, br, gentab, OTUs)
+rm(plot4C, nb, br, OTUs, sdA, meanA, meanN, n, t, tDist)
 
 print("Shared Microbiota (4D)")
 OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()

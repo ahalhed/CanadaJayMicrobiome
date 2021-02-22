@@ -90,14 +90,41 @@ dm_meta <- rbind(dm_dj, dm_within) %>% select(Group, everything())
 # save figure
 pdf("CanadaJayMicrobiome/plots/P4A.pdf")
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance") +
-  geom_signif(comparisons = list(c("Dominant", "Not Dominant")), 
-              map_signif_level=TRUE, test = wilcox.test)
+  geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance")
 dev.off()
-# wilcox-test
-wilcox.test(dm_dj$AitchisonDistance, dm_within$AitchisonDistance)
+
+print("Paired t-test")
+# get data
+tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
+  rename("NBDistance" = "AitchisonDistance", "NonBreederE" = "Sample1") %>%
+  full_join(., dm_dj %>% select(Sample1, Sample2, AitchisonDistance),
+            by = "Sample2") %>%
+  rename("DominantDistance" = "AitchisonDistance", "NonBreederDJ" = "Sample1",
+         "Breeder" = "Sample2") %>%
+  mutate(diff = NBDistance - DominantDistance) %>%
+  select(Breeder, diff, everything()) %>% na.omit()
+# Step 0 - check assumptions (see Radziwill p 345-6)
+# Step 1 - null and alternative hypotheses
+# H0 - equal means (d = d0); HA - within mean lower than between mean (d < d0)
+# Step 2 - significance (going to 0.05)
+# Step 3 - test statistic
+summary(tDist)
+sdA <- sd(tDist$diff)
+meanA <- mean(tDist$diff)
+meanN <- 0
+n <- as.numeric(nrow(tDist))
+t <- (meanA-meanN)/(sdA/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+pt(t, df=n-1)
+#Step 6 - is p-val < a? yes
+qt(0.975, df=n-1)
+#Step 7 - CI and R check
+t.test(tDist$NBDistance, tDist$DominantDistance,
+       paired = TRUE, alternative = "less")
 # clean up
-rm(dm_dj, dm_within, dm_meta)
+rm(dm_dj, dm_within, dm_meta,
+   sdA, meanA, meanN, n, t, tDist)
 
 print("Own offspring vs other offspring (4B)")
 # breeders with non-breeders on same territory (does not include between breeders)

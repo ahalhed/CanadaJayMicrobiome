@@ -308,19 +308,20 @@ qiime feature-table filter-samples \
   --m-metadata-file CanadaJayMicrobiome/data/H5-samples.tsv \
   --o-filtered-table H5-filtered-table.qza
 
-# P5A - non-breeders with origin information
-qiime feature-table filter-samples \
-  --i-table H5-filtered-table.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[BreedingStatus]='Non-breeder'" \
-  --o-filtered-table P5A-filtered-table.qza
-
 # P5A - breeders with origin information
 qiime feature-table filter-samples \
   --i-table H5-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[BreedingStatus]='Breeder'" \
+  --o-filtered-table P5A-filtered-table.qza
+
+# P5B - non-breeders with origin information
+qiime feature-table filter-samples \
+  --i-table H5-filtered-table.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[BreedingStatus]='Non-breeder'" \
   --o-filtered-table P5B-filtered-table.qza
+
 
 # Close QIIME2
 conda deactivate

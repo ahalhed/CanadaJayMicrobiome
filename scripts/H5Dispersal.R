@@ -34,50 +34,8 @@ oriDist <- function(samp) {
 
 
 ## Prediction 5A
-# Non-breeders who have travelled further from their origin will have more diverse microbiomes.
-# considering the number of OTUs observed to be diversity here
-# non-breeders are not established in a territory and are likely travelling around more
-## Load in the required data
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P5A-filtered-table.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-
-# convert OTU table to presence/absences
-OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
-OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
-
-oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
-                   DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
-
-# Make an ordination plot
-pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 10)
-ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin, shape = as.factor(CollectionYear))) +
-  labs(x = "Distance From Origin (m)",
-       y = "Number of OTUs Observed",
-       shape = "Collection Year") +
-  geom_point() +
-  scale_color_viridis_d()
-dev.off()
-
-# stats on linear model
-# linear regression on all samples
-print("All years") # can't do year by year b/c of low sample number
-lm(OTUs~CollectionYear+DistanceFromOrigin, data = oriDF) %>%
-  summary
-lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
-  summary
-
-# clean up
-rm(gj_meta, gj_ps, OTUs, oriDF)
-
-## Prediction 5B
 # Breeders established in a specific territory closer to their natal territory will have less diverse microbial communities.
-gj_ps <- qza_to_phyloseq(features = "P5B-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P5A-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -93,9 +51,9 @@ oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                             DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
 # all fall samples
-pdf("CanadaJayMicrobiome/plots/P5B.pdf", width = 10)
+pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 10)
 ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
-                      shape = as.factor(CollectionYear))) +
+                  shape = as.factor(CollectionYear))) +
   geom_point() + #log scale?
   labs(y = "Number of OTUs", shape = "Collection Year",
        x = "Distance from Origin (m)")
@@ -122,6 +80,48 @@ lm(OTUs~DistanceFromOrigin,
 print("2020 Only")
 lm(OTUs~DistanceFromOrigin, 
    data=filter(oriDF,CollectionYear == 2020)) %>%
+  summary
+
+# clean up
+rm(gj_meta, gj_ps, OTUs, oriDF)
+
+## Prediction 5B
+# Non-breeders who have travelled further from their origin will have more diverse microbiomes.
+# considering the number of OTUs observed to be diversity here
+# non-breeders are not established in a territory and are likely travelling around more
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "P5B-filtered-table.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+
+# convert OTU table to presence/absences
+OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
+OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
+
+oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
+                   DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
+
+# Make an ordination plot
+pdf("CanadaJayMicrobiome/plots/P5B.pdf", width = 10)
+ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin, shape = as.factor(CollectionYear))) +
+  labs(x = "Distance From Origin (m)",
+       y = "Number of OTUs Observed",
+       shape = "Collection Year") +
+  geom_point() +
+  scale_color_viridis_d()
+dev.off()
+
+# stats on linear model
+# linear regression on all samples
+print("All years") # can't do year by year b/c of low sample number
+lm(OTUs~CollectionYear+DistanceFromOrigin, data = oriDF) %>%
+  summary
+lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
   summary
 
 # clean up

@@ -1,0 +1,183 @@
+
+Lmod is automatically replacing "intel/2016.4" with "gcc/7.3.0".
+
+-------------------------------------------------------------------------------
+The following dependent module(s) are not currently loaded: gcccore/.5.4.0 (required by: icc/.2016.4.258, ifort/.2016.4.258)
+-------------------------------------------------------------------------------
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/2.1.1
+
+The following have been reloaded with a version change:
+  1) gcccore/.5.4.0 => gcccore/.7.3.0     2) imkl/11.3.4.258 => imkl/2018.3.222
+
+[1] "Set up - working directory, packages, functions, data"
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.5-7
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+Joining, by = "Sample1"
+[1] "Dominant Juveniles (4A)"
+null device 
+          1 
+[1] "Paired t-test"
+[1] "H0 - equal mean distances (d = d0)"
+[1] "HA - dominant mean greater than not dominant mean (d > d0)"
+   Breeder               diff         NonBreederE          NBDistance    
+ Length:6           Min.   :-0.2584   Length:6           Min.   :0.9879  
+ Class :character   1st Qu.: 0.1623   Class :character   1st Qu.:1.6541  
+ Mode  :character   Median : 1.2613   Mode  :character   Median :3.1785  
+                    Mean   : 0.8464                      Mean   :2.9319  
+                    3rd Qu.: 1.4117                      3rd Qu.:3.7107  
+                    Max.   : 1.5561                      Max.   :5.2128  
+ NonBreederDJ       DominantDistance
+ Length:6           Min.   :2.544   
+ Class :character   1st Qu.:2.544   
+ Mode  :character   Median :3.778   
+                    Mean   :3.778   
+                    3rd Qu.:5.013   
+                    Max.   :5.013   
+[1] "p-value"
+[1] 0.02845763
+[1] "alpha"
+[1] 2.570582
+
+	Paired t-test
+
+data:  tDist$DominantDistance and tDist$NBDistance
+t = 2.4645, df = 5, p-value = 0.02846
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 0.154344      Inf
+sample estimates:
+mean of the differences 
+              0.8463676 
+
+[1] "Own offspring vs other offspring (4B)"
+null device 
+          1 
+[1] "Paired t-test"
+[1] "H0 - equal mean distances (d = d0)"
+[1] "HA - within territory mean less than between territory mean (d < d0)"
+   Breeder               diff          NonBreederW        WithinDistance  
+ Length:486         Min.   :-2.60669   Length:486         Min.   :0.6193  
+ Class :character   1st Qu.:-0.63455   Class :character   1st Qu.:1.2714  
+ Mode  :character   Median : 0.06055   Mode  :character   Median :2.2640  
+                    Mean   : 0.11244                      Mean   :2.2859  
+                    3rd Qu.: 0.90350                      3rd Qu.:2.8024  
+                    Max.   : 2.63547                      Max.   :5.2128  
+ NonBreederB        BetweenDistance 
+ Length:486         Min.   :0.2385  
+ Class :character   1st Qu.:1.3228  
+ Mode  :character   Median :1.8743  
+                    Mean   :2.1735  
+                    3rd Qu.:2.6805  
+                    Max.   :5.3634  
+[1] "p-value"
+[1] 0.9886954
+[1] "alpha"
+[1] 1.964867
+
+	Paired t-test
+
+data:  tDist$WithinDistance and tDist$BetweenDistance
+t = 2.2873, df = 485, p-value = 0.9887
+alternative hypothesis: true difference in means is less than 0
+95 percent confidence interval:
+      -Inf 0.1934613
+sample estimates:
+mean of the differences 
+              0.1124443 
+
+[1] "Counts of Genera (4C+D)"
+[1] "Juvenile Diversity (4C)"
+null device 
+          1 
+[1] "Paired t-test"
+[1] "H0 - equal mean distances (d = d0)"
+[1] "HA - breeder mean greater than non-breeder mean (d > d0)"
+  BreederOTUs        Territory NonBreederOTUs       diff       
+ Min.   : 10.00   CamLkRd :8   Min.   : 6.00   Min.   :-56.00  
+ 1st Qu.: 15.75   Arowhon :6   1st Qu.:14.25   1st Qu.: -2.75  
+ Median : 28.00   Mile36  :6   Median :17.50   Median :  5.00  
+ Mean   : 40.46   NorthBog:3   Mean   :25.73   Mean   : 14.73  
+ 3rd Qu.: 63.75   WolfHowl:3   3rd Qu.:29.00   3rd Qu.: 36.00  
+ Max.   :100.00   BatLake :0   Max.   :71.00   Max.   : 86.00  
+                  (Other) :0                                   
+[1] "p-value"
+[1] 0.01916103
+[1] "alpha"
+[1] 2.059539
+
+	Paired t-test
+
+data:  tDist$BreederOTUs and tDist$NonBreederOTUs
+t = 2.1869, df = 25, p-value = 0.01916
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 3.224692      Inf
+sample estimates:
+mean of the differences 
+               14.73077 
+
+[1] "Shared Microbiota (4D)"
+Joining, by = "b"
+null device 
+          1 
+[1] "Paired t-test"
+[1] "H0 - equal mean un/shared OTUs (d = d0)"
+[1] "HA1 - more shared OTUs than unique non-breeder OTUs (d > d0)"
+[1] "HA2 - more unique breeders OTUs than unique non-breeder OTUs (d > d0)"
+     Bonly            NBonly          shared         diffUnique    
+ Min.   : 10.00   Min.   : 6.00   Min.   : 17.00   Min.   :-56.00  
+ 1st Qu.: 15.75   1st Qu.:14.25   1st Qu.: 32.25   1st Qu.: -2.75  
+ Median : 28.00   Median :17.50   Median : 52.00   Median :  5.00  
+ Mean   : 40.46   Mean   :25.73   Mean   : 61.08   Mean   : 14.73  
+ 3rd Qu.: 63.75   3rd Qu.:29.00   3rd Qu.: 82.25   3rd Qu.: 36.00  
+ Max.   :100.00   Max.   :71.00   Max.   :122.00   Max.   : 86.00  
+   diffShared   
+ Min.   : 6.00  
+ 1st Qu.:14.00  
+ Median :24.50  
+ Mean   :35.35  
+ 3rd Qu.:55.25  
+ Max.   :93.00  
+[1] "HA1 - p-value"
+[1] 4.814061e-07
+[1] "HA2 - p-value"
+[1] 0.01916103
+[1] "alpha"
+[1] 2.059539
+[1] "HA1 - t-test"
+
+	Paired t-test
+
+data:  tDist$shared and tDist$NBonly
+t = 6.4395, df = 25, p-value = 4.814e-07
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 25.97018      Inf
+sample estimates:
+mean of the differences 
+               35.34615 
+
+[1] "HA2 - t-test"
+
+	Paired t-test
+
+data:  tDist$Bonly and tDist$NBonly
+t = 2.1869, df = 25, p-value = 0.01916
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 3.224692      Inf
+sample estimates:
+mean of the differences 
+               14.73077 
+

@@ -116,18 +116,43 @@ dm_meta <- rbind(dm_between, dm_within) %>%
 # save figure
 pdf("CanadaJayMicrobiome/plots/P4B.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() +
-  #geom_jitter(aes(color = interaction(Territory.x, Territory.y))) +
-  scale_color_viridis_d() +
-  labs(x = "Non-Breeder Location", y = "Aitchison Distance") +
-  geom_signif(comparisons = list(c("Different Territory", "Same Territory")), 
-              map_signif_level=TRUE, test = wilcox.test)
+  geom_boxplot() + geom_jitter(width = 0.2, height = 0, aes(alpha = 0.5)) +
+  guides(alpha = FALSE) +
+  labs(x = "Non-Breeder Location", y = "Aitchison Distance")
 dev.off()
-# Mann-Whitney test
-print("Non-breeder Mann-Whitney")
-wilcox.test(dm_between$AitchisonDistance, dm_within$AitchisonDistance)
+
+print("Paired t-test")
+# get data
+tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
+  rename("WithinDistance" = "AitchisonDistance", "NonBreederW" = "Sample1") %>%
+  full_join(., dm_between %>% select(Sample1, Sample2, AitchisonDistance),
+            by = "Sample2") %>%
+  rename("BetweenDistance" = "AitchisonDistance", "NonBreederB" = "Sample1",
+         "Breeder" = "Sample2") %>%
+  mutate(diff = WithinDistance - BetweenDistance) %>%
+  select(Breeder, diff, everything()) %>% na.omit()
+# Step 0 - check assumptions (see Radziwill p 345-6)
+# Step 1 - null and alternative hypotheses
+# H0 - equal means (d = d0); HA - within mean lower than between mean (d < d0)
+# Step 2 - significance (going to 0.05)
+# Step 3 - test statistic
+summary(tDist)
+sdA <- sd(tDist$diff)
+meanA <- mean(tDist$diff)
+meanN <- 0
+n <- as.numeric(nrow(tDist))
+t <- (meanA-meanN)/(sdA/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+pt(t, df=n-1)
+#Step 6 - is p-val < a? yes
+qt(0.975, df=n-1)
+#Step 7 - CI and R check
+t.test(tDist$WithinDistance, tDist$BetweenDistance,
+       paired = TRUE, alternative = "less")
 # clean up
-rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison)
+rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison,
+   sdA, meanA, meanN, n, t, tDist)
 
 print("Counts of Genera (4C+D)")
 # looking at the number of OTUs (not reads) that occur per sample

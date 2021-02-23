@@ -161,25 +161,55 @@ plot3A <- longDM(dmAitchison, "AitchisonDistance", gj_meta) %>%
             by = c("Sample2" = "sampleID"), suffix = c("1", "2"))
 plot3A$Group <- ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
                          plot3A$BreedingStatus1 == "Breeder",
-                       "Breeder",
+                       "Within Breeders",
                        ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
                            plot3A$BreedingStatus1 == "Non-breeder",
-                         "Non-breeder", "Between"))
+                         "Within Non-Breeders", "Between Breeder & Non-Breeder"))
 
 
 # make figure
 pdf("CanadaJayMicrobiome/plots/H3ABox.pdf", width = 9)
 ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw))) +
-  geom_boxplot() +
-  scale_fill_viridis_d() +
-  labs(x = "Number of Freeze Thaw Events (14 days prior to sampling)")
+  geom_boxplot() + scale_fill_viridis_d() +
+  theme(legend.position = "bottom", legend.direction = "vertical") +
+  labs(x = "Number of Freeze Thaw Events (14 days prior to sampling)",
+       y = "Aitchison Distance",
+       fill = "Within Territory Comparison")
 dev.off()
 
 # PERMANOVA
 adonis2(dmAitchison ~ FreezeThaw,
         data = metaWeather[which(metaWeather$sampleID %in% rownames(gj_meta)),],
         na.action = na.exclude)
-
+print("Paired t-test")
+tDist <- OTUsamples %>% filter(Territory == "Within") %>%
+  mutate(Bonly = as.double(Bonly), NBonly = as.double(NBonly), shared = as.double(shared),
+         diffShared = as.numeric(shared) - as.numeric(NBonly),
+         diffUnique = as.numeric(Bonly) - as.numeric(NBonly)) %>%
+  select(Bonly, NBonly, shared, diffUnique, diffShared) %>% na.omit()
+# Step 0 - check assumptions (see Radziwill p 345-6)
+# Step 1 - null and alternative hypotheses
+print("H0 - equal mean distance (d = d0)")
+print("HA - mean distance greater with more ft event than fewer OTUs (d > d0)")
+# Step 2 - significance (going to 0.05)
+# Step 3 - test statistic
+summary(tDist)
+sdA <- sd(tDist$diffShared)
+meanA <- mean(tDist$diffShared)
+meanN <- 0
+n <- as.numeric(nrow(tDist))
+t <- (meanA-meanN)/(sdA/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+print("p-value")
+1 - pt(t, df=n-1)
+#Step 6 - is p-val < a?
+print("alpha")
+qt(0.975, df=n-1)
+#Step 7 - CI and R check
+print("t-test")
+t.test(tDist$shared, tDist$NBonly,
+       paired = TRUE, alternative = "greater")
 # clean up (double check items here)
 rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison,
    plot3A, gj_ps)

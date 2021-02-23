@@ -277,13 +277,13 @@ qiime feature-table filter-samples \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionYear] IN ('2017', '2018') AND [BreedingStatus]='Breeder'" \
   --o-filtered-table P3CD-filtered-table.qza
-
+# Prediction 3D - food supplementation
 qiime deicode rpca \
     --i-table P3CD-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P3CD-aitchison-ordination.qza \
-    --o-distance-matrix P3CD-aitchison-distance.qza
+    --o-biplot P3D-aitchison-ordination.qza \
+    --o-distance-matrix P3D-aitchison-distance.qza
 
 # Hypothesis 4 - parental care
 # all predictions

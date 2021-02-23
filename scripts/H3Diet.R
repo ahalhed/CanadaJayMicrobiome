@@ -252,7 +252,7 @@ plot3B <- otu_df %>% mutate(Count = 1) %>%
 
 pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
 ggplot(plot3B, aes(x = FreezeThaw, y = n)) +
-  geom_jitter() + geom_abline() +
+  geom_jitter() + #geom_abline() +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
        y = "Number of OTUs")
 dev.off()
@@ -263,7 +263,7 @@ summary(lm3B)
 anova(lm3B)
 # clean up - removing 3A+B data
 rm(metaWeather, gj_ps, plot3A, plot3B,
-   otu_df)
+   otu_df, lm3B, tax, gj_meta)
 
 print("Prediction 3C + D - Data for Supplementation")
 ## Load in the required data
@@ -277,33 +277,59 @@ gj_ps <- qza_to_phyloseq(features = "P3CD-filtered-table.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 
-print("Prediction 3CD - Food supplementation")
+print("Prediction 3C - Food supplementation (OTUs)")
+print("Prediction 3D - Food supplementation (distances)")
 # Read in 2017-2018 distance matrix
-dmAitchisonB <- read_qza("P3CD-aitchison-distance.qza")$data 
+dmAitchisonB <- read_qza("P3D-aitchison-distance.qza")$data 
 # combine the aitchison distance data with metadata
 dm_meta <- longDM(dmAitchisonB, "AitchisonDistance", gj_meta) %>%
+  filter(CollectionYear.x == CollectionYear.y) %>%
   # add shared food information
   mutate(host = ifelse(.$JayID.x == .$JayID.y, "Same Bird", "Different Bird"),
          group = ifelse(.$`FoodSupplement.x` == "Y" & .$`FoodSupplement.y` == "Y", "Yes",
                         ifelse(.$`FoodSupplement.x` == "N" & .$`FoodSupplement.y` == "N",
-                               "No", "Between")),
-         Year = word(ExtractID.x, 2, sep = "-")) %>%
+                               "No", "Between"))) #%>%
   # select only the variables of interest for the boxplot
   select(1:4, ExtractID.y, host, group, Year)
 
-pdf("CanadaJayMicrobiome/plots/H3CDBox.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/H3DBox.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
   geom_boxplot() + labs(x = "Food Supplementation") +
-  facet_grid(~Year)
+  facet_grid(~CollectionYear.x)
 dev.off()
 
-dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance
-dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance
-# Mann-Whitney test
-print("Mann-Whitney")
-wilcox.test(dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance,
-            dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance)
-print("t-test")
-t.test(dm_meta[dm_meta$group=="No",] %>% .$AitchisonDistance,
-       dm_meta[dm_meta$group=="Yes",] %>% .$AitchisonDistance)
+print("paired t-test")
+tDist <- dm_meta %>% filter(host == "Different Bird", group != "Between")
+  #mutate(FTgroup = ifelse(.$FreezeThaw > 10, "High", "Low")) %>%
+  select(group, AitchisonDistance) %>% 
+  group_by(Group, Territory, FTgroup) %>%
+  mutate(row = row_number()) %>%
+  pivot_wider(names_from = FTgroup, values_from = AitchisonDistance,
+              values_fill = NA) %>%
+  # every combination of high/low within groups (territory, breeding status)
+  select(-row) %>% expand(High, Low) %>% na.omit
+tDist$diff <- tDist$High - tDist$Low
 
+# Step 0 - check assumptions (see Radziwill p 345-6)
+# Step 1 - null and alternative hypotheses
+print("H0 - equal mean distance (d = d0)")
+print("HA - mean distance greater with more ft event than less ft (d > d0)")
+# Step 2 - significance (going to 0.05)
+# Step 3 - test statistic
+summary(tDist)
+sdA <- sd(tDist$diff)
+meanA <- mean(tDist$diff)
+meanN <- 0
+n <- as.numeric(nrow(tDist))
+t <- (meanA-meanN)/(sdA/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+print("p-value")
+1 - pt(t, df=n-1)
+#Step 6 - is p-val < a?
+print("alpha")
+qt(0.975, df=n-1)
+#Step 7 - CI and R check
+print("t-test")
+t.test(tDist$High, tDist$Low,
+       paired = TRUE, alternative = "greater")

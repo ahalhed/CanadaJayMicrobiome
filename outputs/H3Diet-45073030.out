@@ -1,0 +1,237 @@
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.5-7
+Loading required package: carData
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ lubridate::as.difftime() masks base::as.difftime()
+✖ lubridate::date()        masks base::date()
+✖ dplyr::filter()          masks stats::filter()
+✖ lubridate::intersect()   masks base::intersect()
+✖ dplyr::lag()             masks stats::lag()
+✖ dplyr::recode()          masks car::recode()
+✖ lubridate::setdiff()     masks base::setdiff()
+✖ purrr::some()            masks car::some()
+✖ lubridate::union()       masks base::union()
+[1] "Prediction 3A + B - Weather data for freeze thaw"
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_double(),
+  `Station Name` = col_character(),
+  `Date/Time` = col_date(format = ""),
+  Month = col_character(),
+  Day = col_character(),
+  `Data Quality` = col_logical(),
+  `Max Temp Flag` = col_character(),
+  `Min Temp Flag` = col_character(),
+  `Mean Temp Flag` = col_character(),
+  `Heat Deg Days Flag` = col_character(),
+  `Cool Deg Days Flag` = col_character(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Rain Flag` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Snow Flag` = col_logical(),
+  `Total Precip Flag` = col_character(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust Flag` = col_character(),
+  `Spd of Max Gust Flag` = col_character()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_double(),
+  `Station Name` = col_character(),
+  `Date/Time` = col_date(format = ""),
+  Month = col_character(),
+  Day = col_character(),
+  `Data Quality` = col_logical(),
+  `Max Temp Flag` = col_character(),
+  `Min Temp Flag` = col_character(),
+  `Mean Temp Flag` = col_character(),
+  `Heat Deg Days Flag` = col_character(),
+  `Cool Deg Days Flag` = col_character(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Rain Flag` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Snow Flag` = col_logical(),
+  `Total Precip Flag` = col_character(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust Flag` = col_character(),
+  `Spd of Max Gust Flag` = col_character()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_character(),
+  `Longitude (x)` = col_double(),
+  `Latitude (y)` = col_double(),
+  `Climate ID` = col_double(),
+  `Date/Time` = col_date(format = ""),
+  Year = col_double(),
+  `Data Quality` = col_logical(),
+  `Max Temp (°C)` = col_double(),
+  `Min Temp (°C)` = col_double(),
+  `Mean Temp (°C)` = col_double(),
+  `Heat Deg Days (°C)` = col_double(),
+  `Cool Deg Days (°C)` = col_double(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Precip (mm)` = col_double(),
+  `Snow on Grnd (cm)` = col_double(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust (10s deg)` = col_double()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_character(),
+  `Longitude (x)` = col_double(),
+  `Latitude (y)` = col_double(),
+  `Climate ID` = col_double(),
+  `Date/Time` = col_date(format = ""),
+  Year = col_double(),
+  `Data Quality` = col_logical(),
+  `Max Temp (°C)` = col_double(),
+  `Min Temp (°C)` = col_double(),
+  `Mean Temp (°C)` = col_double(),
+  `Heat Deg Days (°C)` = col_double(),
+  `Cool Deg Days (°C)` = col_double(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Precip (mm)` = col_double(),
+  `Snow on Grnd (cm)` = col_double(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust (10s deg)` = col_double()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_character(),
+  `Longitude (x)` = col_double(),
+  `Latitude (y)` = col_double(),
+  `Climate ID` = col_double(),
+  `Date/Time` = col_date(format = ""),
+  Year = col_double(),
+  `Data Quality` = col_logical(),
+  `Max Temp (°C)` = col_double(),
+  `Min Temp (°C)` = col_double(),
+  `Mean Temp (°C)` = col_double(),
+  `Heat Deg Days (°C)` = col_double(),
+  `Cool Deg Days (°C)` = col_double(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Precip (mm)` = col_double(),
+  `Snow on Grnd (cm)` = col_double(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust (10s deg)` = col_double(),
+  `Dir of Max Gust Flag` = col_logical(),
+  `Spd of Max Gust Flag` = col_logical()
+)
+ℹ Use `spec()` for the full column specifications.
+
+Joining, by = "CollectionDate"
+[1] "Prediction 3A - Freeze thaw variation"
+Joining, by = "Sample1"
+null device 
+          1 
+[1] "Paired t-test"
+[1] "H0 - equal mean distance (d = d0)"
+[1] "HA - mean distance greater with more ft event than less ft (d > d0)"
+    Group            Territory              High            Low        
+ Length:144         Length:144         Min.   :1.674   Min.   :0.7896  
+ Class :character   Class :character   1st Qu.:1.814   1st Qu.:0.9892  
+ Mode  :character   Mode  :character   Median :1.843   Median :1.2372  
+                                       Mean   :2.201   Mean   :1.5216  
+                                       3rd Qu.:2.309   3rd Qu.:1.8857  
+                                       Max.   :3.268   Max.   :2.9604  
+      diff        
+ Min.   :-1.2861  
+ 1st Qu.: 0.3218  
+ Median : 0.7596  
+ Mean   : 0.6799  
+ 3rd Qu.: 1.1153  
+ Max.   : 2.4782  
+[1] "p-value"
+[1] 3.108624e-15
+[1] "alpha"
+[1] 1.976692
+[1] "t-test"
+
+	Paired t-test
+
+data:  tDist$High and tDist$Low
+t = 8.7269, df = 143, p-value = 3.082e-15
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 0.5508854       Inf
+sample estimates:
+mean of the differences 
+              0.6798618 
+
+[1] "Prediction 3B - Shared microbiota"
+null device 
+          1 
+
+Call:
+lm(formula = n ~ FreezeThaw, data = plot3B)
+
+Coefficients:
+(Intercept)   FreezeThaw  
+     22.396        0.439  
+
+
+Call:
+lm(formula = n ~ FreezeThaw, data = plot3B)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-18.103 -10.664  -8.347   0.897  95.653 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)   22.396     19.236   1.164    0.250
+FreezeThaw     0.439      1.779   0.247    0.806
+
+Residual standard error: 21.69 on 47 degrees of freedom
+Multiple R-squared:  0.001294,	Adjusted R-squared:  -0.01995 
+F-statistic: 0.06091 on 1 and 47 DF,  p-value: 0.8061
+
+Analysis of Variance Table
+
+Response: n
+           Df  Sum Sq Mean Sq F value Pr(>F)
+FreezeThaw  1    28.7   28.67  0.0609 0.8061
+Residuals  47 22121.0  470.66               
+[1] "Prediction 3C + D - Data for Supplementation"
+[1] "Prediction 3C - Food supplementation (OTUs)"
+[1] "Prediction 3D - Food supplementation (distances)"
+Joining, by = "Sample1"
+Error in UseMethod("select_") : 
+  no applicable method for 'select_' applied to an object of class "c('integer', 'numeric')"
+Calls: select -> select.default -> select_
+In addition: Warning message:
+`select_()` is deprecated as of dplyr 0.7.0.
+Please use `select()` instead.
+This warning is displayed once every 8 hours.
+Call `lifecycle::last_warnings()` to see where this warning was generated. 
+Execution halted

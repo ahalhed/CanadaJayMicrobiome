@@ -105,7 +105,7 @@ samp <- read_q2metadata("input/jay-met.tsv") %>%
 dates <- samp[samp$FoodSupplement == "N",] %>%
   select(JayID, CollectionDate, CollectionDay, sampleID,
          CollectionMonth, CollectionSeason, CollectionYear,
-         TerritoryQuality, BreedingStatus) %>%
+         TerritoryQuality, BreedingStatus, Territory) %>%
   # modify the dates to match weather dates
   mutate(CollectionDate = dmy(.$CollectionDate)) %>%
   .[!is.na(.$CollectionDate),] # remove any missing dates
@@ -155,9 +155,9 @@ plot3A <- longDM(dmAitchison, "AitchisonDistance", gj_meta) %>%
             by="CollectionDate") %>%
   unique() %>% # remove duplicate rows
   # add in the breeding status information
-  left_join(metaWeather %>% select(sampleID, BreedingStatus),
+  left_join(metaWeather %>% select(sampleID, BreedingStatus, Territory),
           by = c("Sample1" = "sampleID")) %>%
-  left_join(metaWeather %>% select(sampleID, BreedingStatus),
+  left_join(metaWeather %>% select(sampleID, BreedingStatus, Territory),
             by = c("Sample2" = "sampleID"), suffix = c("1", "2"))
 plot3A$Group <- ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
                          plot3A$BreedingStatus1 == "Breeder",
@@ -165,12 +165,15 @@ plot3A$Group <- ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
                        ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
                            plot3A$BreedingStatus1 == "Non-breeder",
                          "Within Non-Breeders", "Between Breeder & Non-Breeder"))
-
+plot3A$Territory <- ifelse(plot3A$Territory1 == plot3A$Territory2,
+                           "Same Territory", "Different Territory")
+plot3A <- plot3A %>% select(-c(Territory1, Territory2, BreedingStatus1, BreedingStatus2))
 
 # make figure
 pdf("CanadaJayMicrobiome/plots/H3ABox.pdf", width = 9)
 ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw))) +
   geom_boxplot() + scale_fill_viridis_d() +
+  facet_grid(~Territory) +
   theme(legend.position = "bottom", legend.direction = "vertical") +
   labs(x = "Number of Freeze Thaw Events (14 days prior to sampling)",
        y = "Aitchison Distance",
@@ -182,20 +185,26 @@ adonis2(dmAitchison ~ FreezeThaw,
         data = metaWeather[which(metaWeather$sampleID %in% rownames(gj_meta)),],
         na.action = na.exclude)
 print("Paired t-test")
-tDist <- OTUsamples %>% filter(Territory == "Within") %>%
-  mutate(Bonly = as.double(Bonly), NBonly = as.double(NBonly), shared = as.double(shared),
-         diffShared = as.numeric(shared) - as.numeric(NBonly),
-         diffUnique = as.numeric(Bonly) - as.numeric(NBonly)) %>%
-  select(Bonly, NBonly, shared, diffUnique, diffShared) %>% na.omit()
+tDist <- plot3A %>%
+  mutate(FTgroup = ifelse(.$FreezeThaw > 10, "High", "Low")) %>%
+  select(Group, Territory, FTgroup, AitchisonDistance) %>% 
+  group_by(Group, Territory, FTgroup) %>%
+  mutate(row = row_number()) %>%
+  pivot_wider(names_from = FTgroup, values_from = AitchisonDistance,
+              values_fill = NA) %>%
+  # every combination of high/low within groups (territory, breeding status)
+  select(-row) %>% expand(High, Low) %>% na.omit
+tDist$diff <- tDist$High - tDist$Low
+
 # Step 0 - check assumptions (see Radziwill p 345-6)
 # Step 1 - null and alternative hypotheses
 print("H0 - equal mean distance (d = d0)")
-print("HA - mean distance greater with more ft event than fewer OTUs (d > d0)")
+print("HA - mean distance greater with more ft event than less ft (d > d0)")
 # Step 2 - significance (going to 0.05)
 # Step 3 - test statistic
 summary(tDist)
-sdA <- sd(tDist$diffShared)
-meanA <- mean(tDist$diffShared)
+sdA <- sd(tDist$diff)
+meanA <- mean(tDist$diff)
 meanN <- 0
 n <- as.numeric(nrow(tDist))
 t <- (meanA-meanN)/(sdA/sqrt(n))
@@ -208,7 +217,7 @@ print("alpha")
 qt(0.975, df=n-1)
 #Step 7 - CI and R check
 print("t-test")
-t.test(tDist$shared, tDist$NBonly,
+t.test(tDist$High, tDist$Low,
        paired = TRUE, alternative = "greater")
 # clean up (double check items here)
 rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison,

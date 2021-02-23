@@ -180,10 +180,6 @@ ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw)))
        fill = "Within Territory Comparison")
 dev.off()
 
-# PERMANOVA
-adonis2(dmAitchison ~ FreezeThaw,
-        data = metaWeather[which(metaWeather$sampleID %in% rownames(gj_meta)),],
-        na.action = na.exclude)
 print("Paired t-test")
 tDist <- plot3A %>%
   mutate(FTgroup = ifelse(.$FreezeThaw > 10, "High", "Low")) %>%
@@ -220,8 +216,7 @@ print("t-test")
 t.test(tDist$High, tDist$Low,
        paired = TRUE, alternative = "greater")
 # clean up (double check items here)
-rm(cacheGroup, eventCount, dates, gj_meta, weatherCombo, weather, dmAitchison,
-   plot3A, gj_ps)
+rm(dates, gj_meta, dmAitchison, samp, gj_ps, tDist, meanA, meanN, n, sdA, t)
 
 print("Prediction 3B - Shared microbiota")
 ## Load in the required data
@@ -234,6 +229,7 @@ gj_ps <- qza_to_phyloseq(features = "P3B-filtered-table.qza",
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
+gj_meta <- rownames_to_column(gj_meta, var = "sampleID")
 
 # extract taxonomy (was thinking I would collapse by this)
 tax <- as(tax_table(gj_ps), "matrix") %>% as.data.frame %>%
@@ -245,23 +241,26 @@ otu_df <- as(otu_table(gj_ps), "matrix") %>%
   select(sampleID, OTU, Count) %>%
   .[which(.$Count > 0),] # select only those present
 
-# combine samples by shared OTUs
-plot3B <- full_join(otu_df, otu_df, by = "OTU") %>%
-  .[-which(.$sampleID.x == .$sampleID.y),] %>%
-  select(sampleID.x, sampleID.y) %>%
-  group_by(sampleID.x, sampleID.y) %>% # group by samples
-  rename(Sample1 = sampleID.x, Sample2 = sampleID.y) %>%
-  count %>% # count the number of times the groups occur
-  left_join(plot3A) %>% # add sample data for plotting
-  na.omit() %>% ungroup # tidy data for plotting
+# summarize to number of OTUs (not counts per)
+plot3B <- otu_df %>% mutate(Count = 1) %>%
+  select(sampleID, Count) %>%
+  group_by(sampleID) %>%
+  count %>% ungroup %>% # count the number of times the groups occur
+  full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
+  right_join(plot3A %>% select(Sample1, FreezeThaw),
+            by = c("sampleID" = "Sample1"))
 
 pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
 ggplot(plot3B, aes(x = FreezeThaw, y = n)) +
-  geom_point() + facet_grid(CollectionSeason~Year) +
+  geom_jitter() + geom_abline() +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
-       y = "Number of Shared Taxa")
+       y = "Number of OTUs")
 dev.off()
 
+# linear model
+(lm3B <- lm(n~FreezeThaw, data = plot3B))
+summary(lm3B)
+anova(lm3B)
 # clean up - removing 3A+B data
 rm(metaWeather, gj_ps, plot3A, plot3B,
    otu_df)

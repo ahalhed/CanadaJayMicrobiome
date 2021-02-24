@@ -1,3 +1,16 @@
+
+Lmod is automatically replacing "intel/2016.4" with "gcc/7.3.0".
+
+-------------------------------------------------------------------------------
+The following dependent module(s) are not currently loaded: gcccore/.5.4.0 (required by: icc/.2016.4.258, ifort/.2016.4.258)
+-------------------------------------------------------------------------------
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/2.1.1
+
+The following have been reloaded with a version change:
+  1) gcccore/.5.4.0 => gcccore/.7.3.0     2) imkl/11.3.4.258 => imkl/2018.3.222
+
 [1] "Working directory, packages, functions"
 Loading required package: permute
 Loading required package: lattice
@@ -36,6 +49,39 @@ Loading required package: ggplot2
 Joining, by = "Sample1"
 null device 
           1 
+[1] "P1A paired t-test"
+[1] "H0 - equal mean distances (d = d0)"
+[1] "HA - within territory mean less than between territory mean (d < d0)"
+   Breeder               diff           BreederW         WithinDistance  
+ Length:69          Min.   :-4.0056   Length:69          Min.   :0.5563  
+ Class :character   1st Qu.:-1.0028   Class :character   1st Qu.:2.0756  
+ Mode  :character   Median : 0.1204   Mode  :character   Median :2.6622  
+                    Mean   :-0.1168                      Mean   :2.3941  
+                    3rd Qu.: 0.7508                      3rd Qu.:2.6898  
+                    Max.   : 2.0065                      Max.   :3.5540  
+   BreederB         BetweenDistance  
+ Length:69          Min.   :0.04849  
+ Class :character   1st Qu.:1.26746  
+ Mode  :character   Median :2.01566  
+                    Mean   :2.51092  
+                    3rd Qu.:3.58669  
+                    Max.   :7.55953  
+[1] "p-value"
+[1] 0.2192195
+[1] "alpha"
+[1] 1.995469
+
+	Paired t-test
+
+data:  tDist$WithinDistance and tDist$BetweenDistance
+t = -0.77942, df = 68, p-value = 0.2192
+alternative hypothesis: true difference in means is less than 0
+95 percent confidence interval:
+      -Inf 0.1331093
+sample estimates:
+mean of the differences 
+             -0.1168122 
+
 [1] "Prediction 1B - Spatial distribution"
 [1] "CLR transformation"
 No. corrected values:  2852 
@@ -513,7 +559,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance     F Pr(>F)
-Model     3   246.92 0.781  0.882
+Model     3   246.92 0.781  0.895
 Residual  4   421.54             
 
 $xyFall2018
@@ -523,7 +569,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     4   155.53 1.2281  0.313
+Model     4   155.53 1.2281  0.306
 Residual  4   126.64              
 
 $xyFall2020
@@ -533,7 +579,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     3   304.18 1.1279  0.232
+Model     3   304.18 1.1279  0.219
 Residual 12  1078.76              
 
 $xySpring2020
@@ -543,7 +589,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     3   289.51 0.9294  0.569
+Model     3   289.51 0.9294  0.585
 Residual  8   830.72              
 
 $xyFall2017
@@ -676,7 +722,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus + Condition(scores(y)), data = data)
          Df Variance      F Pr(>F)
-Model     3   294.10 1.0277  0.451
+Model     3   294.10 1.0277  0.412
 Residual  6   572.36              
 
 $xySpring2020
@@ -686,7 +732,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus + Condition(scores(y)), data = data)
          Df Variance     F Pr(>F)
-Model     3   319.05 0.853  0.616
+Model     3   319.05 0.853  0.652
 Residual  3   374.04             
 
 $xyFall2017
@@ -736,7 +782,7 @@ Call: x ~ 1
 + PCNM2         -0.034114875
 
         Df    AIC      F Pr(>F)
-+ PCNM5  1 53.407 1.2963  0.238
++ PCNM5  1 53.407 1.2963  0.214
 
 Step: R2.adj= 0 
 Call: x ~ 1 
@@ -4019,6 +4065,46 @@ TerritoryQualityH  1.031  0.6694  1.23852    0    0    0
 TerritoryQualityL  1.107  0.3512 -1.93048    0    0    0
 TerritoryQualityM -0.758 -0.3872  0.02077    0    0    0
 
+
+$capseaFall2017
+Permutation test for capscale under reduced model
+Permutation: free
+Number of permutations: 999
+
+Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
+         Df SumOfSqs      F Pr(>F)
+Model     3   3.9115 1.2803  0.337
+Residual  4   4.0733              
+
+$capseaFall2018
+Permutation test for capscale under reduced model
+Permutation: free
+Number of permutations: 999
+
+Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
+         Df SumOfSqs      F Pr(>F)
+Model     3   1.5343 0.4241  0.778
+Residual  4   4.8234              
+
+$capseaFall2020
+Permutation test for capscale under reduced model
+Permutation: free
+Number of permutations: 999
+
+Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
+         Df Variance      F Pr(>F)
+Model     3   0.7780 0.8441  0.564
+Residual 12   3.6871              
+
+$capseaSpring2020
+Permutation test for capscale under reduced model
+Permutation: free
+Number of permutations: 999
+
+Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
+         Df SumOfSqs      F Pr(>F)
+Model     3   2.5972 0.6361  0.796
+Residual  8  10.8882              
 
 $capseaFall2017
 $species

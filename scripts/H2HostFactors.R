@@ -202,56 +202,13 @@ rm(capseaFall2017, capseaFall2018, capseaFall2020, capseaSpring2020)
 # look at summaries
 cap_list
 lapply(cap_list, summary)
+# anova
+lapply(cap_list, anova, step=200, perm.max=1000)
 
 # simple biplot
 pdf("CanadaJayMicrobiome/plots/P2AenvBiplot.pdf", width = 12)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 
-# PERMANOVA
-for (i in names(dmYear)) {
-  p <- adonis2(dmYear[[i]] ~ BreedingStatus + AgeAtCollection + JuvenileStatus + BirthYear + Sex,
-          data = sea_list[[i]])
-  print(i)
-  print(p)
-  rm(i, p)
-}
-
 # clean up
 rm(sea_list,dmYear, cap_list, commFull)
-
-# looking just within non-breeders for juvenile status
-print("non-breeders")
-dmYear <- lapply(commJ, dmFilter, dmAitchison)
-
-# might switch to the phyloseq implementation
-for (i in names(dmYear)) {
-  cap <- capscale(dmYear[[i]] ~ JuvenileStatus,
-                  data = nb_list[[i]], comm = commJ[[i]])
-  assign(paste0("cap",i),cap)
-  rm(i, cap)
-}
-
-# make a list of the capscale data generated from the loop
-cap_list <- list(capseaFall2017 = capseaFall2017, capseaFall2018 = capseaFall2018, 
-                 capseaFall2020 = capseaFall2020, capseaSpring2020 = capseaSpring2020)
-# clean up individual data frames, now that the list is there
-rm(capseaFall2017, capseaFall2018, capseaFall2020, capseaSpring2020)
-
-# look at summaries
-cap_list
-summary(cap_list[[1]])
-#summary(cap_list[[2]]) # number 2 acting up
-summary(cap_list[[3]])
-summary(cap_list[[4]])
-#lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
-
-print("F17 only has one level")
-#adonis2(dmYear[[1]] ~ JuvenileStatus, data = nb_list[[1]])
-adonis2(dmYear[[2]] ~ JuvenileStatus, data = nb_list[[2]])
-print("F20 only has one level")
-#adonis2(dmYear[[3]] ~ JuvenileStatus, data = nb_list[[3]])
-adonis2(dmYear[[4]] ~ JuvenileStatus, data = nb_list[[4]])
-
-# clean up
-rm(dmAitchison, sea_list, cap_list)

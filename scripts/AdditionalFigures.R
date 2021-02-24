@@ -13,16 +13,15 @@ theme_set(theme_bw())
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza", 
-                         tree = "trees/rooted-tree.qza", 
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), phy_tree(.), sample_data(.), tax_table(.))
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
-# read in the aitchison ordination
+# read in the aitchison ordination (need to generate this ordi)
 ordiAitchison <- read_qza("aitchison-ordination.qza")
 # join aitchison vectors with metadata
 # select columns of interest from meta (no location or extraction info)

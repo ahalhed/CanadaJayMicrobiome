@@ -170,7 +170,7 @@ plot3A$Territory <- ifelse(plot3A$Territory1 == plot3A$Territory2,
 plot3A <- plot3A %>% select(-c(Territory1, Territory2, BreedingStatus1, BreedingStatus2))
 
 # make figure
-pdf("CanadaJayMicrobiome/plots/H3ABox.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/P3A.pdf", width = 9)
 ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw))) +
   geom_boxplot() + scale_fill_viridis_d() +
   facet_grid(~Territory) +
@@ -180,7 +180,7 @@ ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw)))
        fill = "Within Territory Comparison")
 dev.off()
 
-print("Paired t-test")
+print("P3A Paired t-test")
 tDist <- plot3A %>%
   mutate(FTgroup = ifelse(.$FreezeThaw > 10, "High", "Low")) %>%
   select(Group, Territory, FTgroup, AitchisonDistance) %>% 
@@ -212,28 +212,24 @@ print("p-value")
 print("alpha")
 qt(0.975, df=n-1)
 #Step 7 - CI and R check
-print("t-test")
+print("t-test - within non-breeders on the same territory")
 t.test(tDist$High, tDist$Low,
        paired = TRUE, alternative = "greater")
 # clean up (double check items here)
 rm(dates, gj_meta, dmAitchison, samp, gj_ps, tDist, meanA, meanN, n, sdA, t)
 
-print("Prediction 3B - Shared microbiota")
+print("Prediction 3B - FT number of microbiota")
 ## Load in the required data
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P3B-filtered-table.qza",
-                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 gj_meta <- rownames_to_column(gj_meta, var = "sampleID")
 
-# extract taxonomy (was thinking I would collapse by this)
-tax <- as(tax_table(gj_ps), "matrix") %>% as.data.frame %>%
-  rownames_to_column(var = "OTU")
 # scatter - x is freeze thaw events, y is % total microbiota shared
 otu_df <- as(otu_table(gj_ps), "matrix") %>%
   as.data.frame %>% rownames_to_column(var = "sampleID") %>%
@@ -250,7 +246,7 @@ plot3B <- otu_df %>% mutate(Count = 1) %>%
   right_join(plot3A %>% select(Sample1, FreezeThaw),
             by = c("sampleID" = "Sample1"))
 
-pdf("CanadaJayMicrobiome/plots/H3B.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/P3B.pdf", width = 9)
 ggplot(plot3B, aes(x = FreezeThaw, y = n)) +
   geom_jitter() + #geom_abline() +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
@@ -263,7 +259,7 @@ summary(lm3B)
 anova(lm3B)
 # clean up - removing 3A+B data
 rm(metaWeather, gj_ps, plot3A, plot3B,
-   otu_df, lm3B, tax, gj_meta)
+   otu_df, lm3B, gj_meta)
 
 print("Prediction 3C + D - Data for Supplementation")
 ## Load in the required data
@@ -276,11 +272,78 @@ gj_ps <- qza_to_phyloseq(features = "P3CD-filtered-table.qza",
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
+gj_meta <- gj_meta %>% rownames_to_column(var = "sampleID")
 
 print("Prediction 3C - Food supplementation (OTUs)")
+# scatter - x is freeze thaw events, y is % total microbiota shared
+otu_df <- as(otu_table(gj_ps), "matrix") %>%
+  as.data.frame %>% rownames_to_column(var = "sampleID") %>%
+  pivot_longer(-sampleID, names_to = "OTU", values_to = "Count") %>%
+  select(sampleID, OTU, Count) %>%
+  .[which(.$Count > 0),] # select only those present
+
+# summarize to number of OTUs (not counts per)
+plot3C <- otu_df %>% mutate(Count = 1) %>%
+  select(sampleID, Count) %>%
+  group_by(sampleID) %>%
+  count %>% ungroup %>% # count the number of OTUs per group
+  full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
+  filter(FoodSupplement != "U")
+
+pdf("CanadaJayMicrobiome/plots/P3C.pdf", width = 9)
+ggplot(plot3C, aes(x = FoodSupplement, y = n)) +
+  geom_boxplot() + facet_grid(~CollectionYear) +
+  labs(x = "Food Supplementation Group",
+       y = "Number of OTUs")
+dev.off()
+
+# step 0 - check assumptions
+# step 1 - set null and alternative hypotheses
+print("H0 - Means are not different (u=0)")
+print("HA - yes FS mean is less than no FS mean (u>u0)")
+# step 2 - choose alpha (0.05)
+# step 3 - calculate test statistic
+print("all")
+print("test statistic")
+yes <- plot3C %>% filter(FoodSupplement == "Y") %>% select(n)
+no <- plot3C %>% filter(FoodSupplement == "N") %>% select(n)
+print("summary of yes")
+summary(yes)
+print("summary of no")
+summary(no)
+sdA <- sd(yes$n)
+meanA <- mean(yes$n)
+meanN <- mean(no$n)
+n <- as.numeric(nrow(yes))
+t <- (meanA-meanN)/(sdA/sqrt(n))
+# Step 4 - draw a figure (gonna do this later)
+# Step 5 - find the p-value
+print("p-value")
+pt(t,df=n-1)
+# step 6 - calculate with R
+t.test(yes, mu=meanN, alternative = "less")
+# clean up
+rm(yes, no, meanA, meanN, n, sdA, t)
+print("2017 only")
+yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2017) %>% select(n)
+no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2017) %>% select(n)
+meanN <- mean(no$n)
+t.test(yes, mu=meanN, alternative = "less")
+rm(yes, no, meanN)
+print("2018 only")
+yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% select(n)
+no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
+meanN <- mean(no$n)
+t.test(yes, mu=meanN, alternative = "less")
+rm(yes, no, meanN)
+# clean up
+rm(plot3C)
+
 print("Prediction 3D - Food supplementation (distances)")
-# Read in 2017-2018 distance matrix
+# Read in data for 3D
 dmAitchisonB <- read_qza("P3D-aitchison-distance.qza")$data 
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
 # combine the aitchison distance data with metadata
 dm_meta <- longDM(dmAitchisonB, "AitchisonDistance", gj_meta) %>%
   filter(CollectionYear.x == CollectionYear.y) %>%
@@ -288,48 +351,48 @@ dm_meta <- longDM(dmAitchisonB, "AitchisonDistance", gj_meta) %>%
   mutate(host = ifelse(.$JayID.x == .$JayID.y, "Same Bird", "Different Bird"),
          group = ifelse(.$`FoodSupplement.x` == "Y" & .$`FoodSupplement.y` == "Y", "Yes",
                         ifelse(.$`FoodSupplement.x` == "N" & .$`FoodSupplement.y` == "N",
-                               "No", "Between"))) #%>%
-  # select only the variables of interest for the boxplot
-  select(1:4, ExtractID.y, host, group, Year)
+                               "No", "Between")))
 
-pdf("CanadaJayMicrobiome/plots/H3DBox.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/P3D.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
   geom_boxplot() + labs(x = "Food Supplementation") +
   facet_grid(~CollectionYear.x)
 dev.off()
 
-print("paired t-test")
-tDist <- dm_meta %>% filter(host == "Different Bird", group != "Between")
-  #mutate(FTgroup = ifelse(.$FreezeThaw > 10, "High", "Low")) %>%
-  select(group, AitchisonDistance) %>% 
-  group_by(Group, Territory, FTgroup) %>%
-  mutate(row = row_number()) %>%
-  pivot_wider(names_from = FTgroup, values_from = AitchisonDistance,
-              values_fill = NA) %>%
-  # every combination of high/low within groups (territory, breeding status)
-  select(-row) %>% expand(High, Low) %>% na.omit
-tDist$diff <- tDist$High - tDist$Low
-
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean distance (d = d0)")
-print("HA - mean distance greater with more ft event than less ft (d > d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA <- sd(tDist$diff)
-meanA <- mean(tDist$diff)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
+# step 0 - check assumptions
+# step 1 - set null and alternative hypotheses
+print("H0 - Mean distances are not different (u=u0)")
+print("HA - yes FS mean distance is less than no FS mean distance (u>u0)")
+# step 2 - choose alpha (0.05)
+# step 3 - calculate test statistic
+print("all samples")
+print("test statistic")
+yes <- dm_meta %>% filter(group == "Yes") %>% select(AitchisonDistance)
+no <- dm_meta %>% filter(group == "No") %>% select(AitchisonDistance)
+print("summary of yes")
+summary(yes)
+print("summary of no")
+summary(no)
+sdA <- sd(yes$AitchisonDistance)
+meanA <- mean(yes$AitchisonDistance)
+meanN <- mean(no$AitchisonDistance)
+n <- as.numeric(nrow(yes))
 t <- (meanA-meanN)/(sdA/sqrt(n))
 # Step 4 - draw a figure (gonna do this later)
 # Step 5 - find the p-value
-print("p-value")
-1 - pt(t, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-print("t-test")
-t.test(tDist$High, tDist$Low,
-       paired = TRUE, alternative = "greater")
+print("all samples p-value")
+pt(t,df=n-1)
+# step 6 - calculate with R
+t.test(yes, mu=meanN, alternative = "less")
+# clean up
+rm(yes, no, meanA, meanN, n, sdA, t)
+print("2017 only")
+yes <- dm_meta %>% filter(group == "Yes", CollectionYear.x == 2017,
+                          CollectionYear.y == 2017) %>% select(AitchisonDistance)
+no <- dm_meta %>% filter(group == "No", CollectionYear.x == 2017,
+                         CollectionYear.y == 2017) %>% select(AitchisonDistance)
+meanN <- mean(no$AitchisonDistance)
+t.test(yes, mu=meanN, alternative = "less")
+print("Not enough Yes's for 2018 only")
+# clean up
+rm(yes, no, meanN, dm_meta, gj_meta, gj_ps, otu_df, dmAitchisonB, longDM)

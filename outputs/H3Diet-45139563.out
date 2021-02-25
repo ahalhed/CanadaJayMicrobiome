@@ -167,39 +167,104 @@ Joining, by = "CollectionDate"
 Joining, by = "Sample1"
 null device 
           1 
-[1] "P3A Paired t-test"
-[1] "H0 - equal mean distance (d = d0)"
-[1] "HA - mean distance greater with more ft event than less ft (d > d0)"
-    Group            Territory              High            Low        
- Length:144         Length:144         Min.   :1.674   Min.   :0.7896  
- Class :character   Class :character   1st Qu.:1.814   1st Qu.:0.9892  
- Mode  :character   Mode  :character   Median :1.843   Median :1.2372  
-                                       Mean   :2.201   Mean   :1.5216  
-                                       3rd Qu.:2.309   3rd Qu.:1.8857  
-                                       Max.   :3.268   Max.   :2.9604  
-      diff        
- Min.   :-1.2861  
- 1st Qu.: 0.3218  
- Median : 0.7596  
- Mean   : 0.6799  
- 3rd Qu.: 1.1153  
- Max.   : 2.4782  
-[1] "p-value"
-[1] 3.108624e-15
-[1] "alpha"
-[1] 1.976692
-[1] "t-test - within non-breeders on the same territory"
 
-	Paired t-test
+Call:
+anosim(x = dmAitchison, grouping = interaction(Territory, BreedingStatus)) 
+Dissimilarity: user supplied square matrix 
 
-data:  tDist$High and tDist$Low
-t = 8.7269, df = 143, p-value = 3.082e-15
-alternative hypothesis: true difference in means is greater than 0
-95 percent confidence interval:
- 0.5508854       Inf
-sample estimates:
-mean of the differences 
-              0.6798618 
+ANOSIM statistic R: 0.1119 
+      Significance: 0.109 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.118 0.158 0.190 0.237 
+
+Dissimilarity ranks between and within classes:
+                        0%    25%   50%    75% 100%   N
+Between                  1 142.75 284.5 423.25  561 532
+Arowhon.Breeder        350 350.00 350.0 350.00  350   1
+BatLake.Breeder         NA     NA    NA     NA   NA   0
+CamLkRd.Breeder        487 487.00 487.0 487.00  487   1
+DaviesBog.Breeder       NA     NA    NA     NA   NA   0
+Mile36.Breeder         178 178.00 178.0 178.00  178   1
+NorthBog.Breeder        NA     NA    NA     NA   NA   0
+OpeoBridge.Breeder      NA     NA    NA     NA   NA   0
+SWAir.Breeder          529 529.00 529.0 529.00  529   1
+TDSN.Breeder            NA     NA    NA     NA   NA   0
+WolfHowl.Breeder        NA     NA    NA     NA   NA   0
+Arowhon.Non-breeder    115 130.00 145.0 243.50  342   3
+BatLake.Non-breeder     38  48.25  72.5 117.75  251   6
+CamLkRd.Non-breeder    246 261.00 291.0 340.50  443   6
+DaviesBog.Non-breeder  428 428.00 428.0 428.00  428   1
+Mile36.Non-breeder      47 229.50 412.0 414.00  416   3
+NorthBog.Non-breeder   230 246.00 262.0 359.00  456   3
+OpeoBridge.Non-breeder  NA     NA    NA     NA   NA   0
+SWAir.Non-breeder       NA     NA    NA     NA   NA   0
+TDSN.Non-breeder        NA     NA    NA     NA   NA   0
+WolfHowl.Non-breeder    85 110.00 135.0 159.00  183   3
+
+[1] "Breeder"
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: -0.1613 
+      Significance: 0.758 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.306 0.412 0.500 0.581 
+
+Dissimilarity ranks between and within classes:
+           0%   25%  50%   75% 100%  N
+Between     1 16.25 33.5 49.75   66 62
+Arowhon    28 28.00 28.0 28.00   28  1
+BatLake    NA    NA   NA    NA   NA  0
+CamLkRd    47 47.00 47.0 47.00   47  1
+DaviesBog  NA    NA   NA    NA   NA  0
+Mile36     18 18.00 18.0 18.00   18  1
+NorthBog   NA    NA   NA    NA   NA  0
+OpeoBridge NA    NA   NA    NA   NA  0
+SWAir      61 61.00 61.0 61.00   61  1
+TDSN       NA    NA   NA    NA   NA  0
+WolfHowl   NA    NA   NA    NA   NA  0
+
+[1] "Non-breeder"
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: 0.04583 
+      Significance: 0.293 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.125 0.169 0.205 0.235 
+
+Dissimilarity ranks between and within classes:
+            0%    25%   50%    75% 100%   N
+Between      1  59.25 116.5 174.75  231 206
+Arowhon     58  66.00  74.0 118.00  162   3
+BatLake     24  30.25  41.0  61.50  118   6
+CamLkRd    115 120.75 137.0 162.25  215   6
+DaviesBog  206 206.00 206.0 206.00  206   1
+Mile36      29 114.00 199.0 200.00  201   3
+NorthBog   105 113.00 121.0 170.00  219   3
+OpeoBridge  NA     NA    NA     NA   NA   0
+SWAir       NA     NA    NA     NA   NA   0
+TDSN        NA     NA    NA     NA   NA   0
+WolfHowl    45  57.50  70.0  77.00   84   3
 
 [1] "Prediction 3B - FT number of microbiota"
 null device 
@@ -239,6 +304,7 @@ Residuals  47 22121.0  470.66
 [1] "Prediction 3C - Food supplementation (OTUs)"
 null device 
           1 
+[1] "one sample t-test"
 [1] "H0 - Means are not different (u=0)"
 [1] "HA - yes FS mean is less than no FS mean (u>u0)"
 [1] "all"
@@ -303,51 +369,92 @@ mean of x
 Joining, by = "Sample1"
 null device 
           1 
-[1] "H0 - Mean distances are not different (u=u0)"
-[1] "HA - yes FS mean distance is less than no FS mean distance (u>u0)"
-[1] "all samples"
-[1] "test statistic"
-[1] "summary of yes"
- AitchisonDistance
- Min.   :1.098    
- 1st Qu.:1.869    
- Median :2.671    
- Mean   :2.440    
- 3rd Qu.:3.243    
- Max.   :3.321    
-[1] "summary of no"
- AitchisonDistance
- Min.   :0.1752   
- 1st Qu.:1.1124   
- Median :1.6372   
- Mean   :1.6516   
- 3rd Qu.:1.9787   
- Max.   :4.1638   
-[1] "all samples p-value"
-[1] 0.8857563
 
-	One Sample t-test
+Call:
+anosim(x = dmAitchisonB, grouping = FoodSupplement) 
+Dissimilarity: 
 
-data:  yes
-t = 1.5088, df = 3, p-value = 0.8858
-alternative hypothesis: true mean is less than 1.651638
-95 percent confidence interval:
-     -Inf 3.670869
-sample estimates:
-mean of x 
- 2.440468 
+ANOSIM statistic R: 0.173 
+      Significance: 0.108 
 
-[1] "2017 only"
+Permutation: free
+Number of permutations: 999
 
-	One Sample t-test
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.178 0.252 0.304 0.365 
 
-data:  yes
-t = 0.97482, df = 2, p-value = 0.7838
-alternative hypothesis: true mean is less than 1.550471
-95 percent confidence interval:
-     -Inf 3.933061
-sample estimates:
-mean of x 
- 2.146804 
+Dissimilarity ranks between and within classes:
+        0%    25%   50%    75% 100%   N
+Between  2  64.00 153.0 205.00  252 107
+N        1  61.25 109.5 170.75  253 136
+U       NA     NA    NA     NA   NA   0
+Y       41 118.00 155.5 217.25  227  10
 
-[1] "Not enough Yes's for 2018 only"
+[1] 2017
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: 0.7231 
+      Significance: 0.132 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.785 0.908 0.940 1.000 
+
+Dissimilarity ranks between and within classes:
+            0% 25% 50% 75% 100%  N
+Between      1  18  34  50   66 65
+Alligator   NA  NA  NA  NA   NA  0
+Arowhon     NA  NA  NA  NA   NA  0
+BatLake     NA  NA  NA  NA   NA  0
+CedarSwamp  NA  NA  NA  NA   NA  0
+ClarkeLake  NA  NA  NA  NA   NA  0
+Cliff       NA  NA  NA  NA   NA  0
+DaviesBog   NA  NA  NA  NA   NA  0
+HeadCreek   NA  NA  NA  NA   NA  0
+NorthBog    10  10  10  10   10  1
+OpeoTurn    NA  NA  NA  NA   NA  0
+SundayCreek NA  NA  NA  NA   NA  0
+SWAir       NA  NA  NA  NA   NA  0
+
+[1] 2018
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: -0.03704 
+      Significance: 0.562 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.852 0.926 1.000 1.000 
+
+Dissimilarity ranks between and within classes:
+            0%   25%  50%   75% 100%  N
+Between      1 14.25 27.5 41.75   55 54
+Alligator   NA    NA   NA    NA   NA  0
+Arowhon     NA    NA   NA    NA   NA  0
+BatLake     NA    NA   NA    NA   NA  0
+CedarSwamp  NA    NA   NA    NA   NA  0
+ClarkeLake  NA    NA   NA    NA   NA  0
+Cliff       NA    NA   NA    NA   NA  0
+DaviesBog   NA    NA   NA    NA   NA  0
+HeadCreek   NA    NA   NA    NA   NA  0
+NorthBog    29 29.00 29.0 29.00   29  1
+OpeoTurn    NA    NA   NA    NA   NA  0
+SundayCreek NA    NA   NA    NA   NA  0
+SWAir       NA    NA   NA    NA   NA  0
+
+Warning messages:
+1: In rm(longWeather, weather) : object 'longWeather' not found
+2: In rm(longWeather, weather) : object 'weather' not found

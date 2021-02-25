@@ -98,6 +98,23 @@ longDM <- function(dm, metric, samp){
   return(df5)
 }
 
+# ANOSIM repititions
+anoRep <- function(samp, season, year, dis) {
+  # samp is df with sample data
+  # season is the collection season of interest
+  # year is the collection year of interest
+  # dis is a distance matrix
+  print(paste(season, year))
+  SampD <- samp[which(samp$CollectionSeason == season & samp$CollectionYear == year),]
+  SampN <- SampD %>% rownames
+  dmSamp <- dis %>% as.matrix %>%
+    .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+    as.dist
+  ano1A <- with(SampD, anosim(dmSamp, Territory))
+  summary(ano1A)
+  rm(SampD, SampN, dmSamp, ano1A)
+}
+
 # get the data
 print("Read in the Data for A and B")
 print("Building phyloseq object")
@@ -155,41 +172,15 @@ annotate_figure(fig, bottom = text_grob("Territory Group"),
                 left = text_grob("Aitchison Distance", rot = 90))
 dev.off()
 
-print("P1A paired t-test")
-# get data
-tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
-  rename("WithinDistance" = "AitchisonDistance", "BreederW" = "Sample1") %>%
-  full_join(., dm_between %>% select(Sample1, Sample2, AitchisonDistance),
-            by = "Sample2") %>%
-  rename("BetweenDistance" = "AitchisonDistance", "BreederB" = "Sample1",
-         "Breeder" = "Sample2") %>%
-  mutate(diff = WithinDistance - BetweenDistance) %>%
-  select(Breeder, diff, everything()) %>% na.omit()
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean distances (d = d0)")
-print("HA - within territory mean less than between territory mean (d < d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA <- sd(tDist$diff)
-meanA <- mean(tDist$diff)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("p-value")
-pt(t, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-t.test(tDist$WithinDistance, tDist$BetweenDistance,
-       paired = TRUE, alternative = "less")
+# ANOSIM
+anoRep(gj_meta, "Fall", 2017, dmAitchison)
+anoRep(gj_meta, "Fall", 2018, dmAitchison)
+anoRep(gj_meta, "Spring", 2020, dmAitchison)
+anoRep(gj_meta, "Fall", 2020, dmAitchison)
+
 # clean up
 rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison, fig,
-   F17, F18, F20, S20, tDist, meanA, meanN, n, sdA, t)
+   F17, F18, F20, S20)
 
 print("Prediction 1B - Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd

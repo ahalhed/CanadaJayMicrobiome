@@ -62,6 +62,8 @@ gj_ps <- qza_to_phyloseq(features = "P4ABCD-filtered-table.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
   mutate_all(na_if,"")
 rownames(gj_meta) <- sample_names(gj_ps)
+# clr OTUs - may not need unless calculating distances here
+# OTUclr <- zCompositions::cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% CoDaSeq::codaSeq.clr(.)
 
 # boxplots - data prep (to long)
 dmAitchison <- read_qza("P4ABCD-aitchison-distance.qza")$data
@@ -94,41 +96,18 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance")
 dev.off()
 
-print("Paired t-test")
-# get data
-tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
-  rename("NBDistance" = "AitchisonDistance", "NonBreederE" = "Sample1") %>%
-  full_join(., dm_dj %>% select(Sample1, Sample2, AitchisonDistance),
-            by = "Sample2") %>%
-  rename("DominantDistance" = "AitchisonDistance", "NonBreederDJ" = "Sample1",
-         "Breeder" = "Sample2") %>%
-  mutate(diff = DominantDistance - NBDistance) %>%
-  select(Breeder, diff, everything()) %>% na.omit()
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean distances (d = d0)")
-print("HA - dominant mean greater than not dominant mean (d > d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA <- sd(tDist$diff)
-meanA <- mean(tDist$diff)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("p-value")
-1 - pt(t, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-t.test(tDist$DominantDistance, tDist$NBDistance,
-       paired = TRUE, alternative = "greater")
+# ANOSIM
+# rows are breeders, columns are non breeders
+gj_meta$Group <- ifelse(gj_meta$BreedingStatus == "Breeder", "Breeder",
+       ifelse(gj_meta$JuvenileStatus == "DominantJuvenile",
+              "DominantJuvenile", "Nestling"))
+print("Not sure which of these is most accurate")
+with(gj_meta, anosim(dmAitchison, interaction(Territory, Group))) %>% summary
+with(gj_meta, anosim(dmAitchison, Group)) %>% summary
+# may try to remove some comparisons
+#test[c(dm_within$Sample1),c(dm_within$Sample2)] <- NA
 # clean up
-rm(dm_dj, dm_within, dm_meta,
-   sdA, meanA, meanN, n, t, tDist)
+rm(dm_dj, dm_within, dm_meta)
 
 print("Own offspring vs other offspring (4B)")
 # breeders with non-breeders on same territory (does not include between breeders)
@@ -153,41 +132,11 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   labs(x = "Non-Breeder Location", y = "Aitchison Distance")
 dev.off()
 
-print("Paired t-test")
-# get data
-tDist <- dm_within %>% select(Sample1, Sample2, AitchisonDistance) %>%
-  rename("WithinDistance" = "AitchisonDistance", "NonBreederW" = "Sample1") %>%
-  full_join(., dm_between %>% select(Sample1, Sample2, AitchisonDistance),
-            by = "Sample2") %>%
-  rename("BetweenDistance" = "AitchisonDistance", "NonBreederB" = "Sample1",
-         "Breeder" = "Sample2") %>%
-  mutate(diff = WithinDistance - BetweenDistance) %>%
-  select(Breeder, diff, everything()) %>% na.omit()
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean distances (d = d0)")
-print("HA - within territory mean less than between territory mean (d < d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA <- sd(tDist$diff)
-meanA <- mean(tDist$diff)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("p-value")
-pt(t, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-t.test(tDist$WithinDistance, tDist$BetweenDistance,
-       paired = TRUE, alternative = "less")
+# ANOSIM - need to arrange this so the pairs only between breeders and non-breeders
+with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus))) %>% summary
+
 # clean up
-rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison,
-   sdA, meanA, meanN, n, t, tDist)
+rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison)
 
 print("Counts of Genera (4C+D)")
 # looking at the number of OTUs (not reads) that occur per sample
@@ -212,38 +161,22 @@ ggplot(plot4C, aes(y = NumberOfOTUs, x = BreedingStatus)) +
   labs(y = "Number of OTUs", x = "Breeding Status")
 dev.off()
 
-print("Paired t-test")
+print("Two sample t-test")
 # get data
 br <- plot4C[plot4C$BreedingStatus=="Breeder",] %>% select(NumberOfOTUs, Territory)
 nb <- plot4C[plot4C$BreedingStatus=="Non-breeder",] %>% select(NumberOfOTUs, Territory)
-tDist <- full_join(br, nb, by = "Territory") %>%
-  rename("BreederOTUs" = "NumberOfOTUs.x", "NonBreederOTUs" = "NumberOfOTUs.y") %>%
-  mutate(diff = BreederOTUs - NonBreederOTUs) %>% na.omit()
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean distances (d = d0)")
-print("HA - breeder mean greater than non-breeder mean (d > d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA <- sd(tDist$diff)
-meanA <- mean(tDist$diff)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("p-value")
-1 - pt(t, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-t.test(tDist$BreederOTUs, tDist$NonBreederOTUs,
-       paired = TRUE, alternative = "greater")
+# null and alternative hypotheses
+print("H0 - equal mean OTUs (u1-u2=0)")
+print("HA - breeder mean OTUs greater than non-breeder mean OTUs (u1-u2>0)")
+# significance (going to 0.05)
+# group sd & mean
+aggregate(plot4C$NumberOfOTUs, by = list(plot4C$BreedingStatus), FUN=sd)
+aggregate(plot4C$NumberOfOTUs, by = list(plot4C$BreedingStatus), FUN=mean)
+# two sample t-test
+t.test(br$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
 
 #clean up
-rm(plot4C, nb, br, OTUs, sdA, meanA, meanN, n, t, tDist)
+rm(plot4C, nb, br, OTUs)
 
 print("Shared Microbiota (4D)")
 # otu and sample data

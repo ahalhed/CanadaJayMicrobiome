@@ -173,7 +173,7 @@ annotate_figure(fig, bottom = text_grob("Territory Group"),
 dev.off()
 
 # ANOSIM
-with(gj_meta, anosim(dmAitchison, Territory))
+with(gj_meta, anosim(dmAitchison, Territory)) %>% summary
 anoRep(gj_meta, "Fall", 2017, dmAitchison)
 anoRep(gj_meta, "Fall", 2018, dmAitchison)
 anoRep(gj_meta, "Spring", 2020, dmAitchison)

@@ -55,6 +55,34 @@ longDM <- function(dm, metric, samp){
   return(df5)
 }
 
+# ANOSIM repititions
+anoRep <- function(samp, breed, dis, year=NULL) {
+  # samp is df with sample data
+  # breed is the breeding status of interest
+  # year is the collection year of interest
+  # dis is a distance matrix
+  if(missing(year)) {
+    print(breed)
+    SampD <- samp[which(samp$BreedingStatus == breed),]
+    SampN <- SampD %>% rownames
+    dmSamp <- dis %>% as.matrix %>%
+      .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+      as.dist
+    ano1A <- with(SampD, anosim(dmSamp, Territory))
+    summary(ano1A)
+  } else{
+    print(year)
+    SampD <- samp[which(samp$CollectionYear == year),]
+    SampN <- SampD %>% rownames
+    dmSamp <- dis %>% as.matrix %>%
+      .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+      as.dist
+    ano1A <- with(SampD, anosim(dmSamp, Territory))
+    summary(ano1A)
+  }
+  rm(SampD, SampN, dmSamp, ano1A)
+}
+
 print("Prediction 3A + B - Weather data for freeze thaw")
 # read in weather data
 weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
@@ -180,43 +208,13 @@ ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw)))
        fill = "Within Territory Comparison")
 dev.off()
 
-print("P3A Paired t-test")
-tDist <- plot3A %>%
-  mutate(FTgroup = ifelse(.$FreezeThaw > 10, "High", "Low")) %>%
-  select(Group, Territory, FTgroup, AitchisonDistance) %>% 
-  group_by(Group, Territory, FTgroup) %>%
-  mutate(row = row_number()) %>%
-  pivot_wider(names_from = FTgroup, values_from = AitchisonDistance,
-              values_fill = NA) %>%
-  # every combination of high/low within groups (territory, breeding status)
-  select(-row) %>% expand(High, Low) %>% na.omit
-tDist$diff <- tDist$High - tDist$Low
-
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean distance (d = d0)")
-print("HA - mean distance greater with more ft event than less ft (d > d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA <- sd(tDist$diff)
-meanA <- mean(tDist$diff)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("p-value")
-1 - pt(t, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-print("t-test - within non-breeders on the same territory")
-t.test(tDist$High, tDist$Low,
-       paired = TRUE, alternative = "greater")
+# ANOSIM
+anoA <- with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus)))
+summary(anoA)
+anoRep(gj_meta, "Breeder", dmAitchison)
+anoRep(gj_meta, "Non-breeder", dmAitchison)
 # clean up (double check items here)
-rm(dates, gj_meta, dmAitchison, samp, gj_ps, tDist, meanA, meanN, n, sdA, t)
+rm(dates, gj_meta, dmAitchison, samp, gj_ps, anoA)
 
 print("Prediction 3B - FT number of microbiota")
 ## Load in the required data
@@ -297,6 +295,7 @@ ggplot(plot3C, aes(x = FoodSupplement, y = n)) +
        y = "Number of OTUs")
 dev.off()
 
+print("one sample t-test")
 # step 0 - check assumptions
 # step 1 - set null and alternative hypotheses
 print("H0 - Means are not different (u=0)")
@@ -335,9 +334,7 @@ yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% sele
 no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
 meanN <- mean(no$n)
 t.test(yes, mu=meanN, alternative = "less")
-rm(yes, no, meanN)
-# clean up
-rm(plot3C)
+rm(yes, no, meanN,plot3C)
 
 print("Prediction 3D - Food supplementation (distances)")
 # Read in data for 3D
@@ -355,44 +352,16 @@ dm_meta <- longDM(dmAitchisonB, "AitchisonDistance", gj_meta) %>%
 
 pdf("CanadaJayMicrobiome/plots/P3D.pdf", width = 9)
 ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
-  geom_boxplot() + labs(x = "Food Supplementation") +
+  geom_boxplot() + labs(x = "Food Supplementation", y = "Aitchison Distance") +
   facet_grid(~CollectionYear.x)
 dev.off()
 
-# step 0 - check assumptions
-# step 1 - set null and alternative hypotheses
-print("H0 - Mean distances are not different (u=u0)")
-print("HA - yes FS mean distance is less than no FS mean distance (u>u0)")
-# step 2 - choose alpha (0.05)
-# step 3 - calculate test statistic
-print("all samples")
-print("test statistic")
-yes <- dm_meta %>% filter(group == "Yes") %>% select(AitchisonDistance)
-no <- dm_meta %>% filter(group == "No") %>% select(AitchisonDistance)
-print("summary of yes")
-summary(yes)
-print("summary of no")
-summary(no)
-sdA <- sd(yes$AitchisonDistance)
-meanA <- mean(yes$AitchisonDistance)
-meanN <- mean(no$AitchisonDistance)
-n <- as.numeric(nrow(yes))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("all samples p-value")
-pt(t,df=n-1)
-# step 6 - calculate with R
-t.test(yes, mu=meanN, alternative = "less")
+# ANOSIM
+anoA <- with(gj_meta, anosim(dmAitchisonB, FoodSupplement))
+summary(anoA)
+anoRep(gj_meta, "Breeder", dmAitchisonB, 2017)
+anoRep(gj_meta, "Breeder", dmAitchisonB, 2018)
+
 # clean up
-rm(yes, no, meanA, meanN, n, sdA, t)
-print("2017 only")
-yes <- dm_meta %>% filter(group == "Yes", CollectionYear.x == 2017,
-                          CollectionYear.y == 2017) %>% select(AitchisonDistance)
-no <- dm_meta %>% filter(group == "No", CollectionYear.x == 2017,
-                         CollectionYear.y == 2017) %>% select(AitchisonDistance)
-meanN <- mean(no$AitchisonDistance)
-t.test(yes, mu=meanN, alternative = "less")
-print("Not enough Yes's for 2018 only")
-# clean up
-rm(yes, no, meanN, dm_meta, gj_meta, gj_ps, otu_df, dmAitchisonB, longDM)
+rm(dm_meta, gj_meta, gj_ps, otu_df, dmAitchisonB, longDM, anoA, anoRep)
+rm(longWeather, weather)

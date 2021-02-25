@@ -1,0 +1,222 @@
+
+Lmod is automatically replacing "intel/2016.4" with "gcc/7.3.0".
+
+-------------------------------------------------------------------------------
+The following dependent module(s) are not currently loaded: gcccore/.5.4.0 (required by: icc/.2016.4.258, ifort/.2016.4.258)
+-------------------------------------------------------------------------------
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/2.1.1
+
+The following have been reloaded with a version change:
+  1) gcccore/.5.4.0 => gcccore/.7.3.0     2) imkl/11.3.4.258 => imkl/2018.3.222
+
+[1] "Set up - working directory, packages, functions, data"
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.5-7
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+Joining, by = "Sample1"
+[1] "Dominant Juveniles (4A)"
+null device 
+          1 
+[1] "Not sure which of these is most accurate"
+
+Call:
+anosim(x = dmAitchison, grouping = interaction(Territory, Group)) 
+Dissimilarity: 
+
+ANOSIM statistic R: 0.136 
+      Significance: 0.09 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.123 0.167 0.202 0.228 
+
+Dissimilarity ranks between and within classes:
+                             0%    25%   50%    75% 100%   N
+Between                       1 143.50 285.0 422.50  561 535
+Arowhon.Breeder             350 350.00 350.0 350.00  350   1
+BatLake.Breeder              NA     NA    NA     NA   NA   0
+CamLkRd.Breeder             487 487.00 487.0 487.00  487   1
+DaviesBog.Breeder            NA     NA    NA     NA   NA   0
+Mile36.Breeder              178 178.00 178.0 178.00  178   1
+NorthBog.Breeder             NA     NA    NA     NA   NA   0
+OpeoBridge.Breeder           NA     NA    NA     NA   NA   0
+SWAir.Breeder               529 529.00 529.0 529.00  529   1
+TDSN.Breeder                 NA     NA    NA     NA   NA   0
+WolfHowl.Breeder             NA     NA    NA     NA   NA   0
+Arowhon.DominantJuvenile     NA     NA    NA     NA   NA   0
+BatLake.DominantJuvenile     NA     NA    NA     NA   NA   0
+CamLkRd.DominantJuvenile     NA     NA    NA     NA   NA   0
+DaviesBog.DominantJuvenile   NA     NA    NA     NA   NA   0
+Mile36.DominantJuvenile      NA     NA    NA     NA   NA   0
+NorthBog.DominantJuvenile    NA     NA    NA     NA   NA   0
+OpeoBridge.DominantJuvenile  NA     NA    NA     NA   NA   0
+SWAir.DominantJuvenile       NA     NA    NA     NA   NA   0
+TDSN.DominantJuvenile        NA     NA    NA     NA   NA   0
+WolfHowl.DominantJuvenile    NA     NA    NA     NA   NA   0
+Arowhon.Nestling            115 130.00 145.0 243.50  342   3
+BatLake.Nestling             38  48.25  72.5 117.75  251   6
+CamLkRd.Nestling            246 255.00 264.0 353.50  443   3
+DaviesBog.Nestling          428 428.00 428.0 428.00  428   1
+Mile36.Nestling              47 229.50 412.0 414.00  416   3
+NorthBog.Nestling           230 246.00 262.0 359.00  456   3
+OpeoBridge.Nestling          NA     NA    NA     NA   NA   0
+SWAir.Nestling               NA     NA    NA     NA   NA   0
+TDSN.Nestling                NA     NA    NA     NA   NA   0
+WolfHowl.Nestling            85 110.00 135.0 159.00  183   3
+
+
+Call:
+anosim(x = dmAitchison, grouping = Group) 
+Dissimilarity: 
+
+ANOSIM statistic R: 0.1588 
+      Significance: 0.034 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.102 0.137 0.177 0.221 
+
+Dissimilarity ranks between and within classes:
+                 0%    25%   50%    75% 100%   N
+Between           2 164.00 303.0 454.00  561 285
+Breeder          10 176.50 404.5 496.25  548  66
+DominantJuvenile NA     NA    NA     NA   NA   0
+Nestling          1 101.75 234.5 351.75  534 210
+
+[1] "Own offspring vs other offspring (4B)"
+null device 
+          1 
+
+Call:
+anosim(x = dmAitchison, grouping = interaction(Territory, BreedingStatus)) 
+Dissimilarity: 
+
+ANOSIM statistic R: 0.1119 
+      Significance: 0.123 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.124 0.166 0.195 0.236 
+
+Dissimilarity ranks between and within classes:
+                        0%    25%   50%    75% 100%   N
+Between                  1 142.75 284.5 423.25  561 532
+Arowhon.Breeder        350 350.00 350.0 350.00  350   1
+BatLake.Breeder         NA     NA    NA     NA   NA   0
+CamLkRd.Breeder        487 487.00 487.0 487.00  487   1
+DaviesBog.Breeder       NA     NA    NA     NA   NA   0
+Mile36.Breeder         178 178.00 178.0 178.00  178   1
+NorthBog.Breeder        NA     NA    NA     NA   NA   0
+OpeoBridge.Breeder      NA     NA    NA     NA   NA   0
+SWAir.Breeder          529 529.00 529.0 529.00  529   1
+TDSN.Breeder            NA     NA    NA     NA   NA   0
+WolfHowl.Breeder        NA     NA    NA     NA   NA   0
+Arowhon.Non-breeder    115 130.00 145.0 243.50  342   3
+BatLake.Non-breeder     38  48.25  72.5 117.75  251   6
+CamLkRd.Non-breeder    246 261.00 291.0 340.50  443   6
+DaviesBog.Non-breeder  428 428.00 428.0 428.00  428   1
+Mile36.Non-breeder      47 229.50 412.0 414.00  416   3
+NorthBog.Non-breeder   230 246.00 262.0 359.00  456   3
+OpeoBridge.Non-breeder  NA     NA    NA     NA   NA   0
+SWAir.Non-breeder       NA     NA    NA     NA   NA   0
+TDSN.Non-breeder        NA     NA    NA     NA   NA   0
+WolfHowl.Non-breeder    85 110.00 135.0 159.00  183   3
+
+[1] "Counts of Genera (4C+D)"
+[1] "Juvenile Diversity (4C)"
+null device 
+          1 
+[1] "Two sample t-test"
+[1] "H0 - equal mean OTUs (u1-u2=0)"
+[1] "HA - breeder mean OTUs greater than non-breeder mean OTUs (u1-u2>0)"
+      Group.1        x
+1     Breeder 59.12288
+2 Non-breeder 26.15939
+      Group.1        x
+1     Breeder 51.66667
+2 Non-breeder 28.13636
+
+	Two Sample t-test
+
+data:  br$NumberOfOTUs and nb$NumberOfOTUs
+t = 1.6138, df = 32, p-value = 0.05819
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ -1.167127       Inf
+sample estimates:
+mean of x mean of y 
+ 51.66667  28.13636 
+
+[1] "Shared Microbiota (4D)"
+Joining, by = "b"
+null device 
+          1 
+[1] "Paired t-test"
+[1] "H0 - equal mean un/shared OTUs (d = d0)"
+[1] "HA1 - more shared OTUs than unique non-breeder OTUs (d > d0)"
+[1] "HA2 - more unique breeders OTUs than unique non-breeder OTUs (d > d0)"
+     Bonly            NBonly          shared         diffUnique    
+ Min.   : 10.00   Min.   : 6.00   Min.   : 17.00   Min.   :-56.00  
+ 1st Qu.: 15.75   1st Qu.:14.25   1st Qu.: 32.25   1st Qu.: -2.75  
+ Median : 28.00   Median :17.50   Median : 52.00   Median :  5.00  
+ Mean   : 40.46   Mean   :25.73   Mean   : 61.08   Mean   : 14.73  
+ 3rd Qu.: 63.75   3rd Qu.:29.00   3rd Qu.: 82.25   3rd Qu.: 36.00  
+ Max.   :100.00   Max.   :71.00   Max.   :122.00   Max.   : 86.00  
+   diffShared   
+ Min.   : 6.00  
+ 1st Qu.:14.00  
+ Median :24.50  
+ Mean   :35.35  
+ 3rd Qu.:55.25  
+ Max.   :93.00  
+[1] "HA1 - p-value"
+[1] 4.814061e-07
+[1] "HA2 - p-value"
+[1] 0.01916103
+[1] "alpha"
+[1] 2.059539
+[1] "HA1 - t-test"
+
+	Paired t-test
+
+data:  tDist$shared and tDist$NBonly
+t = 6.4395, df = 25, p-value = 4.814e-07
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 25.97018      Inf
+sample estimates:
+mean of the differences 
+               35.34615 
+
+[1] "HA2 - t-test"
+
+	Paired t-test
+
+data:  tDist$Bonly and tDist$NBonly
+t = 2.1869, df = 25, p-value = 0.01916
+alternative hypothesis: true difference in means is greater than 0
+95 percent confidence interval:
+ 3.224692      Inf
+sample estimates:
+mean of the differences 
+               14.73077 
+

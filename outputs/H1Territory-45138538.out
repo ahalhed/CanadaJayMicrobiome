@@ -49,38 +49,172 @@ Loading required package: ggplot2
 Joining, by = "Sample1"
 null device 
           1 
-[1] "P1A paired t-test"
-[1] "H0 - equal mean distances (d = d0)"
-[1] "HA - within territory mean less than between territory mean (d < d0)"
-   Breeder               diff           BreederW         WithinDistance  
- Length:69          Min.   :-4.0056   Length:69          Min.   :0.5563  
- Class :character   1st Qu.:-1.0028   Class :character   1st Qu.:2.0756  
- Mode  :character   Median : 0.1204   Mode  :character   Median :2.6622  
-                    Mean   :-0.1168                      Mean   :2.3941  
-                    3rd Qu.: 0.7508                      3rd Qu.:2.6898  
-                    Max.   : 2.0065                      Max.   :3.5540  
-   BreederB         BetweenDistance  
- Length:69          Min.   :0.04849  
- Class :character   1st Qu.:1.26746  
- Mode  :character   Median :2.01566  
-                    Mean   :2.51092  
-                    3rd Qu.:3.58669  
-                    Max.   :7.55953  
-[1] "p-value"
-[1] 0.2192195
-[1] "alpha"
-[1] 1.995469
 
-	Paired t-test
+Call:
+anosim(x = dmAitchison, grouping = Territory) 
+Dissimilarity: 
 
-data:  tDist$WithinDistance and tDist$BetweenDistance
-t = -0.77942, df = 68, p-value = 0.2192
-alternative hypothesis: true difference in means is less than 0
-95 percent confidence interval:
-      -Inf 0.1331093
-sample estimates:
-mean of the differences 
-             -0.1168122 
+ANOSIM statistic R: 0.03823 
+      Significance: 0.311 
+
+Permutation: free
+Number of permutations: 999
+
+[1] "Fall 2017"
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: 0.03704 
+      Significance: 0.485 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.852 0.926 1.000 1.000 
+
+Dissimilarity ranks between and within classes:
+           0%  25% 50%  75% 100%  N
+Between     1  7.5  15 21.5   28 27
+Alligator  NA   NA  NA   NA   NA  0
+Arowhon    NA   NA  NA   NA   NA  0
+BatLake    NA   NA  NA   NA   NA  0
+Boardwalk  NA   NA  NA   NA   NA  0
+CamLkRd    NA   NA  NA   NA   NA  0
+CedarSwamp NA   NA  NA   NA   NA  0
+ClarkeLake NA   NA  NA   NA   NA  0
+Cliff      NA   NA  NA   NA   NA  0
+DaviesBog  NA   NA  NA   NA   NA  0
+HeadCreek  NA   NA  NA   NA   NA  0
+Mile36     NA   NA  NA   NA   NA  0
+NorthBog   14 14.0  14 14.0   14  1
+OpeoBridge NA   NA  NA   NA   NA  0
+OpeoTurn   NA   NA  NA   NA   NA  0
+SWAir      NA   NA  NA   NA   NA  0
+TDSN       NA   NA  NA   NA   NA  0
+TDSS       NA   NA  NA   NA   NA  0
+WestRose   NA   NA  NA   NA   NA  0
+WolfHowl   NA   NA  NA   NA   NA  0
+
+[1] "Fall 2018"
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: -0.4857 
+      Significance: 0.742 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.771 0.943 1.000 1.000 
+
+Dissimilarity ranks between and within classes:
+           0%  25% 50% 75% 100%  N
+Between     1  9.5  18  27   36 35
+Alligator  NA   NA  NA  NA   NA  0
+Arowhon    NA   NA  NA  NA   NA  0
+BatLake    NA   NA  NA  NA   NA  0
+Boardwalk  NA   NA  NA  NA   NA  0
+CamLkRd    NA   NA  NA  NA   NA  0
+CedarSwamp NA   NA  NA  NA   NA  0
+ClarkeLake NA   NA  NA  NA   NA  0
+Cliff      NA   NA  NA  NA   NA  0
+DaviesBog  NA   NA  NA  NA   NA  0
+HeadCreek  NA   NA  NA  NA   NA  0
+Mile36     NA   NA  NA  NA   NA  0
+NorthBog   27 27.0  27  27   27  1
+OpeoBridge NA   NA  NA  NA   NA  0
+OpeoTurn   NA   NA  NA  NA   NA  0
+SWAir      NA   NA  NA  NA   NA  0
+TDSN       NA   NA  NA  NA   NA  0
+TDSS       NA   NA  NA  NA   NA  0
+WestRose   NA   NA  NA  NA   NA  0
+WolfHowl   NA   NA  NA  NA   NA  0
+
+[1] "Spring 2020"
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: -0.2016 
+      Significance: 0.782 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.323 0.411 0.500 0.581 
+
+Dissimilarity ranks between and within classes:
+           0%   25%  50%   75% 100%  N
+Between     1 17.25 32.5 48.75   66 62
+Alligator  NA    NA   NA    NA   NA  0
+Arowhon     6  6.00  6.0  6.00    6  1
+BatLake    NA    NA   NA    NA   NA  0
+Boardwalk  NA    NA   NA    NA   NA  0
+CamLkRd    65 65.00 65.0 65.00   65  1
+CedarSwamp NA    NA   NA    NA   NA  0
+ClarkeLake NA    NA   NA    NA   NA  0
+Cliff      NA    NA   NA    NA   NA  0
+DaviesBog  NA    NA   NA    NA   NA  0
+HeadCreek  NA    NA   NA    NA   NA  0
+Mile36     34 34.00 34.0 34.00   34  1
+NorthBog   NA    NA   NA    NA   NA  0
+OpeoBridge NA    NA   NA    NA   NA  0
+OpeoTurn   NA    NA   NA    NA   NA  0
+SWAir      54 54.00 54.0 54.00   54  1
+TDSN       NA    NA   NA    NA   NA  0
+TDSS       NA    NA   NA    NA   NA  0
+WestRose   NA    NA   NA    NA   NA  0
+WolfHowl   NA    NA   NA    NA   NA  0
+
+[1] "Fall 2020"
+
+Call:
+anosim(x = dmSamp, grouping = Territory) 
+Dissimilarity: 
+
+ANOSIM statistic R: -0.2672 
+      Significance: 0.841 
+
+Permutation: free
+Number of permutations: 999
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.350 0.448 0.526 0.642 
+
+Dissimilarity ranks between and within classes:
+           0%   25%  50%   75% 100%   N
+Between     1 29.75 59.5 90.25  120 116
+Alligator  NA    NA   NA    NA   NA   0
+Arowhon    93 93.00 93.0 93.00   93   1
+BatLake    NA    NA   NA    NA   NA   0
+Boardwalk  NA    NA   NA    NA   NA   0
+CamLkRd    NA    NA   NA    NA   NA   0
+CedarSwamp NA    NA   NA    NA   NA   0
+ClarkeLake NA    NA   NA    NA   NA   0
+Cliff      54 54.00 54.0 54.00   54   1
+DaviesBog  NA    NA   NA    NA   NA   0
+HeadCreek  NA    NA   NA    NA   NA   0
+Mile36     NA    NA   NA    NA   NA   0
+NorthBog   NA    NA   NA    NA   NA   0
+OpeoBridge NA    NA   NA    NA   NA   0
+OpeoTurn   89 89.00 89.0 89.00   89   1
+SWAir      NA    NA   NA    NA   NA   0
+TDSN       NA    NA   NA    NA   NA   0
+TDSS       NA    NA   NA    NA   NA   0
+WestRose   68 68.00 68.0 68.00   68   1
+WolfHowl   NA    NA   NA    NA   NA   0
 
 [1] "Prediction 1B - Spatial distribution"
 [1] "CLR transformation"
@@ -559,7 +693,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance     F Pr(>F)
-Model     3   246.92 0.781  0.895
+Model     3   246.92 0.781  0.869
 Residual  4   421.54             
 
 $xyFall2018
@@ -569,7 +703,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     4   155.53 1.2281  0.306
+Model     4   155.53 1.2281  0.326
 Residual  4   126.64              
 
 $xyFall2020
@@ -579,7 +713,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     3   304.18 1.1279  0.219
+Model     3   304.18 1.1279  0.215
 Residual 12  1078.76              
 
 $xySpring2020
@@ -589,7 +723,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus, data = data)
          Df Variance      F Pr(>F)
-Model     3   289.51 0.9294  0.585
+Model     3   289.51 0.9294  0.565
 Residual  8   830.72              
 
 $xyFall2017
@@ -722,7 +856,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus + Condition(scores(y)), data = data)
          Df Variance      F Pr(>F)
-Model     3   294.10 1.0277  0.412
+Model     3   294.10 1.0277  0.427
 Residual  6   572.36              
 
 $xySpring2020
@@ -732,7 +866,7 @@ Number of permutations: 999
 
 Model: rda(formula = x ~ Sex + BirthYear + JuvenileStatus + Condition(scores(y)), data = data)
          Df Variance     F Pr(>F)
-Model     3   319.05 0.853  0.652
+Model     3   319.05 0.853  0.662
 Residual  3   374.04             
 
 $xyFall2017
@@ -782,7 +916,7 @@ Call: x ~ 1
 + PCNM2         -0.034114875
 
         Df    AIC      F Pr(>F)
-+ PCNM5  1 53.407 1.2963  0.214
++ PCNM5  1 53.407 1.2963   0.22
 
 Step: R2.adj= 0 
 Call: x ~ 1 
@@ -4073,7 +4207,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df SumOfSqs      F Pr(>F)
-Model     3   3.9115 1.2803  0.337
+Model     3   3.9115 1.2803  0.351
 Residual  4   4.0733              
 
 $capseaFall2018
@@ -4083,7 +4217,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df SumOfSqs      F Pr(>F)
-Model     3   1.5343 0.4241  0.778
+Model     3   1.5343 0.4241  0.768
 Residual  4   4.8234              
 
 $capseaFall2020
@@ -4093,7 +4227,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df Variance      F Pr(>F)
-Model     3   0.7780 0.8441  0.564
+Model     3   0.7780 0.8441  0.599
 Residual 12   3.6871              
 
 $capseaSpring2020
@@ -4103,7 +4237,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df SumOfSqs      F Pr(>F)
-Model     3   2.5972 0.6361  0.796
+Model     3   2.5972 0.6361  0.748
 Residual  8  10.8882              
 
 $capseaFall2017

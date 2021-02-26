@@ -8,6 +8,7 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(geosphere)
+library(ggpubr)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -33,7 +34,7 @@ oriDist <- function(samp) {
 }
 
 
-## Prediction 5A
+print("Prediction 5A")
 # Breeders established in a specific territory closer to their natal territory will have less diverse microbial communities.
 gj_ps <- qza_to_phyloseq(features = "P5A-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
@@ -51,13 +52,12 @@ oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                             DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
 # all fall samples
-pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 10)
-ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
-                  shape = as.factor(CollectionYear))) +
-  geom_point() + #log scale?
-  labs(y = "Number of OTUs", shape = "Collection Year",
-       x = "Distance from Origin (m)")
-dev.off()
+p5A <- ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
+                         shape = as.factor(CollectionYear))) +
+  geom_point() + scale_x_log10() +
+  labs(shape = "Collection Year") +
+  theme(axis.title.x=element_blank(),
+        axis.title.y=element_blank())
 
 # stats on linear models
 # linear regression on all samples
@@ -85,7 +85,7 @@ lm(OTUs~DistanceFromOrigin,
 # clean up
 rm(gj_meta, gj_ps, OTUs, oriDF)
 
-## Prediction 5B
+print("Prediction 5B")
 # Non-breeders who have travelled further from their origin will have more diverse microbiomes.
 # considering the number of OTUs observed to be diversity here
 # non-breeders are not established in a territory and are likely travelling around more
@@ -106,16 +106,12 @@ OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
 oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                    DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
-# Make an ordination plot
-pdf("CanadaJayMicrobiome/plots/P5B.pdf", width = 10)
-ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin, shape = as.factor(CollectionYear))) +
-  labs(x = "Distance From Origin (m)",
-       y = "Number of OTUs Observed",
-       shape = "Collection Year") +
-  geom_point() +
-  scale_color_viridis_d()
-dev.off()
-
+# Make an scatter plot
+p5B <- ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin,
+                         shape = as.factor(CollectionYear))) +
+  labs(shape = "Collection Year") +
+  geom_point() + theme(axis.title.x=element_blank(),
+                       axis.title.y=element_blank())
 # stats on linear model
 # linear regression on all samples
 print("All years") # can't do year by year b/c of low sample number
@@ -126,3 +122,16 @@ lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
 
 # clean up
 rm(gj_meta, gj_ps, OTUs, oriDF)
+
+# make figure
+figure <- ggarrange(p5A, p5B, ncol=1, nrow=2, common.legend = TRUE,
+                    legend="top", labels = c("A", "B"))
+# arrange figures
+pdf("CanadaJayMicrobiome/plots/H5.pdf", height = 10)
+annotate_figure(figure, bottom = text_grob("Distance From Origin (m)",
+                                           hjust = 1, x = 0.645, size = 10),
+                left = text_grob("Number of OTUs Observed", rot = 90))
+dev.off()
+
+# clean up
+rm(figure, p5A, p5B, oriDist)

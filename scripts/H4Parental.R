@@ -5,7 +5,6 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(vegan)
 library(phyloseq)
-library(ggsignif)
 library(tidyverse)
 # set plotting theme
 theme_set(theme_bw())
@@ -102,7 +101,7 @@ gj_meta$Group <- ifelse(gj_meta$BreedingStatus == "Breeder", "Breeder",
               "DominantJuvenile", "Nestling"))
 
 # need to filter out breeder-breeder and non-breeder-non-breeder comparisons (?)
-with(gj_meta, anosim(dmAitchison, interaction(Group,Group))) %>% summary
+with(gj_meta, anosim(dmAitchison, interaction(Territory,Group,Group))) %>% summary
 
 # clean up
 rm(dm_dj, dm_within, dm_meta)
@@ -206,7 +205,8 @@ OTUsamples <- shareOTUs %>% left_join(br) %>%
 plot4D <- OTUsamples %>%
   select(Territory, Bonly, NBonly, shared) %>%
   pivot_longer(-Territory, names_to = "Sharing", values_to = "NumberOfOTUs") %>%
-  filter(Territory == "Within")
+  filter(Territory == "Within") %>%
+  mutate(NumberOfOTUs = as.numeric(NumberOfOTUs))
 
 # make plot
 pdf("CanadaJayMicrobiome/plots/P4D.pdf")
@@ -217,45 +217,25 @@ ggplot(plot4D, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   ggtitle("Within Territory OTUs Shared Between Individuals")
 dev.off()
 
-print("Paired t-test")
-tDist <- OTUsamples %>% filter(Territory == "Within") %>%
-  mutate(Bonly = as.double(Bonly), NBonly = as.double(NBonly), shared = as.double(shared),
-         diffShared = as.numeric(shared) - as.numeric(NBonly),
-         diffUnique = as.numeric(Bonly) - as.numeric(NBonly)) %>%
-  select(Bonly, NBonly, shared, diffUnique, diffShared) %>% na.omit()
-# Step 0 - check assumptions (see Radziwill p 345-6)
-# Step 1 - null and alternative hypotheses
-print("H0 - equal mean un/shared OTUs (d = d0)")
-print("HA1 - more shared OTUs than unique non-breeder OTUs (d > d0)")
-print("HA2 - more unique breeders OTUs than unique non-breeder OTUs (d > d0)")
-# Step 2 - significance (going to 0.05)
-# Step 3 - test statistic
-summary(tDist)
-sdA1 <- sd(tDist$diffShared)
-meanA1 <- mean(tDist$diffShared)
-sdA2 <- sd(tDist$diffUnique)
-meanA2 <- mean(tDist$diffUnique)
-meanN <- 0
-n <- as.numeric(nrow(tDist))
-t1 <- (meanA1-meanN)/(sdA1/sqrt(n))
-t2 <- (meanA2-meanN)/(sdA2/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("HA1 - p-value")
-1 - pt(t1, df=n-1)
-print("HA2 - p-value")
-1 - pt(t2, df=n-1)
-#Step 6 - is p-val < a?
-print("alpha")
-qt(0.975, df=n-1)
-#Step 7 - CI and R check
-print("HA1 - t-test")
-t.test(tDist$shared, tDist$NBonly,
-       paired = TRUE, alternative = "greater")
-print("HA2 - t-test")
-t.test(tDist$Bonly, tDist$NBonly,
-       paired = TRUE, alternative = "greater")
+print("Two sample t-test")
+# get data
+br <- plot4D[plot4D$Sharing=="Bonly",]
+nb <- plot4D[plot4D$Sharing=="NBonly",]
+sh <- plot4D[plot4D$Sharing=="shared",]
+# null and alternative hypotheses
+print("H0 - equal mean OTUs (u1-u2=0)")
+print("HA1 - more shared OTUs than unique non-breeder OTUs (u1-u2 > u0)")
+print("HA2 - more unique breeder OTUs than unique non-breeder OTUs (u1-u3 > u0)")
+# significance (going to 0.05)
+# group sd & mean
+aggregate(plot4D$NumberOfOTUs, by = list(plot4D$Sharing), FUN=sd)
+aggregate(plot4D$NumberOfOTUs, by = list(plot4D$Sharing), FUN=mean)
+# two sample t-test
+print("Shared & Non-breeder")
+t.test(sh$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
+print("Breeder & Non-breeder")
+t.test(br$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
+
 # section clean up
-rm(br, nb, otu_br, otu_nb, OTUs, plot4D, shareOTUs, pairedNames, OTUsamples,
-   sdA1, meanA1, sdA2, meanA2, meanN, n, t1, t2, tDist,
+rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4D, shareOTUs, pairedNames, OTUsamples,
    gj_meta, gj_ps, longDM, share)

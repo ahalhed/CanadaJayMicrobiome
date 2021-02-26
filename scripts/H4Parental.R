@@ -96,16 +96,14 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance")
 dev.off()
 
-# ANOSIM
-# rows are breeders, columns are non breeders
+# ANOSIM - need to arrange this so the distances are only between breeders and non-breeders
 gj_meta$Group <- ifelse(gj_meta$BreedingStatus == "Breeder", "Breeder",
        ifelse(gj_meta$JuvenileStatus == "DominantJuvenile",
               "DominantJuvenile", "Nestling"))
-print("Not sure which of these is most accurate")
-with(gj_meta, anosim(dmAitchison, interaction(Territory, Group))) %>% summary
-with(gj_meta, anosim(dmAitchison, Group)) %>% summary
-# may try to remove some comparisons
-#test[c(dm_within$Sample1),c(dm_within$Sample2)] <- NA
+
+# need to filter out breeder-breeder and non-breeder-non-breeder comparisons (?)
+with(gj_meta, anosim(dmAitchison, interaction(Group,Group))) %>% summary
+
 # clean up
 rm(dm_dj, dm_within, dm_meta)
 
@@ -132,8 +130,9 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
   labs(x = "Non-Breeder Location", y = "Aitchison Distance")
 dev.off()
 
-# ANOSIM - need to arrange this so the pairs only between breeders and non-breeders
-with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus))) %>% summary
+# ANOSIM - need to arrange this so the distances are only between breeders and non-breeders
+# not sure interaction(Territory, BreedingStatus, BreedingStatus) is doing the right thing
+with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus, BreedingStatus))) %>% summary
 
 # clean up
 rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison)

@@ -55,34 +55,6 @@ longDM <- function(dm, metric, samp){
   return(df5)
 }
 
-# ANOSIM repititions
-anoRep <- function(samp, breed, dis, year=NULL) {
-  # samp is df with sample data
-  # breed is the breeding status of interest
-  # year is the collection year of interest
-  # dis is a distance matrix
-  if(missing(year)) {
-    print(breed)
-    SampD <- samp[which(samp$BreedingStatus == breed),]
-    SampN <- SampD %>% rownames
-    dmSamp <- dis %>% as.matrix %>%
-      .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
-      as.dist
-    ano1A <- with(SampD, anosim(dmSamp, Territory))
-    summary(ano1A)
-  } else{
-    print(year)
-    SampD <- samp[which(samp$CollectionYear == year),]
-    SampN <- SampD %>% rownames
-    dmSamp <- dis %>% as.matrix %>%
-      .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
-      as.dist
-    ano1A <- with(SampD, anosim(dmSamp, Territory))
-    summary(ano1A)
-  }
-  rm(SampD, SampN, dmSamp, ano1A)
-}
-
 print("Prediction 3A + B - Weather data for freeze thaw")
 # read in weather data
 weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
@@ -209,12 +181,33 @@ ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw)))
 dev.off()
 
 # ANOSIM
-anoA <- with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus)))
-summary(anoA)
-anoRep(gj_meta, "Breeder", dmAitchison)
-anoRep(gj_meta, "Non-breeder", dmAitchison)
-# clean up (double check items here)
-rm(dates, gj_meta, dmAitchison, samp, gj_ps, anoA)
+anoMet <- gj_meta %>% rownames_to_column(var = "sampleID") %>%
+  left_join(metaWeather %>% select(sampleID, FreezeThaw)) %>%
+  column_to_rownames(var = "sampleID")
+
+print("All samples")
+with(anoMet, anosim(dmAitchison, FreezeThaw)) %>% summary #interaction(Territory, BreedingStatus)
+
+print("Breeders only")
+SampD <- anoMet[which(anoMet$BreedingStatus == "Breeder"),]
+SampN <- SampD %>% rownames
+dmSamp <- dmAitchison %>% as.matrix %>%
+  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+  as.dist
+with(SampD, anosim(dmSamp, FreezeThaw)) %>% summary()
+rm(SampD, SampN, dmSamp)
+
+print("Non-Breeders only")
+SampD <- anoMet[which(anoMet$BreedingStatus == "Non-breeder"),]
+SampN <- SampD %>% rownames
+dmSamp <- dmAitchison %>% as.matrix %>%
+  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+  as.dist
+with(SampD, anosim(dmSamp, FreezeThaw)) %>% summary()
+rm(SampD, SampN, dmSamp)
+
+# clean up
+rm(dates, gj_meta, dmAitchison, samp, gj_ps, anoMet)
 
 print("Prediction 3B - FT number of microbiota")
 ## Load in the required data
@@ -252,7 +245,7 @@ ggplot(plot3B, aes(x = FreezeThaw, y = n)) +
 dev.off()
 
 # linear model
-(lm3B <- lm(n~FreezeThaw, data = plot3B))
+(lm3B <- lm(n~FreezeThaw+BreedingStatus, data = plot3B))
 summary(lm3B)
 anova(lm3B)
 # clean up - removing 3A+B data
@@ -302,7 +295,7 @@ print("H0 - Means are not different (u=0)")
 print("HA - yes FS mean is less than no FS mean (u>u0)")
 # step 2 - choose alpha (0.05)
 # step 3 - calculate test statistic
-print("all")
+print("all samples")
 print("test statistic")
 yes <- plot3C %>% filter(FoodSupplement == "Y") %>% select(n)
 no <- plot3C %>% filter(FoodSupplement == "N") %>% select(n)
@@ -357,11 +350,32 @@ ggplot(dm_meta, aes(y = AitchisonDistance, x = group)) +
 dev.off()
 
 # ANOSIM
-anoA <- with(gj_meta, anosim(dmAitchisonB, FoodSupplement))
-summary(anoA)
-anoRep(gj_meta, "Breeder", dmAitchisonB, 2017)
-anoRep(gj_meta, "Breeder", dmAitchisonB, 2018)
+anoMet <- gj_meta[which(gj_meta$BreedingStatus == "Breeder"),]
+print("Both years")
+SampN <- anoMet %>% rownames
+dmSamp <- dmAitchisonB %>% as.matrix %>%
+  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+  as.dist
+with(anoMet, anosim(dmSamp, FoodSupplement)) %>% summary
+rm(SampN, dmSamp)
+
+print("2017 Only")
+SampD <- anoMet[which(anoMet$CollectionYear == 2017),] 
+SampN <- SampD %>% rownames
+dmSamp <- dmAitchisonB %>% as.matrix %>%
+  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+  as.dist
+with(SampD, anosim(dmSamp, FoodSupplement)) %>% summary()
+rm(SampD, SampN, dmSamp)
+
+print("2018 Only")
+SampD <- anoMet[which(anoMet$CollectionYear == 2018),] 
+SampN <- SampD %>% rownames
+dmSamp <- dmAitchisonB %>% as.matrix %>%
+  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
+  as.dist
+with(SampD, anosim(dmSamp, FoodSupplement)) %>% summary()
+rm(SampD, SampN, dmSamp)
 
 # clean up
-rm(dm_meta, gj_meta, gj_ps, otu_df, dmAitchisonB, longDM, anoA, anoRep)
-rm(longWeather, weather)
+rm(dm_meta, gj_meta, gj_ps, otu_df, dmAitchisonB, longDM, anoMet)

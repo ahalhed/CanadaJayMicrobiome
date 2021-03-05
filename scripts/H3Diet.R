@@ -55,7 +55,7 @@ longDM <- function(dm, metric, samp){
   return(df5)
 }
 
-print("Prediction 3A + B - Weather data for freeze thaw")
+print("Prediction 3A - Weather data for freeze thaw")
 # read in weather data
 weather <- read_csv("CanadaJayMicrobiome/data/2020.csv") %>% 
   rbind(read_csv("CanadaJayMicrobiome/data/2019.csv")) %>% 
@@ -129,90 +129,10 @@ metaWeather$Frozen[metaWeather$Frozen== "integer(0)"] <- 0
 #clean up
 rm(cacheGroup, eventCount, weatherCombo, weather)
 
-print("Prediction 3A - Freeze thaw variation")
+print("Prediction 3A - FT number of microbiota")
 ## Load in the required data
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "P3A-filtered-table.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-# double check the combination here
-# read in the aitchison distance matrix
-dmAitchison <- read_qza("P3A-aitchison-distance.qza")$data %>%
-  as.matrix() %>% # remove row without date information
-  .[rownames(.) %in% rownames(gj_meta), colnames(.) %in% rownames(gj_meta)]
-
-# get data frame with sames collected on the same date
-plot3A <- longDM(dmAitchison, "AitchisonDistance", gj_meta) %>%
-  .[which(.$CollectionDate.x == .$CollectionDate.y),] %>%
-  mutate(CollectionDate = dmy(CollectionDate.x),
-         Year = CollectionYear.x) %>%
-  select(CollectionDate, AitchisonDistance, Year, Sample1, Sample2) %>%
-  left_join(metaWeather %>% select(CollectionDate, FreezeThaw, CollectionSeason),
-            by="CollectionDate") %>%
-  unique() %>% # remove duplicate rows
-  # add in the breeding status information
-  left_join(metaWeather %>% select(sampleID, BreedingStatus, Territory),
-          by = c("Sample1" = "sampleID")) %>%
-  left_join(metaWeather %>% select(sampleID, BreedingStatus, Territory),
-            by = c("Sample2" = "sampleID"), suffix = c("1", "2"))
-plot3A$Group <- ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
-                         plot3A$BreedingStatus1 == "Breeder",
-                       "Within Breeders",
-                       ifelse(plot3A$BreedingStatus1 == plot3A$BreedingStatus2 &
-                           plot3A$BreedingStatus1 == "Non-breeder",
-                         "Within Non-Breeders", "Between Breeder & Non-Breeder"))
-plot3A$Territory <- ifelse(plot3A$Territory1 == plot3A$Territory2,
-                           "Same Territory", "Different Territory")
-plot3A <- plot3A %>% select(-c(Territory1, Territory2, BreedingStatus1, BreedingStatus2))
-
-# make figure
-pdf("CanadaJayMicrobiome/plots/P3A.pdf", width = 9)
-ggplot(plot3A, aes(y = AitchisonDistance, fill = Group, x = factor(FreezeThaw))) +
-  geom_boxplot() + scale_fill_viridis_d() +
-  facet_grid(~Territory) +
-  theme(legend.position = "bottom", legend.direction = "vertical") +
-  labs(x = "Number of Freeze Thaw Events (14 days prior to sampling)",
-       y = "Aitchison Distance",
-       fill = "Within Territory Comparison")
-dev.off()
-
-# ANOSIM
-anoMet <- gj_meta %>% rownames_to_column(var = "sampleID") %>%
-  left_join(metaWeather %>% select(sampleID, FreezeThaw)) %>%
-  column_to_rownames(var = "sampleID")
-
-print("All samples")
-with(anoMet, anosim(dmAitchison, FreezeThaw)) %>% summary #interaction(Territory, BreedingStatus)
-
-print("Breeders only")
-SampD <- anoMet[which(anoMet$BreedingStatus == "Breeder"),]
-SampN <- SampD %>% rownames
-dmSamp <- dmAitchison %>% as.matrix %>%
-  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
-  as.dist
-with(SampD, anosim(dmSamp, FreezeThaw)) %>% summary()
-rm(SampD, SampN, dmSamp)
-
-print("Non-Breeders only")
-SampD <- anoMet[which(anoMet$BreedingStatus == "Non-breeder"),]
-SampN <- SampD %>% rownames
-dmSamp <- dmAitchison %>% as.matrix %>%
-  .[which(rownames(.) %in% SampN), which(colnames(.) %in% SampN)] %>%
-  as.dist
-with(SampD, anosim(dmSamp, FreezeThaw)) %>% summary()
-rm(SampD, SampN, dmSamp)
-
-# clean up
-rm(dates, gj_meta, dmAitchison, samp, gj_ps, anoMet)
-
-print("Prediction 3B - FT number of microbiota")
-## Load in the required data
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3B-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -229,33 +149,32 @@ otu_df <- as(otu_table(gj_ps), "matrix") %>%
   .[which(.$Count > 0),] # select only those present
 
 # summarize to number of OTUs (not counts per)
-plot3B <- otu_df %>% mutate(Count = 1) %>%
+plot3A <- otu_df %>% mutate(Count = 1) %>%
   select(sampleID, Count) %>%
   group_by(sampleID) %>%
   count %>% ungroup %>% # count the number of times the groups occur
   full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
-  right_join(plot3A %>% select(Sample1, FreezeThaw),
-            by = c("sampleID" = "Sample1"))
+  left_join(metaWeather %>% select(sampleID, FreezeThaw))
 
-pdf("CanadaJayMicrobiome/plots/P3B.pdf", width = 9)
-ggplot(plot3B, aes(x = FreezeThaw, y = n)) +
-  geom_jitter() + #geom_abline() +
+pdf("CanadaJayMicrobiome/plots/P3A.pdf", width = 9)
+ggplot(plot3A, aes(x = FreezeThaw, y = n)) +
+  geom_jitter() + geom_abline() +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
        y = "Number of OTUs")
 dev.off()
 
 # linear model
-(lm3B <- lm(n~FreezeThaw+BreedingStatus, data = plot3B))
-summary(lm3B)
-anova(lm3B)
+(lm3A <- lm(n~FreezeThaw+BreedingStatus, data = plot3A))
+summary(lm3A)
+anova(lm3A)
 # clean up - removing 3A+B data
-rm(metaWeather, gj_ps, plot3A, plot3B,
-   otu_df, lm3B, gj_meta)
+rm(metaWeather, gj_ps, plot3A,
+   otu_df, lm3A, gj_meta)
 
-print("Prediction 3C + D - Data for Supplementation")
+print("Prediction 3B+C - Data for Supplementation")
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3CD-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P3BC-filtered-table.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -265,7 +184,7 @@ gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 gj_meta <- gj_meta %>% rownames_to_column(var = "sampleID")
 
-print("Prediction 3C - Food supplementation (OTUs)")
+print("Prediction 3B - Food supplementation (OTUs)")
 # scatter - x is freeze thaw events, y is % total microbiota shared
 otu_df <- as(otu_table(gj_ps), "matrix") %>%
   as.data.frame %>% rownames_to_column(var = "sampleID") %>%
@@ -274,15 +193,15 @@ otu_df <- as(otu_table(gj_ps), "matrix") %>%
   .[which(.$Count > 0),] # select only those present
 
 # summarize to number of OTUs (not counts per)
-plot3C <- otu_df %>% mutate(Count = 1) %>%
+plot3B <- otu_df %>% mutate(Count = 1) %>%
   select(sampleID, Count) %>%
   group_by(sampleID) %>%
   count %>% ungroup %>% # count the number of OTUs per group
   full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
   filter(FoodSupplement != "U")
 
-pdf("CanadaJayMicrobiome/plots/P3C.pdf", width = 9)
-ggplot(plot3C, aes(x = FoodSupplement, y = n)) +
+pdf("CanadaJayMicrobiome/plots/P3B.pdf", width = 9)
+ggplot(plot3B, aes(x = FoodSupplement, y = n)) +
   geom_boxplot() + facet_grid(~CollectionYear) +
   labs(x = "Food Supplementation Group",
        y = "Number of OTUs")
@@ -297,8 +216,8 @@ print("HA - yes FS mean is less than no FS mean (u>u0)")
 # step 3 - calculate test statistic
 print("all samples")
 print("test statistic")
-yes <- plot3C %>% filter(FoodSupplement == "Y") %>% select(n)
-no <- plot3C %>% filter(FoodSupplement == "N") %>% select(n)
+yes <- plot3B %>% filter(FoodSupplement == "Y") %>% select(n)
+no <- plot3B %>% filter(FoodSupplement == "N") %>% select(n)
 print("summary of yes")
 summary(yes)
 print("summary of no")
@@ -317,21 +236,21 @@ t.test(yes, mu=meanN, alternative = "less")
 # clean up
 rm(yes, no, meanA, meanN, n, sdA, t)
 print("2017 only")
-yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2017) %>% select(n)
-no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2017) %>% select(n)
+yes <- plot3B %>% filter(FoodSupplement == "Y", CollectionYear == 2017) %>% select(n)
+no <- plot3B %>% filter(FoodSupplement == "N", CollectionYear == 2017) %>% select(n)
 meanN <- mean(no$n)
 t.test(yes, mu=meanN, alternative = "less")
 rm(yes, no, meanN)
 print("2018 only")
-yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% select(n)
-no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
+yes <- plot3B %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% select(n)
+no <- plot3B %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
 meanN <- mean(no$n)
 t.test(yes, mu=meanN, alternative = "less")
-rm(yes, no, meanN,plot3C)
+rm(yes, no, meanN,plot3B)
 
-print("Prediction 3D - Food supplementation (distances)")
-# Read in data for 3D
-dmAitchisonB <- read_qza("P3D-aitchison-distance.qza")$data 
+print("Prediction 3C - Food supplementation (distances)")
+# Read in data for 3C
+dmAitchisonB <- read_qza("P3C-aitchison-distance.qza")$data 
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # combine the aitchison distance data with metadata

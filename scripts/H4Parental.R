@@ -101,7 +101,8 @@ gj_meta$Group <- ifelse(gj_meta$BreedingStatus == "Breeder", "Breeder",
               "DominantJuvenile", "Nestling"))
 
 # need to filter out breeder-breeder and non-breeder-non-breeder comparisons (?)
-with(gj_meta, anosim(dmAitchison, interaction(Territory,Group,Group))) %>% summary
+# should also add Territory,
+with(gj_meta, anosim(dmAitchison, interaction(Group,Group))) %>% summary
 
 # clean up
 rm(dm_dj, dm_within, dm_meta)

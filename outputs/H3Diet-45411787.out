@@ -1,0 +1,268 @@
+
+Lmod is automatically replacing "intel/2016.4" with "gcc/7.3.0".
+
+-------------------------------------------------------------------------------
+The following dependent module(s) are not currently loaded: gcccore/.5.4.0 (required by: icc/.2016.4.258, ifort/.2016.4.258)
+-------------------------------------------------------------------------------
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) openmpi/2.1.1
+
+The following have been reloaded with a version change:
+  1) gcccore/.5.4.0 => gcccore/.7.3.0     2) imkl/11.3.4.258 => imkl/2018.3.222
+
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.5-7
+Loading required package: carData
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ lubridate::as.difftime() masks base::as.difftime()
+✖ lubridate::date()        masks base::date()
+✖ dplyr::filter()          masks stats::filter()
+✖ lubridate::intersect()   masks base::intersect()
+✖ dplyr::lag()             masks stats::lag()
+✖ dplyr::recode()          masks car::recode()
+✖ lubridate::setdiff()     masks base::setdiff()
+✖ purrr::some()            masks car::some()
+✖ lubridate::union()       masks base::union()
+[1] "Prediction 3A - Weather data for freeze thaw"
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_double(),
+  `Station Name` = col_character(),
+  `Date/Time` = col_date(format = ""),
+  Month = col_character(),
+  Day = col_character(),
+  `Data Quality` = col_logical(),
+  `Max Temp Flag` = col_character(),
+  `Min Temp Flag` = col_character(),
+  `Mean Temp Flag` = col_character(),
+  `Heat Deg Days Flag` = col_character(),
+  `Cool Deg Days Flag` = col_character(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Rain Flag` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Snow Flag` = col_logical(),
+  `Total Precip Flag` = col_character(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust Flag` = col_character(),
+  `Spd of Max Gust Flag` = col_character()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_double(),
+  `Station Name` = col_character(),
+  `Date/Time` = col_date(format = ""),
+  Month = col_character(),
+  Day = col_character(),
+  `Data Quality` = col_logical(),
+  `Max Temp Flag` = col_character(),
+  `Min Temp Flag` = col_character(),
+  `Mean Temp Flag` = col_character(),
+  `Heat Deg Days Flag` = col_character(),
+  `Cool Deg Days Flag` = col_character(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Rain Flag` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Snow Flag` = col_logical(),
+  `Total Precip Flag` = col_character(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust Flag` = col_character(),
+  `Spd of Max Gust Flag` = col_character()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_character(),
+  `Longitude (x)` = col_double(),
+  `Latitude (y)` = col_double(),
+  `Climate ID` = col_double(),
+  `Date/Time` = col_date(format = ""),
+  Year = col_double(),
+  `Data Quality` = col_logical(),
+  `Max Temp (°C)` = col_double(),
+  `Min Temp (°C)` = col_double(),
+  `Mean Temp (°C)` = col_double(),
+  `Heat Deg Days (°C)` = col_double(),
+  `Cool Deg Days (°C)` = col_double(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Precip (mm)` = col_double(),
+  `Snow on Grnd (cm)` = col_double(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust (10s deg)` = col_double()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_character(),
+  `Longitude (x)` = col_double(),
+  `Latitude (y)` = col_double(),
+  `Climate ID` = col_double(),
+  `Date/Time` = col_date(format = ""),
+  Year = col_double(),
+  `Data Quality` = col_logical(),
+  `Max Temp (°C)` = col_double(),
+  `Min Temp (°C)` = col_double(),
+  `Mean Temp (°C)` = col_double(),
+  `Heat Deg Days (°C)` = col_double(),
+  `Cool Deg Days (°C)` = col_double(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Precip (mm)` = col_double(),
+  `Snow on Grnd (cm)` = col_double(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust (10s deg)` = col_double()
+)
+ℹ Use `spec()` for the full column specifications.
+
+
+── Column specification ────────────────────────────────────────────────────────
+cols(
+  .default = col_character(),
+  `Longitude (x)` = col_double(),
+  `Latitude (y)` = col_double(),
+  `Climate ID` = col_double(),
+  `Date/Time` = col_date(format = ""),
+  Year = col_double(),
+  `Data Quality` = col_logical(),
+  `Max Temp (°C)` = col_double(),
+  `Min Temp (°C)` = col_double(),
+  `Mean Temp (°C)` = col_double(),
+  `Heat Deg Days (°C)` = col_double(),
+  `Cool Deg Days (°C)` = col_double(),
+  `Total Rain (mm)` = col_logical(),
+  `Total Snow (cm)` = col_logical(),
+  `Total Precip (mm)` = col_double(),
+  `Snow on Grnd (cm)` = col_double(),
+  `Snow on Grnd Flag` = col_logical(),
+  `Dir of Max Gust (10s deg)` = col_double(),
+  `Dir of Max Gust Flag` = col_logical(),
+  `Spd of Max Gust Flag` = col_logical()
+)
+ℹ Use `spec()` for the full column specifications.
+
+Joining, by = "CollectionDate"
+[1] "Prediction 3A - FT number of microbiota"
+Joining, by = "sampleID"
+null device 
+          1 
+
+Call:
+lm(formula = n ~ FreezeThaw + BreedingStatus, data = plot3A)
+
+Coefficients:
+              (Intercept)                 FreezeThaw  
+                   33.663                      1.214  
+BreedingStatusNon-breeder  
+                  -15.339  
+
+
+Call:
+lm(formula = n ~ FreezeThaw + BreedingStatus, data = plot3A)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-39.443 -19.239 -12.249   3.751 171.771 
+
+Coefficients:
+                          Estimate Std. Error t value Pr(>|t|)
+(Intercept)                 33.663     36.635   0.919    0.364
+FreezeThaw                   1.214      3.210   0.378    0.708
+BreedingStatusNon-breeder  -15.339     13.930  -1.101    0.278
+
+Residual standard error: 39.47 on 36 degrees of freedom
+Multiple R-squared:  0.04806,	Adjusted R-squared:  -0.00483 
+F-statistic: 0.9087 on 2 and 36 DF,  p-value: 0.4121
+
+Analysis of Variance Table
+
+Response: n
+               Df Sum Sq Mean Sq F value Pr(>F)
+FreezeThaw      1    942  942.16  0.6048 0.4418
+BreedingStatus  1   1889 1888.99  1.2126 0.2781
+Residuals      36  56083 1557.86               
+[1] "Prediction 3B - Food supplementation (OTUs)"
+null device 
+          1 
+[1] "one sample t-test"
+[1] "H0 - Means are not different (u=0)"
+[1] "HA - yes FS mean is less than no FS mean (u>u0)"
+[1] "all samples"
+[1] "test statistic"
+[1] "summary of yes"
+       n       
+ Min.   : 9.0  
+ 1st Qu.:12.0  
+ Median :23.0  
+ Mean   :23.6  
+ 3rd Qu.:23.0  
+ Max.   :51.0  
+[1] "summary of no"
+       n        
+ Min.   : 3.00  
+ 1st Qu.: 9.00  
+ Median :20.00  
+ Mean   :24.12  
+ 3rd Qu.:28.00  
+ Max.   :66.00  
+[1] "p-value"
+[1] 0.4738422
+
+	One Sample t-test
+
+data:  yes
+t = -0.069825, df = 4, p-value = 0.4738
+alternative hypothesis: true mean is less than 24.11765
+95 percent confidence interval:
+     -Inf 39.40445
+sample estimates:
+mean of x 
+     23.6 
+
+[1] "2017 only"
+
+	One Sample t-test
+
+data:  yes
+t = -3.3304, df = 2, p-value = 0.03978
+alternative hypothesis: true mean is less than 33.875
+95 percent confidence interval:
+     -Inf 31.95993
+sample estimates:
+mean of x 
+ 18.33333 
+
+[1] "2018 only"
+
+	One Sample t-test
+
+data:  yes
+t = 0.82336, df = 1, p-value = 0.7193
+alternative hypothesis: true mean is less than 15.44444
+95 percent confidence interval:
+     -Inf 154.6182
+sample estimates:
+mean of x 
+     31.5 
+

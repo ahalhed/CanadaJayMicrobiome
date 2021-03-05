@@ -257,19 +257,12 @@ qiime feature-table filter-samples \
   --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
   --o-filtered-table P3A-filtered-table.qza
 
-# Prediction 3B/C - food supplementation
+# Prediction 3B - food supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionYear] IN ('2017', '2018') AND [BreedingStatus]='Breeder'" \
-  --o-filtered-table P3BC-filtered-table.qza
-# Prediction 3D - food supplementation
-qiime deicode rpca \
-    --i-table P3BC-filtered-table.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P3C-aitchison-ordination.qza \
-    --o-distance-matrix P3C-aitchison-distance.qza
+  --o-filtered-table P3B-filtered-table.qza
 
 # Hypothesis 4 - parental care
 # all predictions

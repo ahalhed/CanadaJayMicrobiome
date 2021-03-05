@@ -51,7 +51,7 @@ share <- function(otu, b, nb) {
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P4ABCD-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "H4-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
@@ -63,9 +63,8 @@ gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
 rownames(gj_meta) <- sample_names(gj_ps)
 # clr OTUs - may not need unless calculating distances here
 # OTUclr <- zCompositions::cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% CoDaSeq::codaSeq.clr(.)
-
 # boxplots - data prep (to long)
-dmAitchison <- read_qza("P4ABCD-aitchison-distance.qza")$data
+dmAitchison <- read_qza("P4AB-aitchison-distance.qza")$data
 # need to remove duplicate comparisons
 dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)
 
@@ -137,47 +136,12 @@ with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus, Breedin
 # clean up
 rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison)
 
-print("Counts of Genera (4C+D)")
+print("Shared Microbiota (4C)")
 # looking at the number of OTUs (not reads) that occur per sample
 # could do reads using sample_sums
 OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
 OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
 
-print("Juvenile Diversity (4C)")
-# count the number of genera that occur
-plot4C <- colSums(OTUs) %>%
-  as.data.frame() %>%
-  rename("NumberOfOTUs" = ".") %>%
-  # join with sample data
-  merge(gj_meta, by=0, all=TRUE)
-
-pdf("CanadaJayMicrobiome/plots/P4C.pdf")
-# make a scatter plot
-ggplot(plot4C, aes(y = NumberOfOTUs, x = BreedingStatus)) +
-  geom_violin() +
-  geom_dotplot(binaxis = "y", binwidth = 10,
-               stackdir = "center", fill = NA) +
-  labs(y = "Number of OTUs", x = "Breeding Status")
-dev.off()
-
-print("Two sample t-test")
-# get data
-br <- plot4C[plot4C$BreedingStatus=="Breeder",] %>% select(NumberOfOTUs, Territory)
-nb <- plot4C[plot4C$BreedingStatus=="Non-breeder",] %>% select(NumberOfOTUs, Territory)
-# null and alternative hypotheses
-print("H0 - equal mean OTUs (u1-u2=0)")
-print("HA - breeder mean OTUs greater than non-breeder mean OTUs (u1-u2>0)")
-# significance (going to 0.05)
-# group sd & mean
-aggregate(plot4C$NumberOfOTUs, by = list(plot4C$BreedingStatus), FUN=sd)
-aggregate(plot4C$NumberOfOTUs, by = list(plot4C$BreedingStatus), FUN=mean)
-# two sample t-test
-t.test(br$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
-
-#clean up
-rm(plot4C, nb, br, OTUs)
-
-print("Shared Microbiota (4D)")
 # otu and sample data
 OTUs <- otu_table(gj_ps) %>% as.matrix %>% as.data.frame()
 br <- gj_meta %>% rownames_to_column(var = "b") %>%
@@ -203,15 +167,15 @@ OTUsamples <- shareOTUs %>% left_join(br) %>%
   mutate(Territory = ifelse(Territory.b == Territory.nb, "Within", "Between"))
 
 # for plotting
-plot4D <- OTUsamples %>%
+plot4C <- OTUsamples %>%
   select(Territory, Bonly, NBonly, shared) %>%
   pivot_longer(-Territory, names_to = "Sharing", values_to = "NumberOfOTUs") %>%
   filter(Territory == "Within") %>%
   mutate(NumberOfOTUs = as.numeric(NumberOfOTUs))
 
 # make plot
-pdf("CanadaJayMicrobiome/plots/P4D.pdf")
-ggplot(plot4D, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
+pdf("CanadaJayMicrobiome/plots/P4C.pdf")
+ggplot(plot4C, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   geom_boxplot() +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
   labs(x = "Sample(s)", y = "Number of OTUs Present") +
@@ -220,17 +184,17 @@ dev.off()
 
 print("Two sample t-test")
 # get data
-br <- plot4D[plot4D$Sharing=="Bonly",]
-nb <- plot4D[plot4D$Sharing=="NBonly",]
-sh <- plot4D[plot4D$Sharing=="shared",]
+br <- plot4C[plot4C$Sharing=="Bonly",]
+nb <- plot4C[plot4C$Sharing=="NBonly",]
+sh <- plot4C[plot4C$Sharing=="shared",]
 # null and alternative hypotheses
 print("H0 - equal mean OTUs (u1-u2=0)")
 print("HA1 - more shared OTUs than unique non-breeder OTUs (u1-u2 > u0)")
 print("HA2 - more unique breeder OTUs than unique non-breeder OTUs (u1-u3 > u0)")
 # significance (going to 0.05)
 # group sd & mean
-aggregate(plot4D$NumberOfOTUs, by = list(plot4D$Sharing), FUN=sd)
-aggregate(plot4D$NumberOfOTUs, by = list(plot4D$Sharing), FUN=mean)
+aggregate(plot4C$NumberOfOTUs, by = list(plot4C$Sharing), FUN=sd)
+aggregate(plot4C$NumberOfOTUs, by = list(plot4C$Sharing), FUN=mean)
 # two sample t-test
 print("Shared & Non-breeder")
 t.test(sh$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
@@ -238,5 +202,5 @@ print("Breeder & Non-breeder")
 t.test(br$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
 
 # section clean up
-rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4D, shareOTUs, pairedNames, OTUsamples,
+rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4C, shareOTUs, pairedNames, OTUsamples,
    gj_meta, gj_ps, longDM, share)

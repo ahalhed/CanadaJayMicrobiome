@@ -270,14 +270,14 @@ qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
-  --o-filtered-table P4ABCD-filtered-table.qza
+  --o-filtered-table H4-filtered-table.qza
 
 qiime deicode rpca \
-    --i-table P4ABCD-filtered-table.qza \
+    --i-table H4-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P4ABCD-aitchison-ordination.qza \
-    --o-distance-matrix P4ABCD-aitchison-distance.qza
+    --o-biplot P4A-aitchison-ordination.qza \
+    --o-distance-matrix P4A-aitchison-distance.qza
 
 # Hypothesis 5 - only samples with origin data
 # H5-samples.tsv is a list of sampleid's to keep

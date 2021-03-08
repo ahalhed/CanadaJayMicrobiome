@@ -2,6 +2,7 @@ print("Set up - working directory, packages, functions, data")
 # set working directory
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 # load packages
+library(boot)
 library(qiime2R)
 library(vegan)
 library(phyloseq)
@@ -48,6 +49,13 @@ share <- function(otu, b, nb) {
   df <- data.frame(b, nb, Bonly, shared, NBonly)
   return(df)
 }
+# for bootstrapping
+fc <- function(d, i){
+  # d is the data frame
+  # i is the iteration number
+  d2 <- d[i,]
+  return(mean(d2$diff))
+}
 
 ## Load in the required data
 # build the phyloseq object
@@ -64,49 +72,12 @@ rownames(gj_meta) <- sample_names(gj_ps)
 # clr OTUs - may not need unless calculating distances here
 # OTUclr <- zCompositions::cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% CoDaSeq::codaSeq.clr(.)
 # boxplots - data prep (to long)
-dmAitchison <- read_qza("P4AB-aitchison-distance.qza")$data
+dmAitchison <- read_qza("P4A-aitchison-distance.qza")$data
+
 # need to remove duplicate comparisons
 dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)
 
-print("Dominant Juveniles (4A)")
-# only one dominant juvenile non-breeder
-# breeder (any) to non-breeder (dominant) in same territory
-dm_dj <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
-  .[which(.$JuvenileStatus.x == "DominantJuvenile" &
-                        .$BreedingStatus.x == "Non-breeder"),] %>%
-  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
-         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
-  mutate(Group = "Dominant")
-# non-breeder (not dominant juvenile) to breeder (any) in same territory
-dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
-  .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
-  .[which(.$JuvenileStatus.x != "DominantJuvenile" &
-            .$BreedingStatus.x == "Non-breeder"),] %>%
-  select(BreedingStatus.x, BreedingStatus.y, Territory.x, Territory.y,
-         JuvenileStatus.x, JuvenileStatus.y, everything()) %>%
-  mutate(Group = "Not Dominant")
-# put back together
-dm_meta <- rbind(dm_dj, dm_within) %>% select(Group, everything())
-# save figure
-pdf("CanadaJayMicrobiome/plots/P4A.pdf")
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + labs(x = "Juvenile Status of Non-Breeder", y = "Aitchison Distance")
-dev.off()
-
-# ANOSIM - need to arrange this so the distances are only between breeders and non-breeders
-gj_meta$Group <- ifelse(gj_meta$BreedingStatus == "Breeder", "Breeder",
-       ifelse(gj_meta$JuvenileStatus == "DominantJuvenile",
-              "DominantJuvenile", "Nestling"))
-
-# need to filter out breeder-breeder and non-breeder-non-breeder comparisons (?)
-# should also add Territory,
-with(gj_meta, anosim(dmAitchison, interaction(Group,Group))) %>% summary
-
-# clean up
-rm(dm_dj, dm_within, dm_meta)
-
-print("Own offspring vs other offspring (4B)")
+print("Own offspring vs other offspring (4A)")
 # breeders with non-breeders on same territory (does not include between breeders)
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
@@ -118,25 +89,49 @@ dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x == "Non-breeder"),] %>% # y's will be non-breeders
   mutate(Group = "Different Territory")
 # put back together
-dm_meta <- rbind(dm_between, dm_within) %>%
-  select(Group, everything())
+dm_meta <- rbind(dm_between, dm_within)
+plot4A <- aggregate(dm_meta$AitchisonDistance,
+          list(interaction(dm_meta$Group, dm_meta$JayID.y)), mean) %>%
+  mutate(AitchisonDistance = x, Group = word(.$'Group.1', 1, sep=fixed('.')),
+         Breeder = word(.$'Group.1', 2, sep=fixed('.'))) %>%
+  select(AitchisonDistance, Group, Breeder)
 # save figure
-pdf("CanadaJayMicrobiome/plots/P4B.pdf", width = 9)
-ggplot(dm_meta, aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() +
-  geom_dotplot(binaxis = "y", binwidth = 0.1,
-               stackdir = "center", fill = NA) +
-  labs(x = "Non-Breeder Location", y = "Aitchison Distance")
+pdf("CanadaJayMicrobiome/plots/P4A.pdf")
+ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
+  #geom_boxplot() +
+  geom_line(aes(group = Breeder)) +
+  labs(x = "Non-Breeder Location", y = "Mean Aitchison Distance")
 dev.off()
 
-# ANOSIM - need to arrange this so the distances are only between breeders and non-breeders
-# not sure interaction(Territory, BreedingStatus, BreedingStatus) is doing the right thing
-with(gj_meta, anosim(dmAitchison, interaction(Territory, BreedingStatus, BreedingStatus))) %>% summary
+# paired t-test
+# step 0 - check assumptions
+# step 1 - set null and alternative hypotheses
+print("H0: d = d0")
+print("HA: d < 0")
+# step 2 - alpha = 0.05
+# step 3 - test statistic
+test4A <- plot4A %>%
+  pivot_wider(-c(Group), values_from = AitchisonDistance, names_from = Group) %>%
+  na.omit() %>% mutate(diff = `Same Territory` - `Different Territory` )
+summary(test4A)
+SD <- sd(test4A$diff)
+samp <- nrow(test4A)
+Tstat <- (-0.1062)/(SD/sqrt(samp))
+# step 5 - p value
+1-pt(Tstat, df=samp)
+# step 6 is p<a? no
+# step 7 check
+t.test(test4A$`Same Territory`, test4A$`Different Territory`,
+       paired = T, alternative = "less")
+
+# bootstrapping
+boot(test4A, fc, R = 999)
 
 # clean up
-rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison)
+rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison, plot4A,
+   samp, SD, Tstat, test4A, fc)
 
-print("Shared Microbiota (4C)")
+print("Shared Microbiota (4B)")
 # looking at the number of OTUs (not reads) that occur per sample
 # could do reads using sample_sums
 OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
@@ -167,15 +162,15 @@ OTUsamples <- shareOTUs %>% left_join(br) %>%
   mutate(Territory = ifelse(Territory.b == Territory.nb, "Within", "Between"))
 
 # for plotting
-plot4C <- OTUsamples %>%
+plot4B <- OTUsamples %>%
   select(Territory, Bonly, NBonly, shared) %>%
   pivot_longer(-Territory, names_to = "Sharing", values_to = "NumberOfOTUs") %>%
   filter(Territory == "Within") %>%
   mutate(NumberOfOTUs = as.numeric(NumberOfOTUs))
-
+# make percentage, average, line graph
 # make plot
-pdf("CanadaJayMicrobiome/plots/P4C.pdf")
-ggplot(plot4C, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
+pdf("CanadaJayMicrobiome/plots/P4B.pdf")
+ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   geom_boxplot() +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
   labs(x = "Sample(s)", y = "Number of OTUs Present") +
@@ -202,5 +197,5 @@ print("Breeder & Non-breeder")
 t.test(br$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
 
 # section clean up
-rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4C, shareOTUs, pairedNames, OTUsamples,
+rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4B, shareOTUs, pairedNames, OTUsamples,
    gj_meta, gj_ps, longDM, share)

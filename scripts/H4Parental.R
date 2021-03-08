@@ -179,17 +179,17 @@ dev.off()
 
 print("Two sample t-test")
 # get data
-br <- plot4C[plot4C$Sharing=="Bonly",]
-nb <- plot4C[plot4C$Sharing=="NBonly",]
-sh <- plot4C[plot4C$Sharing=="shared",]
+br <- plot4B[plot4B$Sharing=="Bonly",]
+nb <- plot4B[plot4B$Sharing=="NBonly",]
+sh <- plot4B[plot4B$Sharing=="shared",]
 # null and alternative hypotheses
 print("H0 - equal mean OTUs (u1-u2=0)")
 print("HA1 - more shared OTUs than unique non-breeder OTUs (u1-u2 > u0)")
 print("HA2 - more unique breeder OTUs than unique non-breeder OTUs (u1-u3 > u0)")
 # significance (going to 0.05)
 # group sd & mean
-aggregate(plot4C$NumberOfOTUs, by = list(plot4C$Sharing), FUN=sd)
-aggregate(plot4C$NumberOfOTUs, by = list(plot4C$Sharing), FUN=mean)
+aggregate(plot4B$NumberOfOTUs, by = list(plot4B$Sharing), FUN=sd)
+aggregate(plot4B$NumberOfOTUs, by = list(plot4B$Sharing), FUN=mean)
 # two sample t-test
 print("Shared & Non-breeder")
 t.test(sh$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)

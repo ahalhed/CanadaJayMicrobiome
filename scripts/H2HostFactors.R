@@ -8,10 +8,6 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(vegan)
-library(zCompositions)
-# devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
-library(CoDaSeq)
-library(geosphere) # using to compute greater circle distance
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -76,13 +72,6 @@ gj_meta$AgeAtCollection <- ifelse(gj_meta$CollectionSeason == "Fall",
 # making birth year categorical
 gj_meta$BirthYear <- as.character(gj_meta$BirthYear)
 
-# example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
-print("CLR transformation")
-# rows are OTUs, then transposed to OTUs as column
-# impute the OTU table
-OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
-  codaSeq.clr # compute the CLR values
-
 print("Accessing the metadata by season/year")
 # loop to create individual season data frames
 for (YeaR in unique(gj_meta$CollectionYear)) {
@@ -102,82 +91,9 @@ rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
    seaFall2016, seaFall2019, seaSpring2016, seaSpring2017, seaSpring2018, seaSpring2019,
    seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2019, seaWinter2020)
 
-print("Accessing the XY metadata by season")
-# loop to create individual season/year data frames
-for (YeaR in unique(gj_meta$CollectionYear)) {
-  for (SeaSon in unique(gj_meta$CollectionSeason)) {
-    met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
-      rename("Latitude"="LatitudeSamplingDD", "Longitude"="LongitudeSamplingDD")
-    df1 <- subset(met, CollectionSeason == SeaSon) %>%
-      subset(., CollectionYear == YeaR) %>%
-      select("SampleID", "Longitude", "Latitude") #dplyr select
-    df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-    assign(paste0("xy",SeaSon, YeaR),df2)
-    rm(met, df1, df2)
-  }
-}
-# make a list of the xy data frames generated from the loop
-XY_list <- list(xyFall2017 = xyFall2017, xyFall2018 = xyFall2018, 
-                xyFall2020 = xyFall2020, xySpring2020 = xySpring2020)
-
-# clean up individual data frames, now that the list is there
-rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020,
-   # not in list b/c not enough samples for this analysis
-   xyFall2016, xyFall2019, xySpring2016, xySpring2017, xySpring2018, xySpring2019,
-   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2019, xyWinter2020)
-
-print("Computing Haversine Distances")
-# using Haversine distance to get distance between sampling locations in meters
-# reasonable alternative to doing euclidean distances
-dist_list <- lapply(XY_list, function(x) distm(x, x, fun = distHaversine))
-
 ## community object
 print("Build the community object (OTU table) for season")
-commFull <- lapply(sea_list, comm_obj, c=OTUclr)
-# non-breeders only
-nb_list <- lapply(sea_list, function(x) x[which(x$BreedingStatus == "Non-breeder"),])
-commJ <- lapply(nb_list, comm_obj, c=OTUclr)
-
-# unweighted PCNM
-print("Unweighted PCNM - for use with all OTU tables")
-pcnm_list <- lapply(dist_list, pcnm)
-lapply(pcnm_list, function(x) x$vectors)
-# cleanup
-rm(OTUclr, comm_obj, met_filter, XY_list)
-
-# analysis really starts here
-print("Acessing PCNM scores")
-scores_list <- lapply(pcnm_list, scores)
-# test with RDA
-print("Testing with RDA (full model)")
-# create a tiny anonymous function to include formula syntax in call
-abFrac <- mapply(function(x,data) rda(x~., data), 
-                 commFull, sea_list, SIMPLIFY=FALSE)
-abFrac # Full model
-
-print("Prediction 2A - Host associated factors")
-# create a tiny anonymous function to include formula syntax in call
-abFrac0 <- mapply(function(x,data) rda(x~1, data), 
-                  commFull, sea_list, SIMPLIFY=FALSE) # Reduced model
-
-step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
-                   abFrac0, abFrac, SIMPLIFY=FALSE)
-step.env # an rda model, with the final model predictor variables
-# focus on the environment that is the host
-print("Summary of environmental selection process")
-lapply(step.env, function(x) x$anova)
-print("ANOVA on full environmental selection")
-lapply(step.env, anova)
-
-# save plot
-pdf(file = "CanadaJayMicrobiome/plots/P2AStepEnv.pdf", width = 10)
-# make plot
-lapply(step.env, plot)
-dev.off()
-
-#cleanup
-# remove objects to be replaced/no longer needed
-rm(abFrac, abFrac0, step.env, dist_list, gj_meta, gj_ps, scores_list, pcnm_list)
+commFull <- lapply(sea_list, comm_obj, c=otu_table(gj_ps))
 
 # distance based RDA using aitchison distance matrix
 # read in aitchison distance matrix
@@ -206,9 +122,10 @@ lapply(cap_list, summary)
 lapply(cap_list, anova, step=200, perm.max=1000)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P2AenvBiplot.pdf", width = 12)
+pdf("CanadaJayMicrobiome/plots/P2A.pdf", width = 12)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 
 # clean up
 rm(sea_list,dmYear, cap_list, commFull)
+rm(gj_meta, gj_ps, dmAitchison, comm_obj, dmFilter, met_filter)

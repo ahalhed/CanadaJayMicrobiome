@@ -173,8 +173,7 @@ pdf("CanadaJayMicrobiome/plots/P4B.pdf")
 ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   geom_boxplot() +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
-  labs(x = "Sample(s)", y = "Number of OTUs Present") +
-  ggtitle("Within Territory OTUs Shared Between Individuals")
+  labs(x = "Sample(s)", y = "Number of OTUs Present")
 dev.off()
 
 print("Two sample t-test")

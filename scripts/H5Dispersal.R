@@ -51,7 +51,7 @@ oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                             DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
 # save plot
-pdf("CanadaJayMicrobiome/plots/P5A.pdf", height = 10)
+pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 10)
 ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs, shape = as.factor(CollectionYear))) +
   geom_point() + scale_x_log10() + geom_smooth(method=lm, se=FALSE, color = "black") +
   labs(shape = "Collection Year", y = "Number of OTUs Observed",

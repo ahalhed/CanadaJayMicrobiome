@@ -110,3 +110,10 @@ jay %>% filter(BreedingStatus == "Non-breeder") %>%
           "Non-breeders Only by Territory")
 ```
 
+## breeding status by age
+```{r}
+ggplot(jay, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
+  geom_boxplot() +
+  labs(y = "Age At Collection", x = "Breeding Status")
+```
+

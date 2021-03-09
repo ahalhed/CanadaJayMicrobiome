@@ -149,8 +149,7 @@ dev.off()
 summary(lm3A)
 anova(lm3A)
 # clean up - removing 3A+B data
-rm(metaWeather, gj_ps, plot3A,
-   otu_df, lm3A, gj_meta)
+rm(metaWeather, gj_ps, plot3A, otu_df, lm3A, gj_meta)
 
 print("Prediction 3B - Food supplementation (OTUs)")
 ## Load in the required data
@@ -186,46 +185,37 @@ ggplot(plot3B, aes(x = FoodSupplement, y = n)) +
        y = "Number of OTUs")
 dev.off()
 
-print("one sample t-test")
+print("two sample t-test")
 # step 0 - check assumptions
 # step 1 - set null and alternative hypotheses
-print("H0 - Means are not different (u=0)")
-print("HA - yes FS mean is less than no FS mean (u>u0)")
+print("H0 - Means are not different (u1-u2=D0)")
+print("HA - yes FS mean is less than no FS mean (u1-u2>D0)")
 # step 2 - choose alpha (0.05)
 # step 3 - calculate test statistic
 print("all samples")
-print("test statistic")
 yes <- plot3B %>% filter(FoodSupplement == "Y") %>% select(n)
 no <- plot3B %>% filter(FoodSupplement == "N") %>% select(n)
+var.test(yes$n, no$n)
 print("summary of yes")
 summary(yes)
 print("summary of no")
 summary(no)
-sdA <- sd(yes$n)
-meanA <- mean(yes$n)
-meanN <- mean(no$n)
-n <- as.numeric(nrow(yes))
-t <- (meanA-meanN)/(sdA/sqrt(n))
-# Step 4 - draw a figure (gonna do this later)
-# Step 5 - find the p-value
-print("p-value")
-pt(t,df=n-1)
 # step 6 - calculate with R
-t.test(yes, mu=meanN, alternative = "less")
+t.test(yes, no, alternative = "less")
 # clean up
-rm(yes, no, meanA, meanN, n, sdA, t)
+rm(yes, no)
 print("2017 only")
 yes <- plot3B %>% filter(FoodSupplement == "Y", CollectionYear == 2017) %>% select(n)
 no <- plot3B %>% filter(FoodSupplement == "N", CollectionYear == 2017) %>% select(n)
-meanN <- mean(no$n)
-t.test(yes, mu=meanN, alternative = "less")
-rm(yes, no, meanN)
+var.test(yes$n, no$n)
+t.test(yes, no, alternative = "less")
+rm(yes, no)
 print("2018 only")
 yes <- plot3B %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% select(n)
 no <- plot3B %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
-meanN <- mean(no$n)
-t.test(yes, mu=meanN, alternative = "less")
-rm(yes, no, meanN,plot3B)
+var.test(yes$n, no$n)
+t.test(yes, no, alternative = "less")
+rm(yes, no, plot3B)
 
 # full clean up
 rm(dates, gj_meta, gj_ps, otu_df, samp)

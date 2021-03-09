@@ -8,7 +8,6 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(geosphere)
-library(ggpubr)
 library(tidyverse)
 
 theme_set(theme_bw())
@@ -51,87 +50,42 @@ OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
 oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
                             DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
 
-# all fall samples
-p5A <- ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs,
-                         shape = as.factor(CollectionYear))) +
-  geom_point() + scale_x_log10() +
-  labs(shape = "Collection Year") +
-  theme(axis.title.x=element_blank(),
-        axis.title.y=element_blank())
+# save plot
+pdf("CanadaJayMicrobiome/plots/P5A.pdf", height = 10)
+ggplot(oriDF, aes(x = DistanceFromOrigin, y = OTUs, shape = as.factor(CollectionYear))) +
+  geom_point() + scale_x_log10() + geom_smooth(method=lm, se=FALSE, color = "black") +
+  labs(shape = "Collection Year", y = "Number of OTUs Observed",
+       x = "Distance from Origin (m, log10)")
+dev.off()
 
 # stats on linear models
 # linear regression on all samples
 print("All years")
-lm(OTUs~CollectionYear+DistanceFromOrigin, data = oriDF) %>%
-  summary
-lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
-  summary
+Yall <- (lm(OTUs~DistanceFromOrigin, data = oriDF))
+summary(Yall)
+anova(Yall)
+rm(Yall)
 # 2017
 print("2017 Only")
-lm(OTUs~DistanceFromOrigin, 
-   data=filter(oriDF,CollectionYear == 2017)) %>%
-  summary
+(Y2017 <- lm(OTUs~DistanceFromOrigin, 
+   data=filter(oriDF,CollectionYear == 2017)))
+summary(Y2017)
+anova(Y2017)
+rm(Y2017)
 # 2018
 print("2018 Only")
-lm(OTUs~DistanceFromOrigin, 
-   data=filter(oriDF,CollectionYear == 2018)) %>%
-  summary
+(Y2018 <- lm(OTUs~DistanceFromOrigin, 
+             data=filter(oriDF,CollectionYear == 2018)))
+summary(Y2018)
+anova(Y2018)
+rm(Y2018)
 # 2020
 print("2020 Only")
-lm(OTUs~DistanceFromOrigin, 
-   data=filter(oriDF,CollectionYear == 2020)) %>%
-  summary
+(Y2020 <- lm(OTUs~DistanceFromOrigin, 
+             data=filter(oriDF,CollectionYear == 2020)))
+summary(Y2020)
+anova(Y2020)
+rm(Y2020)
 
 # clean up
-rm(gj_meta, gj_ps, OTUs, oriDF)
-
-print("Prediction 5B")
-# Non-breeders who have travelled further from their origin will have more diverse microbiomes.
-# considering the number of OTUs observed to be diversity here
-# non-breeders are not established in a territory and are likely travelling around more
-## Load in the required data
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P5B-filtered-table.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-
-# convert OTU table to presence/absences
-OTUs <- otu_table(gj_ps) %>% t %>% as.data.frame()
-OTUs[which(OTUs>0, arr.ind=TRUE)] <- 1
-
-oriDF <- gj_meta %>% mutate(OTUs = colSums(OTUs),
-                   DistanceFromOrigin = oriDist(gj_meta)$DistanceFromOrigin)
-
-# Make an scatter plot
-p5B <- ggplot(oriDF, aes(y = OTUs, x = DistanceFromOrigin,
-                         shape = as.factor(CollectionYear))) +
-  labs(shape = "Collection Year") +
-  geom_point() + theme(axis.title.x=element_blank(),
-                       axis.title.y=element_blank())
-# stats on linear model
-# linear regression on all samples
-print("All years") # can't do year by year b/c of low sample number
-lm(OTUs~CollectionYear+DistanceFromOrigin, data = oriDF) %>%
-  summary
-lm(OTUs~DistanceFromOrigin, data = oriDF) %>%
-  summary
-
-# clean up
-rm(gj_meta, gj_ps, OTUs, oriDF)
-
-# make figure
-figure <- ggarrange(p5A, p5B, ncol=1, nrow=2, common.legend = TRUE,
-                    legend="top", labels = c("A", "B"))
-# arrange figures
-pdf("CanadaJayMicrobiome/plots/H5.pdf", height = 10)
-annotate_figure(figure, bottom = text_grob("Distance From Origin (m)",
-                                           hjust = 1, x = 0.645, size = 10),
-                left = text_grob("Number of OTUs Observed", rot = 90))
-dev.off()
-
-# clean up
-rm(figure, p5A, p5B, oriDist)
+rm(gj_meta, gj_ps, oriDF, OTUs, oriDist)

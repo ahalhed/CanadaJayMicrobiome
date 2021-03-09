@@ -165,9 +165,9 @@ S20 <- dm_meta[which(dm_meta$CollectionSeason == "Spring" & dm_meta$CollectionYe
   geom_boxplot() + rremove("xylab")
 
 # save figure
-pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 12, height = 6)
 fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 10),
                  labels = c("Fall 2017", "Fall 2018", "Fall 2020", "Spring 2020"))
+pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 12, height = 6)
 annotate_figure(fig, bottom = text_grob("Territory Group"),
                 left = text_grob("Aitchison Distance", rot = 90))
 dev.off()
@@ -224,11 +224,9 @@ for (YeaR in unique(gj_meta$CollectionYear)) {
     rm(met, df1, df2)
   }
 }
-
 # make a list of the xy data frames generated from the loop
 XY_list <- list(xyFall2017 = xyFall2017, xyFall2018 = xyFall2018, 
                 xyFall2020 = xyFall2020, xySpring2020 = xySpring2020)
-
 # clean up individual data frames, now that the list is there
 rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020,
    # not in list b/c not enough samples for this analysis
@@ -263,8 +261,7 @@ vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list,
 vp_mod1_list
 # plot the partitioning
 pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/P1BVPmod1.pdf")
-# make plot
-# plotted in numerical order by month
+# make plots
 lapply(vp_mod1_list, plot)
 dev.off()
 # clean up
@@ -324,7 +321,7 @@ pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
 pbcd
 
 # clean up
-rm(gj_meta, abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df, commFull,
+rm(gj_meta, abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df,commFull,
    gj_ps, pcnm_list, scores_list, step.space, vdist, sea_list)
 
 print("Prediction 1C - territory quality")
@@ -365,6 +362,7 @@ OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
   codaSeq.clr # compute the CLR values
 print("Build the community objects (OTU table) for season")
 commFull <- lapply(sea_list, comm_obj, c=OTUclr)
+
 # read in aitchison distance matrix
 dmAitchison <- read_qza("P1C-aitchison-distance.qza")$data
 # filter distance matrix by year/season

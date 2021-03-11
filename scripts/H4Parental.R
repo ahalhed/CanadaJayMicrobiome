@@ -162,15 +162,17 @@ OTUsamples <- shareOTUs %>% left_join(br) %>%
   mutate(Territory = ifelse(Territory.b == Territory.nb, "Within", "Between"))
 
 # for plotting
-plot4B <- OTUsamples %>%
-  select(Territory, Bonly, NBonly, shared) %>%
-  pivot_longer(-Territory, names_to = "Sharing", values_to = "NumberOfOTUs") %>%
+plot4B <- OTUsamples %>% rownames_to_column(var = "pair") %>%
+  select(Territory, pair, Bonly, NBonly, shared) %>%
+  pivot_longer(-c(Territory, pair), names_to = "Sharing", values_to = "NumberOfOTUs") %>%
   filter(Territory == "Within") %>%
   mutate(NumberOfOTUs = as.numeric(NumberOfOTUs))
 # make percentage, average, line graph
 # make plot
 pdf("CanadaJayMicrobiome/plots/P4B.pdf")
 ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
+  geom_line(stat = "smooth", method=loess, alpha = 0.3,
+            se=FALSE, color = "black", aes(group = pair)) +
   geom_boxplot() +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
   labs(x = "Sample(s)", y = "Number of OTUs Present")

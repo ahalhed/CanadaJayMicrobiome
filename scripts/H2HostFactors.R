@@ -43,16 +43,7 @@ met_filter <- function(meta, season, year, status) {
   df4 <- df2[sapply(df2, function(x) length(unique(x))>1)]
   return(df4)
 }
-dmFilter <- function(data, dm) {
-  # dm is the distance matrix
-  # data is the community object whose row names in the DM labels
-  # filtering based on the row names present in data
-  mat <- dm %>% as.matrix %>%
-    .[rownames(.) %in% rownames(data),
-      colnames(.) %in% rownames(data)]
-  d <- as.dist(mat)
-  return(d)
-}
+
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
@@ -101,49 +92,13 @@ rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
    seaFall2016, seaFall2019, seaSpring2016, seaSpring2017, seaSpring2018, seaSpring2019,
    seaWinter2016, seaWinter2017, seaWinter2018, seaWinter2019, seaWinter2020)
 
-print("Accessing the XY metadata by season")
-# loop to create individual season/year data frames
-for (YeaR in unique(gj_meta$CollectionYear)) {
-  for (SeaSon in unique(gj_meta$CollectionSeason)) {
-    met <- rownames_to_column(gj_meta, var = "SampleID") %>% 
-      rename("Latitude"="LatitudeSamplingDD", "Longitude"="LongitudeSamplingDD")
-    df1 <- subset(met, CollectionSeason == SeaSon) %>%
-      subset(., CollectionYear == YeaR) %>%
-      select("SampleID", "Longitude", "Latitude") #dplyr select
-    df2 <- column_to_rownames(remove_rownames(df1), var = "SampleID")
-    assign(paste0("xy",SeaSon, YeaR),df2)
-    rm(met, df1, df2)
-  }
-}
-# make a list of the xy data frames generated from the loop
-XY_list <- list(xyFall2017 = xyFall2017, xyFall2018 = xyFall2018, 
-                xyFall2020 = xyFall2020, xySpring2020 = xySpring2020)
-
-# clean up individual data frames, now that the list is there
-rm(SeaSon, YeaR, xyFall2017, xyFall2018, xyFall2020, xySpring2020,
-   # not in list b/c not enough samples for this analysis
-   xyFall2016, xyFall2019, xySpring2016, xySpring2017, xySpring2018, xySpring2019,
-   xyWinter2016, xyWinter2017, xyWinter2018, xyWinter2019, xyWinter2020)
-
-print("Computing Haversine Distances")
-# using Haversine distance to get distance between sampling locations in meters
-# reasonable alternative to doing euclidean distances
-dist_list <- lapply(XY_list, function(x) distm(x, x, fun = distHaversine))
 
 ## community object
 print("Build the community object (OTU table) for season")
 commFull <- lapply(sea_list, comm_obj, c=OTUclr)
 
-# unweighted PCNM
-print("Unweighted PCNM - for use with all OTU tables")
-pcnm_list <- lapply(dist_list, pcnm)
-lapply(pcnm_list, function(x) x$vectors)
 # cleanup
-rm(OTUclr, comm_obj, met_filter, XY_list)
-
-# analysis really starts here
-print("Acessing PCNM scores")
-scores_list <- lapply(pcnm_list, scores)
+rm(OTUclr, comm_obj, met_filter)
 
 print("Prediction 2A - Host associated factors")
 # create a tiny anonymous function to include formula syntax in call
@@ -152,6 +107,12 @@ RDAs <- mapply(function(x,data) rda(x~., data),
 # anova
 lapply(RDAs, anova)
 
+print("Spring 2020 - individual variables")
+br <- rda(commFull[["seaSpring2020"]] ~ BreedingStatus, sea_list[["seaSpring2020"]])
+anova(br)
+
+age <- rda(commFull[["seaSpring2020"]] ~ AgeAtCollection, sea_list[["seaSpring2020"]])
+anova(age)
+
 #cleanup
-rm(dist_list, gj_meta, gj_ps, RDAs, scores_list, pcnm_list,
-   sea_list, dmFilter, commFull)
+rm(gj_meta, gj_ps, RDAs, sea_list, commFull, age, br)

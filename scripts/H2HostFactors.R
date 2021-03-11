@@ -1,5 +1,4 @@
-# for Hypothesis 1 - related to environmental/spatial differences
-# this script is for the PCNM spatial analysis
+# for Hypothesis 2 - related to host differences
 # to load R on interactive graham
 # module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
@@ -145,33 +144,14 @@ rm(OTUclr, comm_obj, met_filter, XY_list)
 # analysis really starts here
 print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
-# test with RDA
-print("Testing with RDA (full model)")
-# create a tiny anonymous function to include formula syntax in call
-abFrac <- mapply(function(x,data) rda(x~., data), 
-                 commFull, sea_list, SIMPLIFY=FALSE)
-abFrac # Full model
 
 print("Prediction 2A - Host associated factors")
 # create a tiny anonymous function to include formula syntax in call
-abFrac0 <- mapply(function(x,data) rda(x~1, data), 
+RDAs <- mapply(function(x,data) rda(x~., data), 
                   commFull, sea_list, SIMPLIFY=FALSE) # Reduced model
-
-step.env <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
-                   abFrac0, abFrac, SIMPLIFY=FALSE)
-step.env # an rda model, with the final model predictor variables
-# focus on the environment that is the host
-print("Summary of environmental selection process")
-lapply(step.env, function(x) x$anova)
-print("ANOVA on full environmental selection")
-lapply(step.env, anova)
-
-# save plot
-pdf(file = "CanadaJayMicrobiome/plots/P2A.pdf", width = 10)
-# make plot
-lapply(step.env, plot)
-dev.off()
+# anova
+lapply(RDAs, anova)
 
 #cleanup
-rm(abFrac, abFrac0, step.env, dist_list, gj_meta, gj_ps,
-   scores_list, pcnm_list, sea_list,dmFilter, commFull)
+rm(dist_list, gj_meta, gj_ps, RDAs, scores_list, pcnm_list,
+   sea_list, dmFilter, commFull)

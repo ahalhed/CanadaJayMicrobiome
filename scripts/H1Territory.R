@@ -66,7 +66,7 @@ met_filter <- function(meta, season, year, te=FALSE) {
     return(df6)
   }
 }
-
+# filtering matrix
 dmFilter <- function(data, dm) {
   # dm is the distance matrix
   # data is the community object whose row names in the DM labels
@@ -77,7 +77,6 @@ dmFilter <- function(data, dm) {
   d <- as.dist(mat)
   return(d)
 }
-
 # make long data frame with sample data and distances
 longDM <- function(dm, metric, samp){
   # dm is a distance matrix of interest
@@ -97,7 +96,6 @@ longDM <- function(dm, metric, samp){
     left_join(., rownames_to_column(samp, var = "Sample2"), by = "Sample2")
   return(df5)
 }
-
 # ANOSIM repititions
 anoRep <- function(samp, season, year, dis) {
   # samp is df with sample data
@@ -113,6 +111,16 @@ anoRep <- function(samp, season, year, dis) {
   ano1A <- with(SampD, anosim(dmSamp, Territory))
   summary(ano1A)
   rm(SampD, SampN, dmSamp, ano1A)
+}
+# plotting
+seaPlot <- function(samp, sea, y) {
+  # samp is the sample data containing the distances
+  # sea is the collection season of interest
+  # y is the year
+  dat <- samp[which(samp$CollectionSeason == sea & samp$CollectionYear == y),]
+  ggplot(dat, aes(y = AitchisonDistance, x = Group)) +
+    geom_boxplot() + rremove("xylab") + ylim(0,8) +
+    geom_dotplot(binaxis = "y", binwidth = 0.05, stackdir = "center", fill = NA)
 }
 
 # get the data
@@ -151,18 +159,10 @@ dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
 dm_meta <- rbind(dm_between, dm_within) %>%
   select(Group, Territory, CollectionYear, everything())
 # separate plot for each season/year
-F17 <- dm_meta[which(dm_meta$CollectionSeason == "Fall" & dm_meta$CollectionYear == 2017),] %>%
-  ggplot(aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + rremove("xylab")
-F18 <- dm_meta[which(dm_meta$CollectionSeason == "Fall" & dm_meta$CollectionYear == 2018),] %>%
-  ggplot(aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + rremove("xylab")
-F20 <- dm_meta[which(dm_meta$CollectionSeason == "Fall" & dm_meta$CollectionYear == 2020),] %>%
-  ggplot(aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + rremove("xylab")
-S20 <- dm_meta[which(dm_meta$CollectionSeason == "Spring" & dm_meta$CollectionYear == 2020),] %>%
-  ggplot(aes(y = AitchisonDistance, x = Group)) +
-  geom_boxplot() + rremove("xylab")
+F17 <- seaPlot(dm_meta, "Fall", 2017)
+F18 <- seaPlot(dm_meta, "Fall", 2018)
+F20 <- seaPlot(dm_meta, "Fall", 2020)
+S20 <- seaPlot(dm_meta, "Spring", 2020)
 
 # save figure
 fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 10),
@@ -181,7 +181,7 @@ anoRep(gj_meta, "Fall", 2020, dmAitchison)
 
 # clean up
 rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison, fig,
-   F17, F18, F20, S20)
+   F17, F18, F20, S20, seaPlot, anoRep, longDM)
 
 print("Prediction 1B - Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
@@ -247,82 +247,22 @@ pcnm_list <- lapply(dist_list, pcnm)
 lapply(pcnm_list, function(x) x$vectors)
 
 # cleanup
-rm(OTUclr, max_dist, XY_list)
+rm(OTUclr, max_dist, XY_list, dist_list)
 
 # analysis really starts here
 print("Acessing PCNM scores")
 scores_list <- lapply(pcnm_list, scores)
-# analysis for all OTUs
-print("Analysis for All OTUs")
-print("Variance partitioning")
-vp_mod1_list <- mapply(varpart, commFull, scores_list, data=sea_list, 
-                       MoreArgs = list(~.),
-                       SIMPLIFY = FALSE)
-vp_mod1_list
-# plot the partitioning
-pdf(file = "CanadaJayMicrobiome/plots/AdditionalFigures/P1BVPmod1.pdf")
-# make plots
-lapply(vp_mod1_list, plot)
-dev.off()
-# clean up
-rm(vp_mod1_list, dist_list)
 
 # test with RDA
-print("Testing with RDA (full model)")
-# create a tiny anonymous function to include formula syntax in call
-abFrac <- mapply(function(x,data) rda(x~., data), 
-                 commFull, sea_list, SIMPLIFY=FALSE)
-abFrac # Full model
-
-lapply(abFrac, anova, step=200, perm.max=1000)
-# RsquareAdj gives the same result as component [a] of varpart
-lapply(abFrac, RsquareAdj)
-
-# Test fraction [a] using partial RDA:
-print("Testing with partial RDA (fraction [a])")
-# create a tiny anonymous function to include formula syntax in call
-aFrac <- mapply(function(x,y,data) rda(x~.+Condition(scores(y)), data), 
-                commFull, pcnm_list, sea_list, SIMPLIFY=FALSE)
-aFrac
-# anova
-lapply(aFrac, anova, step=200, perm.max=1000)
-# RsquareAdj gives the same result as component [a] of varpart
-lapply(aFrac, RsquareAdj)
-
-# forward selection for parsimonious model
-print("Forward selection for parsimonious model")
-# spatial variables
-print("Spatial variables")
+print("Testing spatial variables with RDA")
 pcnm_df <- lapply(pcnm_list, function(x) as.data.frame(scores(x)))
-bcFrac <- mapply(function(x,data) rda(x~., data), 
+spac <- mapply(function(x,data) rda(x~., data), 
                  commFull, pcnm_df, SIMPLIFY=FALSE) # Full model
-bcFrac0 <- mapply(function(x,data) rda(x~1, data), 
-                  commFull, pcnm_df, SIMPLIFY=FALSE) # Reduced model
-step.space <- mapply(function(x,y) ordiR2step(x, scope = formula(y)), 
-                     bcFrac0, bcFrac, SIMPLIFY=FALSE)
-step.space
-
-# summary of selection process
-print("Summary of spatial selection process")
-lapply(step.space, function(x) x$anova)
-print("ANOVA on full spatial selection")
-lapply(step.space, anova)
-
-# save plot
-pdf(file = "CanadaJayMicrobiome/plots/P1BStepSpace.pdf")
-# make plot
-lapply(step.space, plot)
-dev.off()
-
-print("Partition Bray-Curtis dissimilarities")
-vdist <- lapply(commFull, dist) # euclidean dist on clr = aitchison
-pbcd <- mapply(function(x,y,z) varpart(x, ~., y, data = z),
-               vdist, scores_list, sea_list, SIMPLIFY=FALSE)
-pbcd
+print("ANOVA on spatial variables")
+lapply(spac, anova)
 
 # clean up
-rm(gj_meta, abFrac, aFrac, bcFrac, bcFrac0, pbcd, pcnm_df,commFull,
-   gj_ps, pcnm_list, scores_list, step.space, vdist, sea_list)
+rm(gj_meta, pcnm_df, commFull, gj_ps, pcnm_list, scores_list, sea_list, spac)
 
 print("Prediction 1C - territory quality")
 print("Read in the Data")
@@ -389,7 +329,7 @@ lapply(cap_list, summary)
 lapply(cap_list, anova, step=200, perm.max=1000)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P1CterBiplot.pdf", width = 17.5, height = 9)
+pdf("CanadaJayMicrobiome/plots/P1C.pdf", width = 17.5, height = 9)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 

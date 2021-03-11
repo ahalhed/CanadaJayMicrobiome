@@ -138,14 +138,14 @@ plot3A <- otu_df %>% mutate(Count = 1) %>%
   left_join(metaWeather %>% select(sampleID, FreezeThaw))
 
 pdf("CanadaJayMicrobiome/plots/P3A.pdf", width = 9)
-ggplot(plot3A, aes(x = FreezeThaw, y = n)) +
-  geom_jitter() +
+ggplot(plot3A, aes(x = FreezeThaw, y = n, shape = BreedingStatus)) +
+  geom_jitter() + geom_smooth(method = lm, se = F, colour = "black") +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
        y = "Number of OTUs")
 dev.off()
 
 # linear model
-(lm3A <- lm(n~FreezeThaw+BreedingStatus, data = plot3A))
+(lm3A <- lm(n~FreezeThaw*BreedingStatus, data = plot3A))
 summary(lm3A)
 anova(lm3A)
 # clean up - removing 3A+B data

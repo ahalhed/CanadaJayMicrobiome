@@ -98,8 +98,8 @@ plot4A <- aggregate(dm_meta$AitchisonDistance,
 # save figure
 pdf("CanadaJayMicrobiome/plots/P4A.pdf")
 ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
-  #geom_boxplot() +
-  geom_line(aes(group = Breeder)) +
+  geom_boxplot() +
+  geom_line(alpha = 0.3, aes(group = Breeder)) +
   labs(x = "Non-Breeder Location", y = "Mean Aitchison Distance")
 dev.off()
 

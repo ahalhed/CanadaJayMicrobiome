@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=0-00:02:00
+#SBATCH --time=0-00:01:00
 #SBATCH --mem-per-cpu 1G
 #SBATCH --job-name=H2HostFactors
 #SBATCH --output=outputs/%x-%j.out

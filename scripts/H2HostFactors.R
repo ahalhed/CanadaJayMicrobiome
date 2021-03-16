@@ -44,6 +44,21 @@ met_filter <- function(meta, season, year, status) {
   return(df4)
 }
 
+ind <- function(comm, met, seaLab) {
+  # comm is the community object
+  # met is the metadata list
+  # seaLab is the season label
+  print(seaLab)
+  br <- rda(comm[[seaLab]] ~ BreedingStatus, met[[seaLab]])
+  print(anova(br))
+  age <- rda(comm[[seaLab]] ~ AgeAtCollection, met[[seaLab]])
+  print(anova(age))
+  sex <- rda(comm[[seaLab]] ~ Sex, met[[seaLab]])
+  print(anova(sex))
+  by <- rda(comm[[seaLab]] ~ BirthYear, met[[seaLab]])
+  print(anova(by))
+}
+
 # get the data
 print("Read in the Data")
 print("Building phyloseq object")
@@ -107,12 +122,11 @@ RDAs <- mapply(function(x,data) rda(x~., data),
 # anova
 lapply(RDAs, anova)
 
-print("Spring 2020 - individual variables")
-br <- rda(commFull[["seaSpring2020"]] ~ BreedingStatus, sea_list[["seaSpring2020"]])
-anova(br)
-
-age <- rda(commFull[["seaSpring2020"]] ~ AgeAtCollection, sea_list[["seaSpring2020"]])
-anova(age)
+print("individual variables")
+ind(commFull, sea_list, "seaFall2017")
+ind(commFull, sea_list, "seaFall2018")
+ind(commFull, sea_list, "seaSpring2020")
+ind(commFull, sea_list, "seaFall2020")
 
 #cleanup
 rm(gj_meta, gj_ps, RDAs, sea_list, commFull, age, br)

@@ -171,9 +171,9 @@ plot4B <- OTUsamples %>% rownames_to_column(var = "pair") %>%
 # make plot
 pdf("CanadaJayMicrobiome/plots/P4B.pdf")
 ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
-  geom_line(stat = "smooth", method=loess, alpha = 0.3,
-            se=FALSE, color = "black", aes(group = pair)) +
   geom_boxplot() +
+  geom_line(stat = "smooth", method=loess, alpha = 0.25,
+            se=FALSE, color = "black", aes(group = pair)) +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
   labs(x = "Sample(s)", y = "Number of OTUs Present")
 dev.off()

@@ -181,6 +181,7 @@ plot3B <- otu_df %>% mutate(Count = 1) %>%
 pdf("CanadaJayMicrobiome/plots/P3B.pdf", width = 9)
 ggplot(plot3B, aes(x = FoodSupplement, y = n)) +
   geom_boxplot() + facet_grid(~CollectionYear) +
+  geom_dotplot(binaxis = "y", binwidth = 1, stackdir = "center", fill = NA) +
   labs(x = "Food Supplementation Group",
        y = "Number of OTUs")
 dev.off()

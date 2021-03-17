@@ -129,4 +129,4 @@ ind(commFull, sea_list, "seaSpring2020")
 ind(commFull, sea_list, "seaFall2020")
 
 #cleanup
-rm(gj_meta, gj_ps, RDAs, sea_list, commFull, age, br)
+rm(gj_meta, gj_ps, RDAs, sea_list, commFull)

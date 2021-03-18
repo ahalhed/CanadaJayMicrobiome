@@ -96,7 +96,7 @@ plot4A <- aggregate(dm_meta$AitchisonDistance,
   mutate(AitchisonDistance = x, Group = word(.$'Group.1', 1, sep=fixed('.')),
          Breeder = word(.$'Group.1', 2, sep=fixed('.'))) %>%
   select(AitchisonDistance, Group, Breeder)
-# save figure
+# make figure
 figA <- ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() +
   geom_line(alpha = 0.3, aes(group = Breeder)) +
@@ -199,6 +199,6 @@ rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4B, shareOTUs, pairedNames, OTUsamples,
    gj_meta, gj_ps, longDM, share)
 
 # arrange figures
-pdf("H4.pdf", width = 10)
+pdf("CanadaJayMicrobiome/plots/H4.pdf", width = 10)
 ggarrange(figA, figB, labels = c("A", "B"))
 dev.off()

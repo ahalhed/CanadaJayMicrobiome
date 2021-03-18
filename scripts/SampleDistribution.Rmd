@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 # load packages
 library(qiime2R)
+library(phyloseq)
 library(tidyverse)
 theme_set(theme_bw())
 ```
@@ -115,5 +116,17 @@ jay %>% filter(BreedingStatus == "Non-breeder") %>%
 ggplot(jay, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
   geom_boxplot() +
   labs(y = "Age At Collection", x = "Breeding Status")
+```
+
+## Year effect
+```{r}
+setwd("~/OneDrive - University of Guelph/Alicia's Thesis/GreyJayMicrobiome")
+ps <- qza_to_phyloseq(metadata = "input/jay-met.tsv",
+                features = "filtered-table-no-singletons-mitochondria-chloroplast.qza")
+```
+
+```{r}
+(or <- ordinate(ps, method = "RDA", formula = . ~ CollectionYear))
+anova(or)
 ```
 

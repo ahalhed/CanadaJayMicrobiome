@@ -6,6 +6,7 @@ library(boot)
 library(qiime2R)
 library(vegan)
 library(phyloseq)
+library(ggpubr)
 library(tidyverse)
 # set plotting theme
 theme_set(theme_bw())
@@ -96,12 +97,10 @@ plot4A <- aggregate(dm_meta$AitchisonDistance,
          Breeder = word(.$'Group.1', 2, sep=fixed('.'))) %>%
   select(AitchisonDistance, Group, Breeder)
 # save figure
-pdf("CanadaJayMicrobiome/plots/P4A.pdf")
-ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
+figA <- ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() +
   geom_line(alpha = 0.3, aes(group = Breeder)) +
   labs(x = "Non-Breeder Location", y = "Mean Aitchison Distance")
-dev.off()
 
 # paired t-test
 # step 0 - check assumptions
@@ -128,8 +127,8 @@ t.test(test4A$`Same Territory`, test4A$`Different Territory`,
 boot(test4A, fc, R = 999)
 
 # clean up
-rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison, plot4A,
-   samp, SD, Tstat, test4A, fc)
+rm(dm_between, dm_within, dm_meta, dm_all, dmAitchison,
+   plot4A, samp, SD, Tstat, test4A, fc)
 
 print("Shared Microbiota (4B)")
 # looking at the number of OTUs (not reads) that occur per sample
@@ -169,14 +168,12 @@ plot4B <- OTUsamples %>% rownames_to_column(var = "pair") %>%
   mutate(NumberOfOTUs = as.numeric(NumberOfOTUs))
 # make percentage, average, line graph
 # make plot
-pdf("CanadaJayMicrobiome/plots/P4B.pdf")
-ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
+figB <- ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   geom_boxplot() +
   geom_line(stat = "smooth", method=loess, alpha = 0.25,
             se=FALSE, color = "black", aes(group = pair)) +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
   labs(x = "Sample(s)", y = "Number of OTUs Present")
-dev.off()
 
 print("Two sample t-test")
 # get data
@@ -200,3 +197,8 @@ t.test(br$NumberOfOTUs, nb$NumberOfOTUs, alternative = "greater", var.equal = T)
 # section clean up
 rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4B, shareOTUs, pairedNames, OTUsamples,
    gj_meta, gj_ps, longDM, share)
+
+# arrange figures
+pdf("H4.pdf", width = 10)
+ggarrange(figA, figB, labels = c("A", "B"))
+dev.off()

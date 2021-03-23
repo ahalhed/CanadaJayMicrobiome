@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=0-00:05:00
+#SBATCH --time=0-00:02:30
 #SBATCH --mem-per-cpu 1G
 #SBATCH --job-name=core
 #SBATCH --output=outputs/%x-%j.out
@@ -10,4 +10,4 @@
 module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 
 # run R script
-Rscript /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/CanadaJayMicrobiome/scripts/gj-core.R
+Rscript /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/CanadaJayMicrobiome/scripts/core.R

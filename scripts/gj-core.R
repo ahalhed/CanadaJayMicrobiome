@@ -54,9 +54,8 @@ x_names <- apply(combn(ncol(start_matrix), 2), 2, function(x) paste(colnames(sta
 df_s <- data.frame(x_names,x)
 names(df_s)[2] <- 1 
 BCaddition <- rbind(BCaddition,df_s)
-# calculating BC dissimilarity based on additon of ranked OTUs from 2nd to 647th (entire length).
-# subscript out of bound error here on graham
-for(i in 2:648){
+# calculating BC dissimilarity based on additon of ranked OTUs from 2nd to 644th (entire length).
+for(i in 2:nrow(occ_abun)){
   otu_add <- otu_ranked$otu[i]
   add_matrix <- as.matrix(otu[otu_add,])
   add_matrix <- t(add_matrix)
@@ -89,7 +88,7 @@ BC_ranked <- data.frame(rank = as.factor(row.names(t(temp_BC_matrix))),t(temp_BC
 Increase <- BC_ranked$MeanBC[-1]/BC_ranked$MeanBC[-length(BC_ranked$MeanBC)]
 # moved the 0 in c to after Increase
 increaseDF <- data.frame(IncreaseBC=c((Increase),0), rank=factor(c(1:(length(Increase)+1))))
-BC_ranked <- left_join(BC_ranked, increaseDF)
+BC_ranked <- left_join(BC_ranked, increaseDF, by = "rank")
 BC_ranked <- BC_ranked[-nrow(BC_ranked),]
 
 
@@ -120,5 +119,12 @@ occ_abunT <- tax %>%
          "Species" = word(.$Taxon, 7, sep = ";")) %>%
   # join to core labels
   right_join(occ_abun, by = c("Feature.ID" = "otu" ))
-# save core information to file
+
+# filter for core names only
+core <- occ_abunT[occ_abunT$fill == "Core",] %>% 
+  rename(c("featureid" = "Feature.ID")) %>%
+  select(featureid)
+
+# save information to file
 write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
+write.table(core, file = "CanadaJayMicrobiome/data/coreFeatures.csv", sep = ",", quote = F, row.names = F)

@@ -5,6 +5,7 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 #if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
 #devtools::install_github("jbisanz/qiime2R")
 library(qiime2R)
+library(ggmap)
 library(phyloseq)
 library(vegan)
 library(tidyverse)
@@ -32,7 +33,7 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
 # read in core data
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 
-# save plot
+# save core plot
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/coreSites.pdf")
 ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
   geom_point() +
@@ -46,11 +47,73 @@ dev.off()
 # clean up
 rm(coreTable)
 
-## PCA plot (closed reference)
-pdf("CanadaJayMicrobiome/plots/AdditionalFigures/PCA-cr.pdf", width = 10)
-# need to sort out NA thing
-ggplot(gj_aitch_V, aes(y=PC2, x=PC1, shape = as.factor(CollectionYear), group = JayID)) + #, group = JayID
-  geom_point() + #geom_line()
-  labs(shape = "Collection Year")
+# counts
+# plot b/nb counts
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/countsSampleType.pdf")
+ggplot(gj_meta, aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
+                fill = interaction(BreedingStatus, JuvenileStatus))) +
+  geom_bar() +
+  # reorder x axis and angle of labels
+  scale_x_discrete(limits = c("Fall 2016", "Fall 2017", "Fall 2018", "Winter 2019", 
+                              "Spring 2019", "Winter 2020", "Spring 2020", "Fall 2020")) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  # changing the interaction legend
+  scale_fill_viridis_d(labels = c("Breeder (Dominant Juvenile)", "Non-Breeder (Dominant Juvenile)", "Breeder (Ejectee)",
+                                  "Breeder (Unknown)", "Non-breeder (Unknown)", "Unknown")) +
+  # adjust axis and legend names
+  labs(x = "Collection Season and Year", y = "Number of Individuals", 
+       fill = "Breeding Status (Juvenile Status)") +
+  ggtitle("Seasonal Distribution of Collected Canada Jay Oral Microbiome Samples",
+          "All Individuals by Breeding and Juvenile Status")
+gj_meta %>% filter(BreedingStatus == "Breeder") %>%
+  ggplot(aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
+             fill = Territory)) + geom_bar() +
+  scale_fill_viridis_d() +
+  # reorder x axis labels
+  scale_x_discrete(limits = c("Fall 2016", "Fall 2017", "Fall 2018", 
+                              "Winter 2020", "Spring 2020", "Fall 2020")) +
+  # adjust axis and legend names
+  labs(x = "Collection Season and Year", y = "Number of Individuals") +
+  ggtitle("Seasonal Distribution of Collected Canada Jay Oral Microbiome Samples",
+          "Breeding Individuals Only by Territory")
+gj_meta %>% filter(BreedingStatus == "Non-breeder") %>%
+  ggplot(aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
+             fill = Territory)) + geom_bar() +
+  scale_fill_viridis_d() +
+  # reorder x axis and angle of labels
+  scale_x_discrete(limits = c("Fall 2017", "Fall 2018", "Winter 2019", "Spring 2019", "Spring 2020", "Fall 2020")) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  facet_grid(~JuvenileStatus) +
+  # adjust axis and legend names
+  labs(x = "Collection Season and Year", y = "Number of Individuals") +
+  ggtitle("Seasonal Distribution of Collected Canada Jay Oral Microbiome Samples",
+          "Non-breeders Only by Territory")
 dev.off()
-## PCA plot (de novo) - need to do this
+
+# breeding status by age plot
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/ageBreedingStatus.pdf")
+ggplot(jay, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
+  geom_boxplot() +
+  labs(y = "Age At Collection", x = "Breeding Status")
+dev.off()
+
+# figure 2
+# map of sampling locations
+# these locations account for ALL sample locations (2016-2020)
+map_gj <- get_map(
+  location = c(left = -79.5, bottom = 45.2, right = -77.9, top = 46.2),
+  source = "osm",
+  force = TRUE) # adding force = TRUE to get_map to force a re-rendering of the map
+# export map
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapSamples.pdf")
+ggmap(map_gj) + 
+  geom_count(data = gj_meta, 
+             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD, 
+                 shape = as.character(CollectionYear))) + 
+  theme(legend.position = "bottom", legend.box = "vertical") +
+  labs(shape = "Collection Year", size = "Number of Samples",
+       title = "Map of Canada Jay Sampling Locations",
+       subtitle = "Algonquin Park, Ontario (2016-2020)")
+dev.off()
+
+

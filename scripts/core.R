@@ -126,5 +126,5 @@ core <- occ_abunT[occ_abunT$fill == "Core",] %>%
   select(featureid)
 
 # save information to file
-write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJay.tsv", sep = "\t", quote = F, row.names = F)
-write.table(core, file = "CanadaJayMicrobiome/data/coreFeatures.csv", sep = ",", quote = F, row.names = F)
+write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
+write.table(core, file = "CanadaJayMicrobiome/data/coreFeatures.tsv", sep = "\t", quote = F, row.names = F)

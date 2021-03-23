@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
-#SBATCH --time=0-00:02:30
+#SBATCH --time=0-00:03:00
 #SBATCH --mem-per-cpu 1G
 #SBATCH --job-name=core
 #SBATCH --output=outputs/%x-%j.out

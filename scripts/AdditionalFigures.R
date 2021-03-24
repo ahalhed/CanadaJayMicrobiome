@@ -24,7 +24,8 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
 # read in the aitchison ordination (need to generate this ordi)
-ordiAitchison <- read_qza("aitchison-ordination.qza")
+ordiAitchison <- read_qza("aitchison-ordination-cr.qza")
+ordiAitchisonDN <- read_qza("aitchison-ordination-dn.qza")
 # join aitchison vectors with metadata
 # select columns of interest from meta (no location or extraction info)
 gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%

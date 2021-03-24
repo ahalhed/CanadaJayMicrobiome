@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
 #SBATCH --ntasks-per-node=16
-#SBATCH --time=0-01:00:00
+#SBATCH --time=0-03:00:00
 #SBATCH --mem-per-cpu 16G
 #SBATCH --job-name=ordis
 #SBATCH --output=CanadaJayMicrobiome/outputs/%x-%j.out

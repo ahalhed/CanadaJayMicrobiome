@@ -1,0 +1,111 @@
+Saved FeatureData[Taxonomy] to: taxonomy/SILVA-taxonomy-dada2.qza
+Usage: qiime feature-table filter-samples [OPTIONS]
+
+  Filter samples from table based on frequency and/or metadata. Any features
+  with a frequency of zero after sample filtering will also be removed. See
+  the filtering tutorial on https://docs.qiime2.org for additional details.
+
+Inputs:
+  --i-table ARTIFACT FeatureTable[Frequency¹ | RelativeFrequency² |
+    PresenceAbsence³ | Composition⁴]
+                       The feature table from which samples should be
+                       filtered.                                    [required]
+Parameters:
+  --p-min-frequency INTEGER
+                       The minimum total frequency that a sample must have to
+                       be retained.                               [default: 0]
+  --p-max-frequency INTEGER
+                       The maximum total frequency that a sample can have to
+                       be retained. If no value is provided this will default
+                       to infinity (i.e., no maximum frequency filter will be
+                       applied).                                    [optional]
+  --p-min-features INTEGER
+                       The minimum number of features that a sample must have
+                       to be retained.                            [default: 0]
+  --p-max-features INTEGER
+                       The maximum number of features that a sample can have
+                       to be retained. If no value is provided this will
+                       default to infinity (i.e., no maximum feature filter
+                       will be applied).                            [optional]
+  --m-metadata-file METADATA...
+    (multiple          Sample metadata used with `where` parameter when
+     arguments will    selecting samples to retain, or with `exclude-ids` when
+     be merged)        selecting samples to discard.                [optional]
+  --p-where TEXT       SQLite WHERE clause specifying sample metadata
+                       criteria that must be met to be included in the
+                       filtered feature table. If not provided, all samples in
+                       `metadata` that are also in the feature table will be
+                       retained.                                    [optional]
+  --p-exclude-ids / --p-no-exclude-ids
+                       If true, the samples selected by `metadata` or `where`
+                       parameters will be excluded from the filtered table
+                       instead of being retained.             [default: False]
+Outputs:
+  --o-filtered-table ARTIFACT FeatureTable[Frequency¹ | RelativeFrequency²
+    | PresenceAbsence³ | Composition⁴]
+                       The resulting feature table filtered by sample.
+                                                                    [required]
+Miscellaneous:
+  --output-dir PATH    Output unspecified results to a directory
+  --verbose / --quiet  Display verbose output to stdout and/or stderr during
+                       execution of this action. Or silence output if
+                       execution is successful (silence is golden).
+  --examples           Show usage examples and exit.
+  --citations          Show citations and exit.
+  --help               Show this message and exit.
+
+                  There were some problems with the command:                  
+ (1/2?) no such option: --i-taxonomy
+ (2/2?) no such option: --p-exclude  Did you mean --p-exclude-ids?
+Saved PCoAResults % Properties('biplot') to: aitchison-ordination-cr.qza
+Saved DistanceMatrix to: aitchison-distance-cr.qza
+Usage: qiime deicode rpca [OPTIONS]
+
+  Performs robust center log-ratio transform robust PCA and ranks the
+  features by the loadings of the resulting SVD.
+
+Inputs:
+  --i-table ARTIFACT FeatureTable[Frequency]
+                       Input table of counts.                       [required]
+Parameters:
+  --p-n-components INTEGER
+                       The underlying low-rank structure. The input can be an
+                       integer (suggested: 1 < rank < 10) [minimum 2]. Note:
+                       as the rank increases the runtime will increase
+                       dramatically.                              [default: 3]
+  --p-min-sample-count INTEGER
+                       Minimum sum cutoff of sample across all features. The
+                       value can be at minimum zero and must be an whole
+                       integer. It is suggested to be greater than or equal to
+                       500.                                     [default: 500]
+  --p-min-feature-count INTEGER
+                       Minimum sum cutoff of features across all samples. The
+                       value can be at minimum zero and must be an whole
+                       integer                                   [default: 10]
+  --p-min-feature-frequency NUMBER
+                       Minimum percentage of samples a feature must appear
+                       with a value greater than zero. This value can range
+                       from 0 to 100 with decimal values allowed. [default: 0]
+  --p-max-iterations INTEGER
+                       The number of iterations to optimize the solution
+                       (suggested to be below 100; beware of overfitting)
+                       [minimum 1]                                [default: 5]
+Outputs:
+  --o-biplot ARTIFACT PCoAResults % Properties('biplot')
+                       A biplot of the (Robust Aitchison) RPCA feature
+                       loadings                                     [required]
+  --o-distance-matrix ARTIFACT
+    DistanceMatrix     The Aitchison distance of the sample loadings from
+                       RPCA.                                        [required]
+Miscellaneous:
+  --output-dir PATH    Output unspecified results to a directory
+  --verbose / --quiet  Display verbose output to stdout and/or stderr during
+                       execution of this action. Or silence output if
+                       execution is successful (silence is golden).
+  --examples           Show usage examples and exit.
+  --citations          Show citations and exit.
+  --help               Show this message and exit.
+
+                    There was a problem with the command:                     
+ (1/1) Invalid value for '--i-table': 'filtered-table-dada2.qza' is not a
+  valid filepath

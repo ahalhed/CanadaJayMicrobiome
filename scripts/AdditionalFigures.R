@@ -1,10 +1,8 @@
 print("Figures")
 # additional figures that don't necessarily fit into one hypothesis
-# to load R on interactive graham
-# module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
+# run locally (on equivalent local directory)
 setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
-#if (!requireNamespace("devtools", quietly = TRUE)){install.packages("devtools")}
-#devtools::install_github("jbisanz/qiime2R")
+# load required packages
 library(qiime2R)
 library(ggmap)
 library(phyloseq)

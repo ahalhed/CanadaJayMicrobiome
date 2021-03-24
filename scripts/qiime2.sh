@@ -196,9 +196,18 @@ qiime feature-table filter-samples \
     --m-metadata-file input/jay-met.tsv \
     --p-exclude-ids 'TRUE' \
     --p-where "[JayID]='BLANK'" \
-    --i-taxonomy taxonomy/SILVA-taxonomy-dada2.qza \
-    --p-exclude mitochondria,chloroplast \
-    --o-filtered-table filtered-table-dada2.qza
+    --o-filtered-table filtered-table-dada2-no-blanks.qza
+# remove singletons
+qiime feature-table filter-features \
+  --i-table filtered-table-dada2-no-blanks.qza \
+  --p-min-samples 2 \
+  --o-filtered-table filtered-table-dada2-no-singletons.qza
+# remove singletons, mitochondria
+qiime taxa filter-table \
+  --i-table filtered-table-dada2-no-singletons.qza \
+  --i-taxonomy taxonomy/SILVA-taxonomy-dada2.qza \
+  --p-exclude mitochondria,chloroplast \
+  --o-filtered-table filtered-table-dada2.qza
 
 # full ordinations (for comparison purposes)
 qiime deicode rpca \

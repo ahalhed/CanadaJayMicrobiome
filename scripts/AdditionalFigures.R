@@ -32,6 +32,10 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
   rownames_to_column(var = "SampleID") %>% # row names need to be a column to join
   left_join(ordiAitchison$data$Vectors,.) %>%
   remove_rownames()
+gj_aitch_VDN <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
+  rownames_to_column(var = "SampleID") %>% # row names need to be a column to join
+  left_join(ordiAitchisonDN$data$Vectors,.) %>%
+  remove_rownames()
 # read in core data
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 
@@ -96,7 +100,7 @@ dev.off()
 print("Breeding status by age")
 # breeding status by age plot
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/ageBreedingStatus.pdf")
-ggplot(jay, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
+ggplot(gj_meta, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
   geom_boxplot() +
   labs(y = "Age At Collection", x = "Breeding Status")
 dev.off()
@@ -120,4 +124,15 @@ ggmap(map_gj) +
        subtitle = "Algonquin Park, Ontario (2016-2020)")
 dev.off()
 
+# clean up
+rm(map_gj)
 
+# ordinations
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/PCA.pdf")
+ggplot(gj_aitch_V, aes(PC1, PC2, shape = as.factor(CollectionYear))) +
+  geom_point() + labs(shape = "Collection Year") +
+  ggtitle("Closed Reference Clustering")
+ggplot(gj_aitch_VDN, aes(PC1, PC2, shape = as.factor(CollectionYear))) +
+  geom_point() + labs(shape = "Collection Year") +
+  ggtitle("DADA2 De Novo Clustering")
+dev.off()

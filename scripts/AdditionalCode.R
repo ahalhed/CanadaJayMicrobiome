@@ -14,7 +14,7 @@ theme_set(theme_bw())
 # build the phyloseq object
 gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         metadata = "input/gj_meta-met.tsv") %>%
+                         metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
 # extract the metadata from the phyloseq object
@@ -47,6 +47,7 @@ gj_meta %>% filter(BreedingStatus == "Non-breeder") %>%
   group_by(Territory, CollectionYear, CollectionSeason) %>%
   count()
 
+print("Should we do analyses by year/season?")
 # confirmation that year/season was the right way to go
 print("Collection Year Ordination")
 (orY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear))

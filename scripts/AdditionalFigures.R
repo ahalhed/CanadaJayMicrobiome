@@ -1,3 +1,4 @@
+print("Figures")
 # additional figures that don't necessarily fit into one hypothesis
 # to load R on interactive graham
 # module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
@@ -33,6 +34,7 @@ gj_aitch_V <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
 # read in core data
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 
+print("Core")
 # save core plot
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/coreSites.pdf")
 ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
@@ -47,7 +49,7 @@ dev.off()
 # clean up
 rm(coreTable)
 
-# counts
+print("Counts")
 # plot b/nb counts
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/countsSampleType.pdf")
 ggplot(gj_meta, aes(x = interaction(CollectionSeason, CollectionYear, sep = " "),
@@ -90,6 +92,7 @@ gj_meta %>% filter(BreedingStatus == "Non-breeder") %>%
           "Non-breeders Only by Territory")
 dev.off()
 
+print("Breeding status by age")
 # breeding status by age plot
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/ageBreedingStatus.pdf")
 ggplot(jay, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
@@ -98,7 +101,7 @@ ggplot(jay, aes(x = BreedingStatus, y = as.numeric(AgeAtCollection))) +
 dev.off()
 
 # figure 2
-# map of sampling locations
+print("Map of sampling locations")
 # these locations account for ALL sample locations (2016-2020)
 map_gj <- get_map(
   location = c(left = -79.5, bottom = 45.2, right = -77.9, top = 46.2),

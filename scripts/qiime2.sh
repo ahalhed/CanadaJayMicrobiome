@@ -49,7 +49,6 @@ qiime metadata tabulate \
 # need this to do closed reference otu picking
 wget -O "references/silva-138-99-seqs.qza" \
   "https://data.qiime2.org/2020.11/common/silva-138-99-seqs.qza"
-# switch 2020.8 to 2020.11 if updating q2 version
 
 # using closed reference clustering to account for the two different runs
 qiime vsearch cluster-features-closed-reference \
@@ -109,7 +108,6 @@ wget -O "references/silva-138-99-nb-classifier.qza" \
 # Bokulich, N.A., Kaehler, B.D., Rideout, J.R. et al. Optimizing taxonomic classification of marker-gene amplicon sequences with QIIME 2’s q2-feature-classifier plugin. Microbiome 6, 90 (2018). https://doi.org/10.1186/s40168-018-0470-z
 
 # This has a high memory requirement (mem=128G,ntasks=16), but runs relatively quick (<30 min)
-# Classifying taxonomies (see 5taxonomyCR for closed reference)
 qiime feature-classifier classify-sklearn \
   --i-classifier references/silva-138-99-nb-classifier.qza \
   --p-n-jobs 16 \
@@ -185,6 +183,37 @@ qiime feature-table filter-samples \
     --p-exclude-ids 'TRUE' \
     --p-where "[JayID]='BLANK'" \
     --o-filtered-table filtered-table-no-blanks.qza
+
+# dada2 tax (for ordination comparison)
+qiime feature-classifier classify-sklearn \
+  --i-classifier references/silva-138-99-nb-classifier.qza \
+  --p-n-jobs 16 \
+  --i-reads rep-seqs-dada2.qza \
+  --o-classification taxonomy/SILVA-taxonomy-dada2.qza
+# filtering dada2 table (for ordination comparison)
+qiime feature-table filter-samples \
+    --i-table table-dada2.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --p-exclude-ids 'TRUE' \
+    --p-where "[JayID]='BLANK'" \
+    --i-taxonomy taxonomy/SILVA-taxonomy-dada2.qza \
+    --p-exclude mitochondria,chloroplast \
+    --o-filtered-table filtered-table-dada2.qza
+
+# full ordinations (for comparison purposes)
+qiime deicode rpca \
+    --i-table filtered-table-no-blanks.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-cr.qza \
+    --o-distance-matrix aitchison-distance-cr.qza
+
+qiime deicode rpca \
+    --i-table filtered-table-dada2.qza \
+    --p-min-feature-count 10 \
+    --p-min-sample-count 2 \
+    --o-biplot aitchison-ordination-dn.qza \
+    --o-distance-matrix aitchison-distance-dn.qza
 
 # rarefying to feed into core definition in R (needed nowhere else)
 # 344 retains all samples

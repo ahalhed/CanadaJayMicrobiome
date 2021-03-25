@@ -70,8 +70,7 @@ gj_ps <- qza_to_phyloseq(features = "H4-filtered-table.qza",
 gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
   mutate_all(na_if,"")
 rownames(gj_meta) <- sample_names(gj_ps)
-# clr OTUs - may not need unless calculating distances here
-# OTUclr <- zCompositions::cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% CoDaSeq::codaSeq.clr(.)
+
 # boxplots - data prep (to long)
 dmAitchison <- read_qza("P4A-aitchison-distance.qza")$data
 
@@ -162,10 +161,11 @@ OTUsamples <- shareOTUs %>% left_join(br) %>%
 
 # for plotting
 plot4B <- OTUsamples %>% rownames_to_column(var = "pair") %>%
-  select(Territory, pair, Bonly, NBonly, shared) %>%
-  pivot_longer(-c(Territory, pair), names_to = "Sharing", values_to = "NumberOfOTUs") %>%
+  select(Territory, pair, Bonly, NBonly, shared, `JuvenileStatus.nb`) %>%
+  pivot_longer(-c(Territory, pair, `JuvenileStatus.nb`), names_to = "Sharing", values_to = "NumberOfOTUs") %>%
   filter(Territory == "Within") %>%
   mutate(NumberOfOTUs = as.numeric(NumberOfOTUs))
+
 # make percentage, average, line graph
 # make plot
 figB <- ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
@@ -202,3 +202,17 @@ rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4B, shareOTUs, pairedNames, OTUsamples,
 pdf("CanadaJayMicrobiome/plots/H4.pdf", width = 10)
 ggarrange(figA, figB, labels = c("A", "B"))
 dev.off()
+
+# top outlier is a dominant juvenile
+print("Dominant Juvenile")
+plot4B %>% filter(JuvenileStatus.nb == "DominantJuvenile") %>%
+  group_by(Sharing) %>% summarize(count = nrow(.)/3,
+                                  mean = mean(NumberOfOTUs),
+                                  max = max(NumberOfOTUs),
+                                  min = min(NumberOfOTUs))
+print("Other Juveniles")
+plot4B %>% filter(JuvenileStatus.nb != "DominantJuvenile") %>%
+  group_by(Sharing) %>% summarize(count = nrow(.)/3,
+                                  mean = mean(NumberOfOTUs),
+                                  max = max(NumberOfOTUs),
+                                  min = min(NumberOfOTUs))

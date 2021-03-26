@@ -38,9 +38,7 @@ gj_aitch_VDN <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 
 print("Core")
-# save core plot
-pdf("CanadaJayMicrobiome/plots/AdditionalFigures/coreSites.pdf")
-ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
+corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
   geom_point() +
   # log transform the x axis, set discrete viridis colour scheme
   scale_x_log10() + scale_colour_viridis_d() + 
@@ -48,9 +46,17 @@ ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) +
   labs(x = "Mean Relative Abundance of Each OTU (log10)", 
        y = "Occupancy (Proportion of Samples)",
        color = "OTU Type")
+# save core plot
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/coreSites.pdf")
+corePlot    # without labels
+corePlot +  # with text labels
+  geom_text(data=coreTable[which(coreTable$fill == "Core"),],
+            aes(y = otu_occ, x = otu_rel, label= Genus),
+            color='black', size=2.5,
+            position=position_jitter(width=0.01,height=0.01))
 dev.off()
 # clean up
-rm(coreTable)
+rm(coreTable, corePlot)
 
 print("Counts")
 # plot b/nb counts

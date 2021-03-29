@@ -273,22 +273,6 @@ qiime composition ancom \
     --m-metadata-column TerritoryQuality \
     --o-visualization P1C-ancom
 
-qiime aldex2 aldex2 \
-    --i-table P1C-filtered-table.qza \
-    --m-metadata-file input/jay-met.tsv \
-    --m-metadata-column TerritoryQuality \
-    --output-dir P1C-aldex
-qiime aldex2 extract-differences \
-    --i-table P1C-aldex/differentials.qza \
-    --o-differentials P1C-aldex/P1C-sig \
-    --p-sig-threshold 0.1 \
-    --p-effect-threshold 0 \
-    --p-difference-threshold 0
-qiime tools export \
-    --input-path P1C-aldex/P1C-sig.qza \
-    --output-path P1C-aldex/
-  
-
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)
 qiime deicode rpca \
@@ -307,7 +291,19 @@ qiime feature-table filter-samples \
   --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
   --o-filtered-table P3A-filtered-table.qza
 
-# Prediction 3B - food supplementation
+# Prediction 3B - The most common microbiota will putatively function in food preservation.
+# differential abundance testing - those functioning in food preservation will be more abundant in fall samples
+qiime composition add-pseudocount \
+    --i-table P1C-filtered-table.qza \
+    --o-composition-table P1C-pseudo
+
+qiime composition ancom \
+    --i-table P1C-pseudo.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --m-metadata-column TerritoryQuality \
+    --o-visualization P1C-ancom
+
+# Prediction 3C - food supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \

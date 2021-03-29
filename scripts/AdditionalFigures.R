@@ -36,6 +36,7 @@ gj_aitch_VDN <- gj_meta %>% select(1:5, 7:17, 24:27) %>%
   remove_rownames()
 # read in core data
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
+coreTable$samples <- round(coreTable$otu_occ*88)
 
 print("Core")
 corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 

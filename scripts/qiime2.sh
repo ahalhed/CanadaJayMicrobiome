@@ -263,18 +263,30 @@ qiime deicode rpca \
     --o-distance-matrix P1C-aitchison-distance.qza
 
 # differential abundance testing
-qiime gneiss gradient-clustering \
-  --i-table P1C-filtered-table.qza \
-  --m-gradient-file input/jay-met.tsv \
-  --m-gradient-column ProportionSpruceOnTerritory \
-  --o-clustering P1C-gradient-hierarchy.qza
-qiime gneiss dendrogram-heatmap \
-  --i-table P1C-filtered-table.qza \
-  --i-tree P1C-gradient-hierarchy.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --m-metadata-column TerritoryQuality \
-  --p-color-map viridis \
-  --o-visualization P1C-heatmap.qzv
+qiime composition add-pseudocount \
+    --i-table P1C-filtered-table.qza \
+    --o-composition-table P1C-pseudo
+
+qiime composition ancom \
+    --i-table P1C-pseudo.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --m-metadata-column TerritoryQuality \
+    --o-visualization P1C-ancom
+
+qiime aldex2 aldex2 \
+    --i-table P1C-filtered-table.qza \
+    --m-metadata-file input/jay-met.tsv \
+    --m-metadata-column TerritoryQuality \
+    --output-dir P1C-aldex
+qiime aldex2 extract-differences \
+    --i-table P1C-aldex/differentials.qza \
+    --o-differentials P1C-aldex/P1C-sig \
+    --p-sig-threshold 0.1 \
+    --p-effect-threshold 0 \
+    --p-difference-threshold 0
+qiime tools export \
+    --input-path P1C-aldex/P1C-sig.qza \
+    --output-path P1C-aldex/
   
 
 # Hypothesis 2

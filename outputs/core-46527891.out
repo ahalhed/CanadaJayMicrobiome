@@ -32,3 +32,7 @@ cols(
 `summarise()` regrouping output by 'otu' (override with `.groups` argument)
 `summarise()` ungrouping output (override with `.groups` argument)
 `summarise()` ungrouping output (override with `.groups` argument)
+Joining, by = "Feature.ID"
+Joining, by = "Feature.ID"
+Joining, by = "Feature.ID"
+Joining, by = "Feature.ID"

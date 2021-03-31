@@ -48,13 +48,25 @@ corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) +
        y = "Occupancy (Proportion of Samples)",
        color = "OTU Type")
 # save core plot
-pdf("CanadaJayMicrobiome/plots/AdditionalFigures/coreSites.pdf")
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/core.pdf")
 corePlot    # without labels
 corePlot +  # with text labels
   geom_text(data=coreTable[which(coreTable$fill == "Core"),],
             aes(y = otu_occ, x = otu_rel, label= Genus),
             color='black', size=2.5,
             position=position_jitter(width=0.01,height=0.01))
+ggplot(coreTable, aes(y = FallOcc, x = FallRel, color = fill)) + 
+  geom_point() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU", 
+       y = "Occupancy (Proportion of Fall Samples)",
+       color = "OTU Type")
+ggplot(coreTable, aes(y = WSOcc, x = WSRel, color = fill)) + 
+  geom_point() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU", 
+       y = "Occupancy (Proportion of Winter/Spring Samples)",
+       color = "OTU Type")
 dev.off()
 # clean up
 rm(coreTable, corePlot)

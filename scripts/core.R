@@ -11,8 +11,9 @@ theme_set(theme_bw())
 
 # read in the required data
 nReads <- 344
-otu <- read_qza("rarefied-table.qza")$data
-map <- read_tsv("input/jay-met.tsv")[-1,]
+otu <- read_qza("filtered-table-no-blanks.qza")$data
+map <- read_tsv("input/jay-met.tsv")[-1,] %>%
+  .[which(.$CollectionSeason != "BLANK"),]
 
 otu_PA <- 1*((otu>0)==1)                                               # presence-absence data
 otu_occ <- rowSums(otu_PA)/ncol(otu_PA)                                # occupancy calculation
@@ -27,14 +28,14 @@ occ_abun <- rownames_to_column(as.data.frame(cbind(otu_occ, otu_rel)),var="otu")
 PresenceSum <- data.frame(otu = as.factor(row.names(otu)), otu) %>% 
   gather(sampleid, abun, -otu) %>%
   left_join(map, by = 'sampleid') %>%
-  group_by(otu, Territory) %>%
+  group_by(otu, CollectionSeason) %>%
   summarise(plot_freq=sum(abun>0)/length(abun),        # frequency of detection between time points
             coreSite=ifelse(plot_freq == 1, 1, 0), # 1 only if occupancy 1 with specific site, 0 if not
             detect=ifelse(plot_freq > 0, 1, 0)) %>%    # 1 if detected and 0 if not detected with specific site
   group_by(otu) %>%
   summarise(sumF=sum(plot_freq),
             sumG=sum(coreSite),
-            nS=length(Territory)*2,
+            nS=length(CollectionSeason)*2,
             Index=(sumF+sumG)/nS) # calculating weighting Index based on number of time points detected and 
 
 otu_ranked <- occ_abun %>%
@@ -120,6 +121,31 @@ occ_abunT <- tax %>%
   # join to core labels
   right_join(occ_abun, by = c("Feature.ID" = "otu" ))
 
+# seasonal abundances
+# fall samples
+F <- map[which(map$CollectionSeason == "Fall"),] %>%
+  select(sampleid) 
+otuF <- otu[which(colnames(otu) %in% F$sampleid),]
+FallRel <- as.matrix(rowSums(1*((otuF>0)==1))/ncol(1*((otuF>0)==1))) %>%
+  as.data.frame() %>% rownames_to_column(var = "Feature.ID")
+FallOcc <- as.matrix(apply(decostand(otuF, method="total", MARGIN=2),1, mean)) %>%
+  as.data.frame() %>% rownames_to_column(var = "Feature.ID")
+rm(F, otuF)
+
+F <- map[which(map$CollectionSeason != "Fall"),] %>%
+  select(sampleid)
+otuF <- otu[which(colnames(otu) %in% F$sampleid),]
+Rel <- as.matrix(rowSums(1*((otuF>0)==1))/ncol(1*((otuF>0)==1))) %>%
+  as.data.frame() %>% rownames_to_column(var = "Feature.ID")
+Occ <- as.matrix(apply(decostand(otuF, method="total", MARGIN=2),1, mean))%>%
+  as.data.frame() %>% rownames_to_column(var = "Feature.ID")
+rm(F, otuF)
+
+occ_abunT %>%
+  left_join(FallRel) %>% rename("FallRel" = V1) %>%
+  left_join(FallOcc) %>% rename("FallOcc" = V1) %>%
+  left_join(Rel) %>% rename("WSRel" = V1) %>%
+  left_join(Occ) %>% rename("WSOcc" = V1) %>% View
 # filter for core names only
 core <- occ_abunT[occ_abunT$fill == "Core",] %>% 
   rename(c("featureid" = "Feature.ID")) %>%

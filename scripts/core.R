@@ -92,6 +92,8 @@ increaseDF <- data.frame(IncreaseBC=c((Increase),0), rank=factor(c(1:(length(Inc
 BC_ranked <- left_join(BC_ranked, increaseDF, by = "rank")
 BC_ranked <- BC_ranked[-nrow(BC_ranked),]
 
+# clean up
+#rm(add_matrix, BCaddition, BCfull)
 
 #Creating occupancy abundance plot
 occ_abun$fill <- 'Rare'
@@ -125,7 +127,7 @@ occ_abunT <- tax %>%
 # fall samples
 F <- map[which(map$CollectionSeason == "Fall"),] %>%
   select(sampleid) 
-otuF <- otu[which(colnames(otu) %in% F$sampleid),]
+otuF <- otu[,which(colnames(otu) %in% F$sampleid)]
 FallRel <- as.matrix(rowSums(1*((otuF>0)==1))/ncol(1*((otuF>0)==1))) %>%
   as.data.frame() %>% rownames_to_column(var = "Feature.ID")
 FallOcc <- as.matrix(apply(decostand(otuF, method="total", MARGIN=2),1, mean)) %>%
@@ -134,23 +136,24 @@ rm(F, otuF)
 
 F <- map[which(map$CollectionSeason != "Fall"),] %>%
   select(sampleid)
-otuF <- otu[which(colnames(otu) %in% F$sampleid),]
+otuF <- otu[,which(colnames(otu) %in% F$sampleid)]
 Rel <- as.matrix(rowSums(1*((otuF>0)==1))/ncol(1*((otuF>0)==1))) %>%
   as.data.frame() %>% rownames_to_column(var = "Feature.ID")
 Occ <- as.matrix(apply(decostand(otuF, method="total", MARGIN=2),1, mean))%>%
   as.data.frame() %>% rownames_to_column(var = "Feature.ID")
 rm(F, otuF)
 
-occ_abunT %>%
+seasons <- occ_abunT %>%
   left_join(FallRel) %>% rename("FallRel" = V1) %>%
   left_join(FallOcc) %>% rename("FallOcc" = V1) %>%
   left_join(Rel) %>% rename("WSRel" = V1) %>%
-  left_join(Occ) %>% rename("WSOcc" = V1) %>% View
+  left_join(Occ) %>% rename("WSOcc" = V1)
+
 # filter for core names only
 core <- occ_abunT[occ_abunT$fill == "Core",] %>% 
   rename(c("featureid" = "Feature.ID")) %>%
   select(featureid)
 
 # save information to file
-write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
+write.table(seasons, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
 write.table(core, file = "CanadaJayMicrobiome/data/coreFeatures.tsv", sep = "\t", quote = F, row.names = F)

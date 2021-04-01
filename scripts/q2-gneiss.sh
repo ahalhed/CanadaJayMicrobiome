@@ -8,6 +8,10 @@
 # ________________________________________
 
 # differential abundance testing with gneiss
+# load env on graham
+module load nixpkgs/16.09 miniconda3
+conda activate qiime2-2020.11
+
 # make folder
 mkdir differential
 # move into folder
@@ -100,16 +104,16 @@ qiime feature-table filter-samples \
   --o-filtered-table P1C-table-F17.qza
 
 qiime gneiss correlation-clustering \
-  --i-table P1A-table-F17.qza \
-  --o-clustering P1A-hierarchy-F17.qza
+  --i-table P1C-table-F17.qza \
+  --o-clustering P1C-hierarchy-F17.qza
 
 qiime gneiss dendrogram-heatmap \
-  --i-table P1A-table-F17.qza  \
-  --i-tree P1A-hierarchy-F17.qza \
+  --i-table P1C-table-F17.qza  \
+  --i-tree P1C-hierarchy-F17.qza \
   --m-metadata-file ../input/jay-met.tsv  \
   --m-metadata-column Territory \
   --p-color-map viridis \
-  --o-visualization P1A-heatmap-F17.qzv
+  --o-visualization P1C-heatmap-F17.qzv
 
 # fall 2018
 qiime feature-table filter-samples \
@@ -119,16 +123,16 @@ qiime feature-table filter-samples \
   --o-filtered-table P1C-table-F18.qza
 
 qiime gneiss correlation-clustering \
-  --i-table P1A-table-F18.qza \
-  --o-clustering P1A-hierarchy-F18.qza
+  --i-table P1C-table-F18.qza \
+  --o-clustering P1C-hierarchy-F18.qza
 
 qiime gneiss dendrogram-heatmap \
-  --i-table P1A-table-F18.qza  \
-  --i-tree P1A-hierarchy-F18.qza \
+  --i-table P1C-table-F18.qza  \
+  --i-tree P1C-hierarchy-F18.qza \
   --m-metadata-file ../input/jay-met.tsv  \
   --m-metadata-column Territory \
   --p-color-map viridis \
-  --o-visualization P1A-heatmap-F18.qzv
+  --o-visualization P1C-heatmap-F18.qzv
 
 # fall 2020
 qiime feature-table filter-samples \
@@ -138,16 +142,16 @@ qiime feature-table filter-samples \
   --o-filtered-table P1C-table-F20.qza
 
 qiime gneiss correlation-clustering \
-  --i-table P1A-table-F20.qza \
-  --o-clustering P1A-hierarchy-F20.qza
+  --i-table P1C-table-F20.qza \
+  --o-clustering P1C-hierarchy-F20.qza
 
 qiime gneiss dendrogram-heatmap \
-  --i-table P1A-table-F20.qza  \
-  --i-tree P1A-hierarchy-F20.qza \
+  --i-table P1C-table-F20.qza  \
+  --i-tree P1C-hierarchy-F20.qza \
   --m-metadata-file ../input/jay-met.tsv  \
   --m-metadata-column Territory \
   --p-color-map viridis \
-  --o-visualization P1A-heatmap-F20.qzv
+  --o-visualization P1C-heatmap-F20.qzv
 
 # spring 2020
 qiime feature-table filter-samples \
@@ -157,18 +161,19 @@ qiime feature-table filter-samples \
   --o-filtered-table P1C-table-S20.qza
 
 qiime gneiss correlation-clustering \
-  --i-table P1A-table-S20.qza \
-  --o-clustering P1A-hierarchy-S20.qza
+  --i-table P1C-table-S20.qza \
+  --o-clustering P1C-hierarchy-S20.qza
 
 qiime gneiss dendrogram-heatmap \
-  --i-table P1A-table-S20.qza  \
-  --i-tree P1A-hierarchy-S20.qza \
+  --i-table P1C-table-S20.qza  \
+  --i-tree P1C-hierarchy-S20.qza \
   --m-metadata-file ../input/jay-met.tsv  \
   --m-metadata-column Territory \
   --p-color-map viridis \
-  --o-visualization P1A-heatmap-S20.qzv
+  --o-visualization P1C-heatmap-S20.qzv
 
 
 
 
-
+# unload qiime environment
+conda deactivate

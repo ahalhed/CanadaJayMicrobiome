@@ -281,23 +281,12 @@ qiime feature-table filter-samples \
   --o-filtered-table P3A-filtered-table.qza
 
 # Prediction 3B - The most common microbiota will putatively function in food preservation.
-# differential abundance testing - those functioning in food preservation will be more abundant in fall samples
-qiime composition add-pseudocount \
-    --i-table P1C-filtered-table.qza \
-    --o-composition-table P1C-pseudo
-
-qiime composition ancom \
-    --i-table P1C-pseudo.qza \
-    --m-metadata-file input/jay-met.tsv \
-    --m-metadata-column TerritoryQuality \
-    --o-visualization P1C-ancom
-
 # Prediction 3C - food supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionYear] IN ('2017', '2018') AND [BreedingStatus]='Breeder'" \
-  --o-filtered-table P3B-filtered-table.qza
+  --o-filtered-table P3C-filtered-table.qza
 
 # Hypothesis 4 - parental care
 # all predictions

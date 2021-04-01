@@ -2,7 +2,7 @@
 # Species: Canada (Grey) Jay
 # Sample: Oral Swabs
 # 16S rRNA
-# working with qiime2-2020.8
+# working with qiime2-2020.11
 
 # script starts here
 # ________________________________________
@@ -261,17 +261,6 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot P1C-aitchison-ordination.qza \
     --o-distance-matrix P1C-aitchison-distance.qza
-
-# differential abundance testing
-qiime composition add-pseudocount \
-    --i-table P1C-filtered-table.qza \
-    --o-composition-table P1C-pseudo
-
-qiime composition ancom \
-    --i-table P1C-pseudo.qza \
-    --m-metadata-file input/jay-met.tsv \
-    --m-metadata-column TerritoryQuality \
-    --o-visualization P1C-ancom
 
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)

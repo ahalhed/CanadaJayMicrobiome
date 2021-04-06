@@ -260,12 +260,12 @@ qiime feature-table filter-samples \
 qiime gneiss correlation-clustering \
   --i-table P3C-table-F17.qza \
   --o-clustering P3C-hierarchy-F17.qza
-# need to run figure
+
 qiime gneiss dendrogram-heatmap \
   --i-table P3C-table-F17.qza  \
   --i-tree P3C-hierarchy-F17.qza \
   --m-metadata-file ../input/jay-met.tsv  \
-  --m-metadata-column FoodSupplementation \
+  --m-metadata-column FoodSupplement \
   --p-color-map viridis \
   --o-visualization P3C-heatmap-F17.qzv
 
@@ -279,12 +279,12 @@ qiime feature-table filter-samples \
 qiime gneiss correlation-clustering \
   --i-table P3C-table-F18.qza \
   --o-clustering P3C-hierarchy-F18.qza
-# need to run figure
+
 qiime gneiss dendrogram-heatmap \
   --i-table P3C-table-F18.qza  \
   --i-tree P3C-hierarchy-F18.qza \
   --m-metadata-file ../input/jay-met.tsv  \
-  --m-metadata-column FoodSupplementation \
+  --m-metadata-column FoodSupplement \
   --p-color-map viridis \
   --o-visualization P3C-heatmap-F18.qzv
 

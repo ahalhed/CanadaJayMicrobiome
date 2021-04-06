@@ -129,8 +129,8 @@ core <- occ_abunT[occ_abunT$fill == "Core",] %>%
   select(featureid)
 
 # save information to file
-write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJayF17.csv", sep = ",", quote = F, row.names = F)
-write.table(core, file = "CanadaJayMicrobiome/data/coreFeaturesF17.tsv", sep = "\t", quote = F, row.names = F)
+write.table(occ_abunT, file = "CanadaJayMicrobiome/data/coreJayF20.csv", sep = ",", quote = F, row.names = F)
+write.table(core, file = "CanadaJayMicrobiome/data/coreFeaturesF20.tsv", sep = "\t", quote = F, row.names = F)
 
 fig <- ggplot(occ_abunT, aes(y = otu_occ, x = otu_rel, color = fill)) + 
   geom_point() +

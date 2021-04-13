@@ -156,7 +156,6 @@ print("Prediction 3B - Core OTUs")
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
 coreTable$samples <- round(coreTable$otu_occ*88)
 
-print("Core")
 corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
   geom_point() +
   # log transform the x axis, set discrete viridis colour scheme
@@ -166,7 +165,7 @@ corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) +
        y = "Occupancy (Proportion of Samples)",
        color = "OTU Type")
 # save core plot
-pdf("CanadaJayMicrobiome/plots/AdditionalFigures/core.pdf")
+pdf("CanadaJayMicrobiome/plots/P3B.pdf")
 corePlot    # without labels
 corePlot +  # with text labels
   geom_text(data=coreTable[which(coreTable$fill == "Core"),],

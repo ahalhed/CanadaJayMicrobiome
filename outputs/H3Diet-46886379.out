@@ -198,7 +198,6 @@ BreedingStatus             1   1889 1888.99  1.1865 0.2835
 FreezeThaw:BreedingStatus  1    362  362.12  0.2275 0.6364
 Residuals                 35  55721 1592.02               
 [1] "Prediction 3B - Core OTUs"
-[1] "Core"
 null device 
           1 
 [1] "Prediction 3C - Food supplementation (OTUs)"

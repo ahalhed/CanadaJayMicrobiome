@@ -239,28 +239,28 @@ qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
-  --o-filtered-table P1AB-filtered-table.qza
+  --o-filtered-table P1A-filtered-table.qza
 
 # Prediction 1A - territory groups (all breeding statuses, without food supplementation)
 qiime deicode rpca \
-    --i-table P1AB-filtered-table.qza \
+    --i-table P1A-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
     --o-biplot P1A-aitchison-ordination.qza \
     --o-distance-matrix P1A-aitchison-distance.qza
   
-# Prediction 1C - only breeders without supplementation and with territory quality information
+# Prediction 1B - only breeders without supplementation and with territory quality information
 qiime feature-table filter-samples \
-  --i-table P1AB-filtered-table.qza \
+  --i-table P1A-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
-  --o-filtered-table P1C-filtered-table.qza
+  --o-filtered-table P1B-filtered-table.qza
 qiime deicode rpca \
-    --i-table P1C-filtered-table.qza \
+    --i-table P1B-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P1C-aitchison-ordination.qza \
-    --o-distance-matrix P1C-aitchison-distance.qza
+    --o-biplot P1B-aitchison-ordination.qza \
+    --o-distance-matrix P1B-aitchison-distance.qza
 
 # Hypothesis 2
 # Prediction 2A - host associated factors (all samples)

@@ -126,7 +126,7 @@ seaPlot <- function(samp, sea, y) {
 # get the data
 print("Read in the Data for A and B")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1AB-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P1A-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -183,7 +183,7 @@ anoRep(gj_meta, "Fall", 2020, dmAitchison)
 rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison, fig,
    F17, F18, F20, S20, seaPlot, anoRep, longDM)
 
-print("Prediction 1B - Spatial distribution")
+print("Prediction 1A - Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
 print("CLR transformation")
 # rows are OTUs, then transposed to OTUs as column
@@ -264,10 +264,10 @@ lapply(spac, anova)
 # clean up
 rm(gj_meta, pcnm_df, commFull, gj_ps, pcnm_list, scores_list, sea_list, spac)
 
-print("Prediction 1C - territory quality")
+print("Prediction 1B - territory quality")
 print("Read in the Data")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1C-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P1B-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -304,7 +304,7 @@ print("Build the community objects (OTU table) for season")
 commFull <- lapply(sea_list, comm_obj, c=OTUclr)
 
 # read in aitchison distance matrix
-dmAitchison <- read_qza("P1C-aitchison-distance.qza")$data
+dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
 # filter distance matrix by year/season
 dmYear <- lapply(commFull, dmFilter, dmAitchison)
 # non transformed OTUs
@@ -329,7 +329,7 @@ lapply(cap_list, summary)
 lapply(cap_list, anova, step=200, perm.max=1000)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/P1C.pdf", width = 17.5, height = 9)
+pdf("CanadaJayMicrobiome/plots/P1B.pdf", width = 17.5, height = 9)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 

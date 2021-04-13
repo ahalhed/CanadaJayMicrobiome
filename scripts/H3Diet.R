@@ -151,10 +151,48 @@ anova(lm3A)
 # clean up - removing 3A+B data
 rm(metaWeather, gj_ps, plot3A, otu_df, lm3A, gj_meta)
 
-print("Prediction 3B - Food supplementation (OTUs)")
+print("Prediction 3B - Core OTUs")
+# read in core data
+coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
+coreTable$samples <- round(coreTable$otu_occ*88)
+
+print("Core")
+corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
+  geom_point() +
+  # log transform the x axis, set discrete viridis colour scheme
+  scale_x_log10() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
+       y = "Occupancy (Proportion of Samples)",
+       color = "OTU Type")
+# save core plot
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/core.pdf")
+corePlot    # without labels
+corePlot +  # with text labels
+  geom_text(data=coreTable[which(coreTable$fill == "Core"),],
+            aes(y = otu_occ, x = otu_rel, label= Genus),
+            color='black', size=2.5,
+            position=position_jitter(width=0.01,height=0.01))
+ggplot(coreTable, aes(y = FallOcc, x = FallRel, color = fill)) + 
+  geom_point() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU", 
+       y = "Occupancy (Proportion of Fall Samples)",
+       color = "OTU Type")
+ggplot(coreTable, aes(y = WSOcc, x = WSRel, color = fill)) + 
+  geom_point() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU", 
+       y = "Occupancy (Proportion of Winter/Spring Samples)",
+       color = "OTU Type")
+dev.off()
+# clean up
+rm(coreTable, corePlot)
+
+print("Prediction 3C - Food supplementation (OTUs)")
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3B-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "P3C-filtered-table.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -171,15 +209,15 @@ otu_df <- as(otu_table(gj_ps), "matrix") %>%
   .[which(.$Count > 0),] # select only those present
 
 # summarize to number of OTUs (not counts per)
-plot3B <- otu_df %>% mutate(Count = 1) %>%
+plot3C <- otu_df %>% mutate(Count = 1) %>%
   select(sampleID, Count) %>%
   group_by(sampleID) %>%
   count %>% ungroup %>% # count the number of OTUs per group
   full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
   filter(FoodSupplement != "U")
 
-pdf("CanadaJayMicrobiome/plots/P3B.pdf", width = 9)
-ggplot(plot3B, aes(x = FoodSupplement, y = n)) +
+pdf("CanadaJayMicrobiome/plots/P3C.pdf", width = 9)
+ggplot(plot3C, aes(x = FoodSupplement, y = n)) +
   geom_boxplot() + facet_grid(~CollectionYear) +
   geom_dotplot(binaxis = "y", binwidth = 1, stackdir = "center", fill = NA) +
   labs(x = "Food Supplementation Group",
@@ -194,8 +232,8 @@ print("HA - yes FS mean is less than no FS mean (u1-u2>D0)")
 # step 2 - choose alpha (0.05)
 # step 3 - calculate test statistic
 print("all samples")
-yes <- plot3B %>% filter(FoodSupplement == "Y") %>% select(n)
-no <- plot3B %>% filter(FoodSupplement == "N") %>% select(n)
+yes <- plot3C %>% filter(FoodSupplement == "Y") %>% select(n)
+no <- plot3C %>% filter(FoodSupplement == "N") %>% select(n)
 var.test(yes$n, no$n)
 print("summary of yes")
 summary(yes)
@@ -206,17 +244,17 @@ t.test(yes, no, alternative = "less")
 # clean up
 rm(yes, no)
 print("2017 only")
-yes <- plot3B %>% filter(FoodSupplement == "Y", CollectionYear == 2017) %>% select(n)
-no <- plot3B %>% filter(FoodSupplement == "N", CollectionYear == 2017) %>% select(n)
+yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2017) %>% select(n)
+no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2017) %>% select(n)
 var.test(yes$n, no$n)
 t.test(yes, no, alternative = "less")
 rm(yes, no)
 print("2018 only")
-yes <- plot3B %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% select(n)
-no <- plot3B %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
+yes <- plot3C %>% filter(FoodSupplement == "Y", CollectionYear == 2018) %>% select(n)
+no <- plot3C %>% filter(FoodSupplement == "N", CollectionYear == 2018) %>% select(n)
 var.test(yes$n, no$n)
 t.test(yes, no, alternative = "less")
-rm(yes, no, plot3B)
+rm(yes, no, plot3C)
 
 # full clean up
 rm(dates, gj_meta, gj_ps, otu_df, samp)

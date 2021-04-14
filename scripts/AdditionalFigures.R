@@ -100,14 +100,14 @@ gj_meta2 <- gj_meta %>%
   count(LatitudeSamplingDD, LongitudeSamplingDD, SeasonYear) %>%
   inner_join(., gj_meta)
 #filter for sample size >2
-tt <- table(gj_meta$SeasonYear)
+tt <- table(gj_meta2$SeasonYear)
 gj_meta3 <- subset(gj_meta2, SeasonYear %in% names(tt[tt > 2]))
 # export map
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapSamples.pdf")
 ggmap(map_gj) + #facet_grid(~SeasonYear) +
-  geom_text(data = gj_meta2, 
+  geom_count(data = gj_meta2, 
              aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD,
-                 label = n, color = SeasonYear)) + 
+                 color = SeasonYear)) + 
   #geom_text(hjust = 0, aes(label = 1))+
   theme(legend.position = "bottom", legend.box = "vertical") +
   scale_color_viridis_d() +

@@ -93,16 +93,22 @@ map_gj <- get_map(
   location = c(left = -79.5, bottom = 45.2, right = -77.9, top = 46.2),
   source = "osm",
   force = TRUE) # adding force = TRUE to get_map to force a re-rendering of the map
+# add season/year column
+gj_meta$SeasonYear <- paste(gj_meta$CollectionSeason, gj_meta$CollectionYear)
+#filter for sample size >2
+tt <- table(gj_meta$SeasonYear)
+gj_meta2 <- subset(gj_meta, SeasonYear %in% names(tt[tt > 2]))
 # export map
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapSamples.pdf")
-ggmap(map_gj) + 
-  geom_count(data = gj_meta, 
-             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD, 
-                 shape = as.character(CollectionYear))) + 
+ggmap(map_gj) + facet_grid(~SeasonYear) +
+  geom_text(data = gj_meta2, 
+             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD,
+                 label = nrow(gj_meta2))) + 
+  #geom_text(hjust = 0, aes(label = 1))+
   theme(legend.position = "bottom", legend.box = "vertical") +
   labs(shape = "Collection Year", size = "Number of Samples",
        title = "Map of Canada Jay Sampling Locations",
-       subtitle = "Algonquin Park, Ontario (2016-2020)")
+       subtitle = "Algonquin Park, Ontario (2017-2020)")
 dev.off()
 
 # clean up

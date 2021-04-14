@@ -91,24 +91,26 @@ print("Map of sampling locations")
 # these locations account for ALL sample locations (2016-2020)
 map_gj <- get_map(
   location = c(left = -79.5, bottom = 45.2, right = -77.9, top = 46.2),
-  source = "osm",
+  source = "osm", color = "bw",
   force = TRUE) # adding force = TRUE to get_map to force a re-rendering of the map
+
 # add season/year column
 gj_meta$SeasonYear <- paste(gj_meta$CollectionSeason, gj_meta$CollectionYear)
+gj_meta2 <- gj_meta %>%
+  count(LatitudeSamplingDD, LongitudeSamplingDD, SeasonYear) %>%
+  inner_join(., gj_meta)
 #filter for sample size >2
 tt <- table(gj_meta$SeasonYear)
-gj_meta2 <- subset(gj_meta, SeasonYear %in% names(tt[tt > 2]))
-gj_meta2 <- gj_meta2 %>%
-  count(LatitudeSamplingDD, LongitudeSamplingDD, SeasonYear) %>%
-  inner_join(., gj_meta2)
+gj_meta3 <- subset(gj_meta2, SeasonYear %in% names(tt[tt > 2]))
 # export map
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapSamples.pdf")
-ggmap(map_gj) + facet_grid(~SeasonYear) +
+ggmap(map_gj) + #facet_grid(~SeasonYear) +
   geom_text(data = gj_meta2, 
              aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD,
-                 label = n)) + 
+                 label = n, color = SeasonYear)) + 
   #geom_text(hjust = 0, aes(label = 1))+
   theme(legend.position = "bottom", legend.box = "vertical") +
+  scale_color_viridis_d() +
   labs(shape = "Collection Year", size = "Number of Samples",
        title = "Map of Canada Jay Sampling Locations",
        subtitle = "Algonquin Park, Ontario (2017-2020)")

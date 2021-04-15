@@ -102,18 +102,20 @@ gj_meta2 <- gj_meta %>%
 #filter for sample size >2
 tt <- table(gj_meta2$SeasonYear)
 gj_meta3 <- subset(gj_meta2, SeasonYear %in% names(tt[tt > 2]))
-# export map
+# export map (increase width/height)
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapSamples.pdf")
-ggmap(map_gj) + #facet_grid(~SeasonYear) +
-  geom_count(data = gj_meta2, 
-             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD,
-                 color = SeasonYear)) + 
+ggmap(map_gj) + facet_grid(~SeasonYear) +
+  geom_count(data = gj_meta3, 
+             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD)) + #, color = SeasonYear
   #geom_text(hjust = 0, aes(label = 1))+
   theme(legend.position = "bottom", legend.box = "vertical") +
-  scale_color_viridis_d() +
-  labs(shape = "Collection Year", size = "Number of Samples",
-       title = "Map of Canada Jay Sampling Locations",
-       subtitle = "Algonquin Park, Ontario (2017-2020)")
+  #scale_color_viridis_d() +
+  ggsn::scalebar(x.min = -79.4, x.max = -78, 
+                 y.min = 45.3, y.max = 46.1,
+                 location = "bottomleft",
+                 dist = 10, dist_unit = "km",
+                 transform = TRUE, model = "WGS84") +
+  labs(shape = "Collection Year", size = "Number of Samples")
 dev.off()
 
 # clean up

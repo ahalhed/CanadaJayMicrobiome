@@ -14,7 +14,7 @@ cd /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome
 # data transfer to graham (not github - for large files)
 # rsync -avz --no-g --no-p <source> <destination>
 # load miniconda
-module load miniconda3
+module load nixpkgs/16.09 miniconda3
 # Activate QIIME2
 conda activate qiime2-2020.11
 
@@ -281,6 +281,22 @@ qiime feature-table filter-samples \
   --o-filtered-table P3A-filtered-table.qza
 
 # Prediction 3B - The most common microbiota will putatively function in food preservation.
+# this run locally in QIIME2-2021.2 (issues with installation on cluster in 2020.11)
+qiime picrust2 full-pipeline \
+   --i-table filtered-table-no-blanks.qza \
+   --i-seq rep-seqs-cr-99.qza \
+   --output-dir q2-picrust2_output \
+   --p-placement-tool sepp \
+   --p-threads 8 \
+   --p-hsp-method pic \
+   --p-max-nsti 2 \
+   --verbose
+# 2 of 2301 ASVs were above the max NSTI cut-off of 2.0 and were removed from the downstream analyses.
+# make visualization (pathway abundance like an OTU table)
+qiime feature-table summarize \
+   --i-table q2-picrust2_output/pathway_abundance.qza \
+   --o-visualization q2-picrust2_output/pathway_abundance.qzv
+
 # Prediction 3C - food supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \

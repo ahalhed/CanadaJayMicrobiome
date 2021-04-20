@@ -1,4 +1,4 @@
-# for Hypothesis 2 - feeding differences
+# for Hypothesis 3 - feeding differences
 # this script is for the diet supplementation plot
 # to load R on interactive graham
 # module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2

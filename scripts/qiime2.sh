@@ -281,9 +281,20 @@ qiime feature-table filter-samples \
   --o-filtered-table P3A-filtered-table.qza
 
 # Prediction 3B - The most common microbiota will putatively function in food preservation.
-# this run locally in QIIME2-2021.2 (issues with installation on cluster in 2020.11)
+# this run locally in QIIME2-2021.2 (issues with picrust 2installation on cluster in 2020.11)
+qiime feature-table filter-samples \
+  --i-table filtered-table-no-blanks.qza \
+  --m-metadata-file input/jay-met.tsv \
+  --p-where "[CollectionSeason] IN ('Fall')" \
+  --o-filtered-table P3B-filtered-table-fall.qza
+
+qiime feature-table filter-features \
+  --i-table P3B-filtered-table-fall.qza \
+  --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
+  --o-filtered-table P3B-filtered-table.qza
+
 qiime picrust2 full-pipeline \
-   --i-table filtered-table-no-blanks.qza \
+   --i-table P3B-filtered-table.qza \
    --i-seq rep-seqs-cr-99.qza \
    --output-dir q2-picrust2_output \
    --p-placement-tool sepp \

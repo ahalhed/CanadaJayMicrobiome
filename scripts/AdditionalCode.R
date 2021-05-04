@@ -47,20 +47,6 @@ gj_meta %>% filter(BreedingStatus == "Non-breeder") %>%
   group_by(Territory, CollectionYear, CollectionSeason) %>%
   count()
 
-print("Should we do analyses by year/season?")
-# confirmation that year/season was the right way to go
-print("Collection Year Ordination")
-(orY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear))
-anova(orY)
-print("Collection Season Ordination")
-(orS <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionSeason))
-anova(orS)
-print("Collection Year*Season Ordination")
-(orSY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear * CollectionSeason))
-anova(orSY)
-# clean up
-rm(gj_meta, gj_ps, orS, orSY, orY)
-
 print("Are there any core differences in each season?")
 F17 <- read.csv("CanadaJayMicrobiome/data/coreJayF17.csv") %>%
   .[which(.$fill == "Core"),]

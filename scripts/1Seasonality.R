@@ -10,32 +10,6 @@ library(phyloseq)
 library(ALDEx2)
 library(tidyverse)
 
-print("prediction 1A - by season?")
-## Load in the required data
-# build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
-                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
-# extract the metadata from the phyloseq object
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-# confirmation that year/season was the right way to go
-print("Collection Year Ordination")
-(orY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear))
-anova(orY)
-print("Collection Season Ordination")
-(orS <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionSeason))
-anova(orS)
-print("Collection Year*Season Ordination")
-(orSY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear * CollectionSeason))
-anova(orSY)
-# clean up
-rm(gj_meta, gj_ps, orS, orSY, orY)
-
-print("prediction 1B - functional?")
-print("function for analysis")
 aldAn <- function(met, year, group, lev, v = FALSE) {
   # met is the sample metadata
   # year is the year(s) of interest
@@ -68,6 +42,32 @@ aldAn <- function(met, year, group, lev, v = FALSE) {
   rm(Ald, conds, orderPathAbun)
 }
 
+
+print("prediction 1A - by season?")
+## Load in the required data
+# build the phyloseq object
+gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
+                         taxonomy = "taxonomy/SILVA-taxonomy.qza",
+                         metadata = "input/jay-met.tsv") %>%
+  # transposing the OTU table into the format expected by vegan (OTUs as columns)
+  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.), tax_table(.))
+# extract the metadata from the phyloseq object
+gj_meta <- as(sample_data(gj_ps), "data.frame")
+rownames(gj_meta) <- sample_names(gj_ps)
+# confirmation that year/season was the right way to go
+print("Collection Year Ordination")
+(orY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear))
+anova(orY)
+print("Collection Season Ordination")
+(orS <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionSeason))
+anova(orS)
+print("Collection Year*Season Ordination")
+(orSY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear * CollectionSeason))
+anova(orSY)
+# clean up
+rm(gj_meta, gj_ps, orS, orSY, orY)
+
+print("prediction 1B - functional?")
 print("read in sample data")
 meta <- read_q2metadata("input/jay-met.tsv") %>%
   .[which(.$CollectionSeason == "Fall"),] %>%

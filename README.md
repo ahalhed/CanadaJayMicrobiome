@@ -4,9 +4,9 @@ Repository for scripts associated with Alicia's Canada jay microbiome project.
 ## What can you find in this directory?
 
 ### scripts
-There is a single QIIME2 script in this directory, labelled *gj-q2.sh*. This particular script was run as individual batch jobs, as some steps are long running. These individual jobs are stored in a subdirectory of *scripts* called *batchJobs*. The resulting QIIME2 visualizations and artifacts are stored in a directory above the repository on Graham (a Compute Canada cluster).
+There is a subdirectory including QIIME2 scripts. These particular scripts were run as individual batch jobs, as some steps are long running. The resulting QIIME2 visualizations and artifacts are stored in a directory above the repository on Graham (a Compute Canada cluster).
 
-The remaining files in the scripts folder are a combination of shell and R scripts; corresponding scripts have the same naming but different extensions. All files in this directory, with the exception *gj-q2.sh* and scripts in *batchJobs*, are post-QIIME2 analysis in R. 
+The remaining files in the scripts folder are a combination of shell and R scripts; corresponding scripts have the same naming but different extensions. All files in this directory are post-QIIME2 analysis in R. 
 
 ### plots
 In addition to STDOUT, discussed below, some scripts output figures corresponding to different steps of the analysis. The labelling of these files is consistent with the hypothesis being investigated and the type of figure.

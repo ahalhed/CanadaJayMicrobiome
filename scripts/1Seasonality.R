@@ -30,9 +30,9 @@ aldAn <- function(met, year, group, lev, v = FALSE) {
                include.sample.summary=FALSE, denom="all", verbose=FALSE)
   # volcano plots
   if(missing(lev)){
-    pa <- paste0("CanadaJayMicrobiome/plots/", year, group, ".pdf")
+    pa <- paste0("CanadaJayMicrobiome/plots/volcanoes/", year, group, ".pdf")
   } else {
-    pa <- paste0("CanadaJayMicrobiome/plots/", year, group, lev, ".pdf")
+    pa <- paste0("CanadaJayMicrobiome/plots/volcanoes/", year, group, lev, ".pdf")
   }
   pdf(pa)
   par(mfrow=c(1,2))

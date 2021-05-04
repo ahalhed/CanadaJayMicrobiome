@@ -291,6 +291,7 @@ qiime feature-table filter-samples \
 qiime feature-table filter-features \
   --i-table P3B-filtered-table-fall.qza \
   --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
+  --p-no-filter-empty-samples \
   --o-filtered-table P3B-filtered-table.qza
 
 qiime picrust2 full-pipeline \

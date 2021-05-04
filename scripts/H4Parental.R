@@ -77,7 +77,7 @@ dmAitchison <- read_qza("P4A-aitchison-distance.qza")$data
 # need to remove duplicate comparisons
 dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)
 
-print("Own offspring vs other offspring (4A)")
+print("Own parent vs other offspring (4A)")
 # breeders with non-breeders on same territory (does not include between breeders)
 dm_within <- dm_all[-which(dm_all$Territory.x != dm_all$Territory.y),] %>%
   .[which(.$BreedingStatus.x != .$BreedingStatus.y),] %>%
@@ -91,15 +91,15 @@ dm_between <- dm_all[which(dm_all$Territory.x != dm_all$Territory.y),] %>%
 # put back together
 dm_meta <- rbind(dm_between, dm_within)
 plot4A <- aggregate(dm_meta$AitchisonDistance,
-          list(interaction(dm_meta$Group, dm_meta$JayID.y)), mean) %>%
+          list(interaction(dm_meta$Group, dm_meta$JayID.x)), mean) %>%
   mutate(AitchisonDistance = x, Group = word(.$'Group.1', 1, sep=fixed('.')),
-         Breeder = word(.$'Group.1', 2, sep=fixed('.'))) %>%
-  select(AitchisonDistance, Group, Breeder)
+         NonBreeder = word(.$'Group.1', 2, sep=fixed('.'))) %>%
+  select(AitchisonDistance, Group, NonBreeder)
 # make figure
 figA <- ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() +
-  geom_line(alpha = 0.3, aes(group = Breeder)) +
-  labs(x = "Non-Breeder Location", y = "Mean Aitchison Distance")
+  geom_line(alpha = 0.3, aes(group = NonBreeder)) +
+  labs(x = "Territory of Breeder", y = "Mean Aitchison Distance")
 
 # paired t-test
 # step 0 - check assumptions
@@ -142,6 +142,7 @@ br <- gj_meta %>% rownames_to_column(var = "b") %>%
   select(b, JuvenileStatus, Territory)
 nb <- gj_meta %>% rownames_to_column(var = "nb") %>%
   filter(BreedingStatus == "Non-breeder") %>%
+  filter(JuvenileStatus != "DominantJuvenile") %>%
   select(nb, JuvenileStatus, Territory)
 # get grouped samples
 otu_br <- OTUs[rownames(OTUs) %in% br$b,]

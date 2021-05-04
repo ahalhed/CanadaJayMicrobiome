@@ -28,16 +28,19 @@ aldAn <- function(met, year, group, lev, v = FALSE) {
   orderPathAbun <- pathAbunI %>% select(names(conds))
   Ald <- aldex(orderPathAbun, conds, test="t", effect=TRUE,
                include.sample.summary=FALSE, denom="all", verbose=FALSE)
-  # do we view the data?
-  if(!missing(v)){
-    print(Ald)
-  }
   # volcano plots
+  if(missing(lev)){
+    pa <- paste0("CanadaJayMicrobiome/plots/", year, group, ".pdf")
+  } else {
+    pa <- paste0("CanadaJayMicrobiome/plots/", year, group, lev, ".pdf")
+  }
+  pdf(pa)
   par(mfrow=c(1,2))
   aldex.plot(Ald, type="MA", test="wilcox", xlab="Log-ratio abundance",
              ylab="Difference")
   aldex.plot(Ald, type="MW", test="wilcox", xlab="Dispersion",
              ylab="Difference")
+  dev.off()
   # clean up
   rm(Ald, conds, orderPathAbun)
 }

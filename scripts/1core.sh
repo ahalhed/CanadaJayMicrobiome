@@ -10,4 +10,4 @@
 module load nixpkgs/16.09 gcc/7.3.0 r/4.0.2
 
 # run R script
-Rscript /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/CanadaJayMicrobiome/scripts/H3core.R
+Rscript /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/CanadaJayMicrobiome/scripts/1core.R

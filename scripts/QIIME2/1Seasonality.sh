@@ -2,16 +2,21 @@
 # Species: Canada (Grey) Jay
 # Sample: Oral Swabs
 # 16S rRNA
-# working with qiime2-2021.2 (this file only)
+# working with qiime2-2021.2 (end of this file only)
 
 # script starts here
 # ________________________________________
 
-# local for 1B
+# working in a SHARCNET folder for the jays
+cd /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome
+# request interactive session for testing
+# salloc --mem-per-cpu=4G --account=def-cottenie --time=0-01:00:00
+# data transfer to graham (not github - for large files)
+# rsync -avz --no-g --no-p <source> <destination>
+# load miniconda
+module load nixpkgs/16.09 miniconda3
 # Activate QIIME2
-conda activate qiime2-2021.2
-# Prediction 1B - The most common microbiota will putatively function in food preservation.
-# this run locally in QIIME2-2021.2 (issues with picrust 2installation on cluster in 2020.11)
+conda activate qiime2-2020.11
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -23,6 +28,12 @@ qiime feature-table filter-features \
   --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
   --p-no-filter-empty-samples \
   --o-filtered-table 1B-filtered-table.qza
+
+# local for 1B
+# Activate QIIME2
+conda activate qiime2-2021.2
+# Prediction 1B - The most common microbiota will putatively function in food preservation.
+# this run locally in QIIME2-2021.2 (issues with picrust 2installation on cluster in 2020.11)
 
 qiime picrust2 full-pipeline \
    --i-table 1B-filtered-table.qza \

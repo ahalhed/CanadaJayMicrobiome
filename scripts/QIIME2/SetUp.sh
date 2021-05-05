@@ -262,16 +262,6 @@ qiime deicode rpca \
     --o-biplot P1B-aitchison-ordination.qza \
     --o-distance-matrix P1B-aitchison-distance.qza
 
-# Hypothesis 2
-# Prediction 2A - host associated factors (all samples)
-qiime deicode rpca \
-    --i-table filtered-table-no-blanks.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P2A-aitchison-ordination.qza \
-    --o-distance-matrix P2A-aitchison-distance.qza
-
-
 # Hypothesis 3
 # Prediction 3A  - food caching (winter and spring only)
 qiime feature-table filter-samples \

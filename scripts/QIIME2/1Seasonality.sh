@@ -39,3 +39,5 @@ qiime feature-table summarize \
    --i-table q2-picrust2_output/pathway_abundance.qza \
    --o-visualization q2-picrust2_output/pathway_abundance.qzv
 # differential abundance testing - using aldex2 in r
+
+conda deactivate

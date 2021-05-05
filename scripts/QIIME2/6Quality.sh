@@ -20,16 +20,16 @@ conda activate qiime2-2020.11
 
 # 6 - only breeders without supplementation and with territory quality information
 qiime feature-table filter-samples \
-  --i-table P1A-filtered-table.qza \
+  --i-table 5-filtered-table.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
-  --o-filtered-table P1B-filtered-table.qza
+  --o-filtered-table 6-filtered-table.qza
 qiime deicode rpca \
-    --i-table P1B-filtered-table.qza \
+    --i-table 6-filtered-table.qza \
     --p-min-feature-count 10 \
     --p-min-sample-count 2 \
-    --o-biplot P1B-aitchison-ordination.qza \
-    --o-distance-matrix P1B-aitchison-distance.qza
+    --o-biplot 6-aitchison-ordination.qza \
+    --o-distance-matrix 6-aitchison-distance.qza
 
 # Close QIIME2
 conda deactivate

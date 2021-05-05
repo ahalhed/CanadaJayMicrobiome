@@ -17,7 +17,7 @@ cd /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome
 module load nixpkgs/16.09 miniconda3
 # Activate QIIME2
 conda activate qiime2-2020.11
-# Prediction 1A+B - only breeders without supplementation
+# 5 - only breeders without supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -31,3 +31,6 @@ qiime deicode rpca \
     --p-min-sample-count 2 \
     --o-biplot 5-aitchison-ordination.qza \
     --o-distance-matrix 5-aitchison-distance.qza
+
+# exit conda environment
+conda deactivate

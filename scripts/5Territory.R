@@ -1,4 +1,4 @@
-# for Hypothesis 1 - related to territorial differences
+# for Hypothesis 5 - related to territorial differences
 
 print("Working directory, packages, functions")
 # to load R on interactive graham
@@ -126,7 +126,7 @@ seaPlot <- function(samp, sea, y) {
 # get the data
 print("Read in the Data for A and B")
 print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1A-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "5-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -139,7 +139,7 @@ gj_meta[is.na(gj_meta)] <- "" # putting blanks instead of NA to fix complete cas
 
 print("Prediction 1A - Territorial distribution")
 # boxplots - data prep (to long)
-dmAitchison <- read_qza("P1A-aitchison-distance.qza")$data
+dmAitchison <- read_qza("5-aitchison-distance.qza")$data
 # need to remove duplicate comparisons
 dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)
 
@@ -167,7 +167,7 @@ S20 <- seaPlot(dm_meta, "Spring", 2020)
 # save figure
 fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 10),
                  labels = c("Fall 2017", "Fall 2018", "Fall 2020", "Spring 2020"))
-pdf("CanadaJayMicrobiome/plots/P1A.pdf", width = 12, height = 6)
+pdf("CanadaJayMicrobiome/plots/H5.pdf", width = 12, height = 6)
 annotate_figure(fig, bottom = text_grob("Territory Group"),
                 left = text_grob("Aitchison Distance", rot = 90))
 dev.off()
@@ -263,76 +263,3 @@ lapply(spac, anova)
 
 # clean up
 rm(gj_meta, pcnm_df, commFull, gj_ps, pcnm_list, scores_list, sea_list, spac)
-
-print("Prediction 1B - territory quality")
-print("Read in the Data")
-print("Building phyloseq object")
-gj_ps <- qza_to_phyloseq(features = "P1B-filtered-table.qza",
-                         metadata = "input/jay-met.tsv") %>%
-  # transposing the OTU table into the format expected by vegan (OTUs as columns)
-  phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
-
-# based on the meta function from the microbiome package
-print("Extract the metadata")
-gj_meta <- as(sample_data(gj_ps), "data.frame")
-rownames(gj_meta) <- sample_names(gj_ps)
-gj_meta[is.na(gj_meta)] <- "" # putting blanks instead of NA to fix complete case issue
-
-print("Accessing the metadata by season/year")
-# loop to create individual season data frames
-for (YeaR in unique(gj_meta$CollectionYear)) {
-  for (SeaSon in unique(gj_meta$CollectionSeason)) {
-    met <- met_filter(gj_meta, SeaSon, YeaR, te=TRUE)
-    assign(paste0("sea",SeaSon,YeaR),met)
-    rm(met)
-  }
-}
-# make a list of the season data frames generated from the loop
-sea_list <- list(seaFall2017 = seaFall2017, seaFall2018 = seaFall2018,
-                 seaFall2020 = seaFall2020, seaSpring2020 = seaSpring2020)
-# clean up individual data frames, now that the list is there
-rm(SeaSon, YeaR, seaFall2017, seaFall2018, seaFall2020, seaSpring2020,
-   # not enough samples in these ones
-   seaSpring2017, seaSpring2018, seaWinter2017, seaWinter2018, seaWinter2020)
-
-print("CLR transformation")
-# rows are OTUs, then transposed to OTUs as column
-# impute the OTU table
-OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
-  codaSeq.clr # compute the CLR values
-print("Build the community objects (OTU table) for season")
-commFull <- lapply(sea_list, comm_obj, c=OTUclr)
-
-# read in aitchison distance matrix
-dmAitchison <- read_qza("P1B-aitchison-distance.qza")$data
-# filter distance matrix by year/season
-dmYear <- lapply(commFull, dmFilter, dmAitchison)
-# non transformed OTUs
-# working on looping the capscale below
-# might switch to the phyloseq implementation
-for (i in names(dmYear)) {
-  cap <- capscale(dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality,
-                  data = sea_list[[i]], comm = commFull[[i]])
-  assign(paste0("cap",i),cap)
-  rm(i, cap)
-}
-
-# make a list of the capscale data generated from the loop
-cap_list <- list(capseaFall2017 = capseaFall2017, capseaFall2018 = capseaFall2018, 
-                 capseaFall2020 = capseaFall2020, capseaSpring2020 = capseaSpring2020)
-# clean up individual data frames, now that the list is there
-rm(capseaFall2017, capseaFall2018, capseaFall2020, capseaSpring2020)
-
-# look at summaries
-cap_list
-lapply(cap_list, summary)
-lapply(cap_list, anova, step=200, perm.max=1000)
-
-# simple biplot
-pdf("CanadaJayMicrobiome/plots/P1B.pdf", width = 17.5, height = 9)
-lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
-dev.off()
-
-#clean up
-rm(commFull, dmYear, cap_list, gj_meta, gj_ps, OTUclr, sea_list, dmAitchison,
-   comm_obj, dmFilter, met_filter)

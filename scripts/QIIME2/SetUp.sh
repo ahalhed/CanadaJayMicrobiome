@@ -231,37 +231,7 @@ qiime feature-table rarefy \
     --p-sampling-depth 344 \
     --p-no-with-replacement \
     --o-rarefied-table rarefied-table
-# ran gj-core.R here to produce a list of core and rare features
-
-# diet
-# Prediction 1A+B - only breeders without supplementation
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[BreedingStatus]='Breeder' AND [FoodSupplement]='N'" \
-  --o-filtered-table P1A-filtered-table.qza
-
-# Prediction 1A - territory groups (all breeding statuses, without food supplementation)
-qiime deicode rpca \
-    --i-table P1A-filtered-table.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P1A-aitchison-ordination.qza \
-    --o-distance-matrix P1A-aitchison-distance.qza
-  
-# Prediction 1B - only breeders without supplementation and with territory quality information
-qiime feature-table filter-samples \
-  --i-table P1A-filtered-table.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[TerritoryQuality] IN ('H', 'M', 'L')" \
-  --o-filtered-table P1B-filtered-table.qza
-qiime deicode rpca \
-    --i-table P1B-filtered-table.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P1B-aitchison-ordination.qza \
-    --o-distance-matrix P1B-aitchison-distance.qza
-
+# ran 1core.R here to produce a list of core and rare features
 
 # Close QIIME2
 conda deactivate

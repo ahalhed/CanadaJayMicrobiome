@@ -124,7 +124,6 @@ seaPlot <- function(samp, sea, y) {
 }
 
 # get the data
-print("Read in the Data for A and B")
 print("Building phyloseq object")
 gj_ps <- qza_to_phyloseq(features = "5-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
@@ -183,7 +182,7 @@ anoRep(gj_meta, "Fall", 2020, dmAitchison)
 rm(dm_all, dm_between, dm_meta, dm_within, dmAitchison, fig,
    F17, F18, F20, S20, seaPlot, anoRep, longDM)
 
-print("Prediction 1A - Spatial distribution")
+print("Spatial distribution")
 # example in https://github.com/ggloor/CoDaSeq/blob/master/Intro_tiger_ladybug.Rmd
 print("CLR transformation")
 # rows are OTUs, then transposed to OTUs as column

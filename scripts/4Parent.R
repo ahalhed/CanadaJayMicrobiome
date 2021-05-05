@@ -203,17 +203,3 @@ rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4B, shareOTUs, pairedNames, OTUsamples,
 pdf("CanadaJayMicrobiome/plots/H4.pdf", width = 10)
 ggarrange(figA, figB, labels = c("A", "B"))
 dev.off()
-
-# top outlier is a dominant juvenile
-print("Dominant Juvenile")
-plot4B %>% filter(JuvenileStatus.nb == "DominantJuvenile") %>%
-  group_by(Sharing) %>% summarize(count = nrow(.)/3,
-                                  mean = mean(NumberOfOTUs),
-                                  max = max(NumberOfOTUs),
-                                  min = min(NumberOfOTUs))
-print("Other Juveniles")
-plot4B %>% filter(JuvenileStatus.nb != "DominantJuvenile") %>%
-  group_by(Sharing) %>% summarize(count = nrow(.)/3,
-                                  mean = mean(NumberOfOTUs),
-                                  max = max(NumberOfOTUs),
-                                  min = min(NumberOfOTUs))

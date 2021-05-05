@@ -12,6 +12,56 @@ library(zCompositions)
 library(CoDaSeq)
 library(tidyverse)
 
+# subset full metadata by season (placed inside for loop)
+met_filter <- function(meta, season, year, te=FALSE) {
+  # meta is the full metadata table
+  # season is the sampling season of interest
+  # year is the sampling year of interest
+  # te indicates whether to select territory data or not
+  if(missing(te)){
+    met <- rownames_to_column(meta, var = "SampleID")
+    df1 <- subset(met, CollectionSeason == season) %>%
+      subset(., CollectionYear == year)
+    df2 <- df1 %>%
+      select("SampleID", "Sex", "BirthYear", "CollectionSeason",
+             "CollectionYear", "JuvenileStatus") # make sure this is dplyr select
+    df3 <- column_to_rownames(remove_rownames(df2), var = "SampleID")
+    # select columns with more than one level
+    df4 <- df3[sapply(df3, function(x) length(unique(x))>1)]
+    return(df4)
+  } else {
+    met <- rownames_to_column(meta, var = "SampleID")
+    df1 <- subset(met, CollectionSeason == season) %>%
+      subset(., CollectionYear == year)
+    df5 <- df1 %>% select("SampleID", "ProportionSpruceOnTerritory", "TerritoryQuality",
+                          "CollectionSeason", "CollectionYear") # make sure this is dplyr select
+    df6 <- column_to_rownames(remove_rownames(df5), var = "SampleID") %>%
+      .[sapply(., function(x) length(unique(x))>1)]
+    return(df6)
+  }
+}
+# community object
+comm_obj <- function(n, c) {
+  # subset the OTUs (c is OTU table being subset)
+  # n is sample data with rownames to be subset
+  comm <- c %>%
+    subset(., rownames(.) %in% rownames(n)) %>%
+    .[ , colSums(.)>0 ]
+  return(comm)
+}
+# filtering matrix
+dmFilter <- function(data, dm) {
+  # dm is the distance matrix
+  # data is the community object whose row names in the DM labels
+  # filtering based on the row names present in data
+  mat <- dm %>% as.matrix %>%
+    .[rownames(.) %in% rownames(data),
+      colnames(.) %in% rownames(data)]
+  d <- as.dist(mat)
+  return(d)
+}
+
+
 print("6 - territory quality")
 print("Read in the Data")
 print("Building phyloseq object")

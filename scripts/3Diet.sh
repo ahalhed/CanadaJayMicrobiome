@@ -3,7 +3,7 @@
 #SBATCH --time=0-00:02:00
 #SBATCH --mem-per-cpu 1G
 #SBATCH --dependency=afterok:46886356
-#SBATCH --job-name=H3Diet
+#SBATCH --job-name=3Diet
 #SBATCH --output=./outputs/%x-%j.out
 
 

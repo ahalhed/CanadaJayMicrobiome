@@ -71,7 +71,44 @@ anova(orSY)
 rm(gj_meta, gj_ps, orS, orSY, orY)
 
 print("prediction 1B - functional?")
-print("read in sample data")
+print("Core figure")
+# read in core data
+coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
+coreTable$samples <- round(coreTable$otu_occ*88)
+
+corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
+  geom_point() +
+  # log transform the x axis, set discrete viridis colour scheme
+  scale_x_log10() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
+       y = "Occupancy (Proportion of Samples)",
+       color = "OTU Type")
+# save core plot
+pdf("CanadaJayMicrobiome/plots/P1B.pdf")
+corePlot    # without labels
+corePlot +  # with text labels
+  geom_text(data=coreTable[which(coreTable$fill == "Core"),],
+            aes(y = otu_occ, x = otu_rel, label= Genus),
+            color='black', size=2.5,
+            position=position_jitter(width=0.01,height=0.01))
+ggplot(coreTable, aes(y = FallOcc, x = FallRel, color = fill)) + 
+  geom_point() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU", 
+       y = "Occupancy (Proportion of Fall Samples)",
+       color = "OTU Type")
+ggplot(coreTable, aes(y = WSOcc, x = WSRel, color = fill)) + 
+  geom_point() + scale_colour_viridis_d() + 
+  # add axis labels
+  labs(x = "Mean Relative Abundance of Each OTU", 
+       y = "Occupancy (Proportion of Winter/Spring Samples)",
+       color = "OTU Type")
+dev.off()
+# clean up
+rm(coreTable, corePlot)
+
+print("differential abundance")
 meta <- read_q2metadata("input/jay-met.tsv") %>%
   .[which(.$CollectionSeason == "Fall"),] %>%
   remove_rownames() %>% column_to_rownames(var = "SampleID")

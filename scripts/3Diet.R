@@ -113,7 +113,7 @@ rm(cacheGroup, eventCount, weatherCombo, weather)
 print("Prediction 3A - FT number of microbiota")
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3A-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "3A-filtered-table.qza",
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
   phyloseq(otu_table(t(otu_table(.)), taxa_are_rows = F), sample_data(.))
@@ -137,7 +137,7 @@ plot3A <- otu_df %>% mutate(Count = 1) %>%
   full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
   left_join(metaWeather %>% select(sampleID, FreezeThaw))
 
-pdf("CanadaJayMicrobiome/plots/P3A.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/3A.pdf", width = 9)
 ggplot(plot3A, aes(x = FreezeThaw, y = n, shape = BreedingStatus)) +
   geom_jitter() + geom_smooth(method = lm, se = F, colour = "black") +
   labs(x = "Number of Freeze Thaw Events (14 Days prior to sampling)",
@@ -148,50 +148,14 @@ dev.off()
 (lm3A <- lm(n~FreezeThaw*BreedingStatus, data = plot3A))
 summary(lm3A)
 anova(lm3A)
-# clean up - removing 3A+B data
+# clean up - removing 3A data
 rm(metaWeather, gj_ps, plot3A, otu_df, lm3A, gj_meta)
 
-print("Prediction 3B - Core OTUs")
-# read in core data
-coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
-coreTable$samples <- round(coreTable$otu_occ*88)
-
-corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) + 
-  geom_point() +
-  # log transform the x axis, set discrete viridis colour scheme
-  scale_x_log10() + scale_colour_viridis_d() + 
-  # add axis labels
-  labs(x = "Mean Relative Abundance of Each OTU (log10)", 
-       y = "Occupancy (Proportion of Samples)",
-       color = "OTU Type")
-# save core plot
-pdf("CanadaJayMicrobiome/plots/P3B.pdf")
-corePlot    # without labels
-corePlot +  # with text labels
-  geom_text(data=coreTable[which(coreTable$fill == "Core"),],
-            aes(y = otu_occ, x = otu_rel, label= Genus),
-            color='black', size=2.5,
-            position=position_jitter(width=0.01,height=0.01))
-ggplot(coreTable, aes(y = FallOcc, x = FallRel, color = fill)) + 
-  geom_point() + scale_colour_viridis_d() + 
-  # add axis labels
-  labs(x = "Mean Relative Abundance of Each OTU", 
-       y = "Occupancy (Proportion of Fall Samples)",
-       color = "OTU Type")
-ggplot(coreTable, aes(y = WSOcc, x = WSRel, color = fill)) + 
-  geom_point() + scale_colour_viridis_d() + 
-  # add axis labels
-  labs(x = "Mean Relative Abundance of Each OTU", 
-       y = "Occupancy (Proportion of Winter/Spring Samples)",
-       color = "OTU Type")
-dev.off()
-# clean up
-rm(coreTable, corePlot)
 
 print("Prediction 3C - Food supplementation (OTUs)")
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "P3C-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "3B-filtered-table.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
   # transposing the OTU table into the format expected by vegan (OTUs as columns)
@@ -215,7 +179,7 @@ plot3C <- otu_df %>% mutate(Count = 1) %>%
   full_join(gj_meta, by = "sampleID") %>% # add sample data for plotting
   filter(FoodSupplement != "U")
 
-pdf("CanadaJayMicrobiome/plots/P3C.pdf", width = 9)
+pdf("CanadaJayMicrobiome/plots/3B.pdf", width = 9)
 ggplot(plot3C, aes(x = FoodSupplement, y = n)) +
   geom_boxplot() + facet_grid(~CollectionYear) +
   geom_dotplot(binaxis = "y", binwidth = 1, stackdir = "center", fill = NA) +

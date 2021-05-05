@@ -60,7 +60,7 @@ fc <- function(d, i){
 
 ## Load in the required data
 # build the phyloseq object
-gj_ps <- qza_to_phyloseq(features = "H4-filtered-table.qza",
+gj_ps <- qza_to_phyloseq(features = "4-filtered-table.qza",
                          taxonomy = "taxonomy/SILVA-taxonomy.qza",
                          # q2 types line causes issues (so removed in the tsv file input here)
                          metadata = "input/jay-met.tsv") %>%
@@ -72,7 +72,7 @@ gj_meta <- as(sample_data(gj_ps), "data.frame") %>%
 rownames(gj_meta) <- sample_names(gj_ps)
 
 # boxplots - data prep (to long)
-dmAitchison <- read_qza("P4A-aitchison-distance.qza")$data
+dmAitchison <- read_qza("4A-aitchison-distance.qza")$data
 
 # need to remove duplicate comparisons
 dm_all <- longDM(dmAitchison, "AitchisonDistance", gj_meta)

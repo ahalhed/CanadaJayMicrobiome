@@ -262,36 +262,6 @@ qiime deicode rpca \
     --o-biplot P1B-aitchison-ordination.qza \
     --o-distance-matrix P1B-aitchison-distance.qza
 
-# Hypothesis 3
-# Prediction 3A  - food caching (winter and spring only)
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
-  --o-filtered-table P3A-filtered-table.qza
-
-# Prediction 3C - food supplementation
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionYear] IN ('2017', '2018') AND [BreedingStatus]='Breeder'" \
-  --o-filtered-table P3C-filtered-table.qza
-
-# Hypothesis 4 - parental care
-# all predictions
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason]='Spring' AND [CollectionYear]='2020'" \
-  --o-filtered-table H4-filtered-table.qza
-
-qiime deicode rpca \
-    --i-table H4-filtered-table.qza \
-    --p-min-feature-count 10 \
-    --p-min-sample-count 2 \
-    --o-biplot P4A-aitchison-ordination.qza \
-    --o-distance-matrix P4A-aitchison-distance.qza
-
 
 # Close QIIME2
 conda deactivate

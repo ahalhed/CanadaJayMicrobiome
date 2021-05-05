@@ -17,6 +17,8 @@ cd /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome
 module load nixpkgs/16.09 miniconda3
 # Activate QIIME2
 conda activate qiime2-2020.11
+
+# filtering
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
@@ -26,7 +28,6 @@ qiime feature-table filter-samples \
 qiime feature-table filter-features \
   --i-table 1B-filtered-table-fall.qza \
   --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
-  --p-no-filter-empty-samples \
   --o-filtered-table 1B-filtered-table.qza
 
 # local for 1B
@@ -34,7 +35,6 @@ qiime feature-table filter-features \
 conda activate qiime2-2021.2
 # Prediction 1B - The most common microbiota will putatively function in food preservation.
 # this run locally in QIIME2-2021.2 (issues with picrust 2installation on cluster in 2020.11)
-
 qiime picrust2 full-pipeline \
    --i-table 1B-filtered-table.qza \
    --i-seq rep-seqs-cr-99.qza \

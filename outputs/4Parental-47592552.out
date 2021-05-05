@@ -1,15 +1,7 @@
-
-Lmod is automatically replacing "intel/2016.4" with "gcc/7.3.0".
-
--------------------------------------------------------------------------------
-The following dependent module(s) are not currently loaded: gcccore/.5.4.0 (required by: icc/.2016.4.258, ifort/.2016.4.258)
--------------------------------------------------------------------------------
-
-Due to MODULEPATH changes, the following have been reloaded:
-  1) openmpi/2.1.1
+Unloading StdEnv/2020
 
 The following have been reloaded with a version change:
-  1) gcccore/.5.4.0 => gcccore/.7.3.0     2) imkl/11.3.4.258 => imkl/2018.3.222
+  1) gcccore/.9.3.0 => gcccore/.7.3.0     2) imkl/2020.1.217 => imkl/2018.3.222
 
 [1] "Set up - working directory, packages, functions, data"
 Loading required package: permute
@@ -32,28 +24,28 @@ Loading required package: ggplot2
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()
 Joining, by = "Sample1"
-[1] "Own offspring vs other offspring (4A)"
+[1] "Own parent vs other offspring (4A)"
 [1] "H0: d = d0"
 [1] "HA: d < 0"
-   Breeder          Different Territory Same Territory       diff        
- Length:8           Min.   :1.443       Min.   :1.349   Min.   :-0.4103  
- Class :character   1st Qu.:1.570       1st Qu.:1.695   1st Qu.:-0.2909  
- Mode  :character   Median :1.753       Median :1.821   Median : 0.1663  
-                    Mean   :2.123       Mean   :2.230   Mean   : 0.1062  
-                    3rd Qu.:2.222       3rd Qu.:2.437   3rd Qu.: 0.2979  
-                    Max.   :4.271       Max.   :4.386   Max.   : 0.9869  
-[1] 0.7315764
+  NonBreeder        Different Territory Same Territory        diff         
+ Length:16          Min.   :1.688       Min.   :0.7789   Min.   :-1.29119  
+ Class :character   1st Qu.:2.065       1st Qu.:1.5541   1st Qu.:-0.70119  
+ Mode  :character   Median :2.295       Median :2.1653   Median :-0.39148  
+                    Mean   :2.371       Mean   :2.1863   Mean   :-0.18455  
+                    3rd Qu.:2.657       3rd Qu.:2.6271   3rd Qu.: 0.06663  
+                    Max.   :3.274       Max.   :4.0076   Max.   : 1.52568  
+[1] 0.6993439
 
 	Paired t-test
 
 data:  test4A$`Same Territory` and test4A$`Different Territory`
-t = 0.64539, df = 7, p-value = 0.7304
+t = -0.92632, df = 15, p-value = 0.1845
 alternative hypothesis: true difference in means is less than 0
 95 percent confidence interval:
-      -Inf 0.4180676
+      -Inf 0.1647041
 sample estimates:
 mean of the differences 
-              0.1062282 
+             -0.1845451 
 
 
 ORDINARY NONPARAMETRIC BOOTSTRAP
@@ -64,8 +56,8 @@ boot(data = test4A, statistic = fc, R = 999)
 
 
 Bootstrap Statistics :
-     original      bias    std. error
-t1* 0.1062282 -0.01042444   0.1571833
+      original       bias    std. error
+t1* -0.1845451 -0.004587968   0.2002823
 [1] "Shared Microbiota (4B)"
 Joining, by = "b"
 [1] "Two sample t-test"
@@ -73,54 +65,40 @@ Joining, by = "b"
 [1] "HA1 - more shared OTUs than unique non-breeder OTUs (u1-u2 > u0)"
 [1] "HA2 - more unique breeder OTUs than unique non-breeder OTUs (u1-u3 > u0)"
   Group.1        x
-1   Bonly 29.68802
-2  NBonly 18.93686
-3  shared 33.36816
+1   Bonly 30.06081
+2  NBonly 14.02631
+3  shared 32.22000
   Group.1        x
-1   Bonly 40.46154
-2  NBonly 25.73077
-3  shared 61.07692
+1   Bonly 40.50000
+2  NBonly 21.95833
+3  shared 57.95833
 [1] "Shared & Non-breeder"
 
 	Two Sample t-test
 
 data:  sh$NumberOfOTUs and nb$NumberOfOTUs
-t = 4.6975, df = 50, p-value = 1.047e-05
+t = 5.0188, df = 46, p-value = 4.127e-06
 alternative hypothesis: true difference in means is greater than 0
 95 percent confidence interval:
- 22.73594      Inf
+ 23.95887      Inf
 sample estimates:
 mean of x mean of y 
- 61.07692  25.73077 
+ 57.95833  21.95833 
 
 [1] "Breeder & Non-breeder"
 
 	Two Sample t-test
 
 data:  br$NumberOfOTUs and nb$NumberOfOTUs
-t = 2.1331, df = 50, p-value = 0.01893
+t = 2.7383, df = 46, p-value = 0.004377
 alternative hypothesis: true difference in means is greater than 0
 95 percent confidence interval:
- 3.157112      Inf
+ 7.17507     Inf
 sample estimates:
 mean of x mean of y 
- 40.46154  25.73077 
+ 40.50000  21.95833 
 
 `geom_smooth()` using formula 'y ~ x'
 There were 50 or more warnings (use warnings() to see the first 50)
 null device 
           1 
-
-[1] "Dominant Juvenile"
-# A tibble: 3 x 5
-  Sharing count  mean   max   min
-  <chr>   <dbl> <dbl> <dbl> <dbl>
-1 Bonly       2  40      65    15
-2 NBonly      2  71      71    71
-[1] "Other Juveniles"
-# A tibble: 3 x 5
-  Sharing count  mean   max   min
-  <chr>   <dbl> <dbl> <dbl> <dbl>
-1 Bonly      24  40.5   100    10
-2 NBonly     24  22.0    60     6
-3 shared     24  58.0   122    17

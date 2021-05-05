@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-cottenie
 #SBATCH --time=0-00:05:00
-#SBATCH --mem-per-cpu 1G
+#SBATCH --mem-per-cpu 3G
 #SBATCH --job-name=1Seasonality
 #SBATCH --output=outputs/%x-%j.out
 

@@ -50,7 +50,7 @@ Number of permutations: 999
 
 Model: rda(formula = OTU ~ CollectionYear, data = data)
          Df  Variance      F Pr(>F)  
-Model     1  19038022 3.0128  0.017 *
+Model     1  19038022 3.0128  0.021 *
 Residual 86 543443576                
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
@@ -107,12 +107,15 @@ Number of permutations: 999
 
 Model: rda(formula = OTU ~ CollectionYear * CollectionSeason, data = data)
          Df  Variance      F Pr(>F)   
-Model     5 111692536 4.0634  0.003 **
+Model     5 111692536 4.0634  0.005 **
 Residual 82 450789066                 
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 [1] "prediction 1B - functional?"
-[1] "read in sample data"
+[1] "Core figure"
+null device 
+          1 
+[1] "differential abundance"
 Note: Using an external vector in selections is ambiguous.
 ℹ Use `all_of(group)` instead of `group` to silence this message.
 ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.

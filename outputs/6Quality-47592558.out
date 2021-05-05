@@ -21,342 +21,18 @@ Loading required package: truncnorm
 Loading required package: ALDEx2
 Loading required package: car
 Loading required package: carData
-Loading required package: ggplot2
 ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
 ✔ tibble  3.0.5     ✔ dplyr   1.0.2
 ✔ tidyr   1.1.2     ✔ stringr 1.4.0
 ✔ readr   1.4.0     ✔ forcats 0.5.0
-✔ purrr   0.3.4     
 ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()
 ✖ dplyr::recode() masks car::recode()
 ✖ dplyr::select() masks MASS::select()
 ✖ purrr::some()   masks car::some()
-[1] "Initiate functions for analysis"
-[1] "Read in the Data for A and B"
-[1] "Building phyloseq object"
-[1] "Extract the metadata"
-[1] "Prediction 1A - Territorial distribution"
-Joining, by = "Sample1"
-null device 
-          1 
-
-Call:
-anosim(x = dmAitchison, grouping = Territory) 
-Dissimilarity: 
-
-ANOSIM statistic R: 0.03823 
-      Significance: 0.316 
-
-Permutation: free
-Number of permutations: 999
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.105 0.141 0.175 0.208 
-
-Dissimilarity ranks between and within classes:
-            0%    25% 50%   75% 100%    N
-Between      1 269.00 546 813.0 1081 1021
-Alligator  193 508.00 823 886.0  949    3
-Arowhon     58 280.50 344 997.0 1072   15
-BatLake     NA     NA  NA    NA   NA    0
-Boardwalk   NA     NA  NA    NA   NA    0
-CamLkRd    750 750.00 750 750.0  750    1
-CedarSwamp  NA     NA  NA    NA   NA    0
-ClarkeLake  NA     NA  NA    NA   NA    0
-Cliff      170 407.50 582 675.5  850    6
-DaviesBog  486 486.00 486 486.0  486    1
-HeadCreek   NA     NA  NA    NA   NA    0
-Mile36     347 416.00 485 637.5  790    3
-NorthBog    32 135.50 494 785.0  901   15
-OpeoBridge 508 508.00 508 508.0  508    1
-OpeoTurn    41 491.00 941 963.5  986    3
-SWAir      189 312.25 442 508.0  685   10
-TDSN       770 770.00 770 770.0  770    1
-TDSS        NA     NA  NA    NA   NA    0
-WestRose   760 760.00 760 760.0  760    1
-WolfHowl    NA     NA  NA    NA   NA    0
-
-[1] "Fall 2017"
-
-Call:
-anosim(x = dmSamp, grouping = Territory) 
-Dissimilarity: 
-
-ANOSIM statistic R: 0.03704 
-      Significance: 0.509 
-
-Permutation: free
-Number of permutations: 999
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.852 0.926 1.000 1.000 
-
-Dissimilarity ranks between and within classes:
-           0%  25% 50%  75% 100%  N
-Between     1  7.5  15 21.5   28 27
-Alligator  NA   NA  NA   NA   NA  0
-Arowhon    NA   NA  NA   NA   NA  0
-BatLake    NA   NA  NA   NA   NA  0
-Boardwalk  NA   NA  NA   NA   NA  0
-CamLkRd    NA   NA  NA   NA   NA  0
-CedarSwamp NA   NA  NA   NA   NA  0
-ClarkeLake NA   NA  NA   NA   NA  0
-Cliff      NA   NA  NA   NA   NA  0
-DaviesBog  NA   NA  NA   NA   NA  0
-HeadCreek  NA   NA  NA   NA   NA  0
-Mile36     NA   NA  NA   NA   NA  0
-NorthBog   14 14.0  14 14.0   14  1
-OpeoBridge NA   NA  NA   NA   NA  0
-OpeoTurn   NA   NA  NA   NA   NA  0
-SWAir      NA   NA  NA   NA   NA  0
-TDSN       NA   NA  NA   NA   NA  0
-TDSS       NA   NA  NA   NA   NA  0
-WestRose   NA   NA  NA   NA   NA  0
-WolfHowl   NA   NA  NA   NA   NA  0
-
-[1] "Fall 2018"
-
-Call:
-anosim(x = dmSamp, grouping = Territory) 
-Dissimilarity: 
-
-ANOSIM statistic R: -0.4857 
-      Significance: 0.763 
-
-Permutation: free
-Number of permutations: 999
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.771 0.943 1.000 1.000 
-
-Dissimilarity ranks between and within classes:
-           0%  25% 50% 75% 100%  N
-Between     1  9.5  18  27   36 35
-Alligator  NA   NA  NA  NA   NA  0
-Arowhon    NA   NA  NA  NA   NA  0
-BatLake    NA   NA  NA  NA   NA  0
-Boardwalk  NA   NA  NA  NA   NA  0
-CamLkRd    NA   NA  NA  NA   NA  0
-CedarSwamp NA   NA  NA  NA   NA  0
-ClarkeLake NA   NA  NA  NA   NA  0
-Cliff      NA   NA  NA  NA   NA  0
-DaviesBog  NA   NA  NA  NA   NA  0
-HeadCreek  NA   NA  NA  NA   NA  0
-Mile36     NA   NA  NA  NA   NA  0
-NorthBog   27 27.0  27  27   27  1
-OpeoBridge NA   NA  NA  NA   NA  0
-OpeoTurn   NA   NA  NA  NA   NA  0
-SWAir      NA   NA  NA  NA   NA  0
-TDSN       NA   NA  NA  NA   NA  0
-TDSS       NA   NA  NA  NA   NA  0
-WestRose   NA   NA  NA  NA   NA  0
-WolfHowl   NA   NA  NA  NA   NA  0
-
-[1] "Spring 2020"
-
-Call:
-anosim(x = dmSamp, grouping = Territory) 
-Dissimilarity: 
-
-ANOSIM statistic R: -0.2016 
-      Significance: 0.813 
-
-Permutation: free
-Number of permutations: 999
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.324 0.412 0.468 0.565 
-
-Dissimilarity ranks between and within classes:
-           0%   25%  50%   75% 100%  N
-Between     1 17.25 32.5 48.75   66 62
-Alligator  NA    NA   NA    NA   NA  0
-Arowhon     6  6.00  6.0  6.00    6  1
-BatLake    NA    NA   NA    NA   NA  0
-Boardwalk  NA    NA   NA    NA   NA  0
-CamLkRd    65 65.00 65.0 65.00   65  1
-CedarSwamp NA    NA   NA    NA   NA  0
-ClarkeLake NA    NA   NA    NA   NA  0
-Cliff      NA    NA   NA    NA   NA  0
-DaviesBog  NA    NA   NA    NA   NA  0
-HeadCreek  NA    NA   NA    NA   NA  0
-Mile36     34 34.00 34.0 34.00   34  1
-NorthBog   NA    NA   NA    NA   NA  0
-OpeoBridge NA    NA   NA    NA   NA  0
-OpeoTurn   NA    NA   NA    NA   NA  0
-SWAir      54 54.00 54.0 54.00   54  1
-TDSN       NA    NA   NA    NA   NA  0
-TDSS       NA    NA   NA    NA   NA  0
-WestRose   NA    NA   NA    NA   NA  0
-WolfHowl   NA    NA   NA    NA   NA  0
-
-[1] "Fall 2020"
-
-Call:
-anosim(x = dmSamp, grouping = Territory) 
-Dissimilarity: 
-
-ANOSIM statistic R: -0.2672 
-      Significance: 0.842 
-
-Permutation: free
-Number of permutations: 999
-
-Upper quantiles of permutations (null model):
-  90%   95% 97.5%   99% 
-0.350 0.448 0.527 0.634 
-
-Dissimilarity ranks between and within classes:
-           0%   25%  50%   75% 100%   N
-Between     1 29.75 59.5 90.25  120 116
-Alligator  NA    NA   NA    NA   NA   0
-Arowhon    93 93.00 93.0 93.00   93   1
-BatLake    NA    NA   NA    NA   NA   0
-Boardwalk  NA    NA   NA    NA   NA   0
-CamLkRd    NA    NA   NA    NA   NA   0
-CedarSwamp NA    NA   NA    NA   NA   0
-ClarkeLake NA    NA   NA    NA   NA   0
-Cliff      54 54.00 54.0 54.00   54   1
-DaviesBog  NA    NA   NA    NA   NA   0
-HeadCreek  NA    NA   NA    NA   NA   0
-Mile36     NA    NA   NA    NA   NA   0
-NorthBog   NA    NA   NA    NA   NA   0
-OpeoBridge NA    NA   NA    NA   NA   0
-OpeoTurn   89 89.00 89.0 89.00   89   1
-SWAir      NA    NA   NA    NA   NA   0
-TDSN       NA    NA   NA    NA   NA   0
-TDSS       NA    NA   NA    NA   NA   0
-WestRose   68 68.00 68.0 68.00   68   1
-WolfHowl   NA    NA   NA    NA   NA   0
-
-[1] "Prediction 1A - Spatial distribution"
-[1] "CLR transformation"
-No. corrected values:  2852 
-[1] "Accessing the metadata by season/year"
-[1] "Accessing the XY metadata by season"
-[1] "Computing Haversine Distances"
-[1] "Maximum Distance (m) by Collection Season"
-$xyFall2017
-[1] 21040.29
-
-$xyFall2018
-[1] 21117.46
-
-$xyFall2020
-[1] 82607.29
-
-$xySpring2020
-[1] 74993.99
-
-[1] "Build the community objects (OTU table) for season"
-[1] "Unweighted PCNM - for use with all OTU tables"
-$xyFall2017
-        PCNM1        PCNM2       PCNM3        PCNM4         PCNM5
-1  0.44856297  0.642009407  0.34824290 -0.022439812 -0.0012329138
-2 -0.34105728  0.161324358 -0.10520979 -0.337286855 -0.7376909866
-3  0.54298253 -0.004750313 -0.41067053  0.014894015 -0.0001105186
-4 -0.33432753  0.167590381 -0.07453421  0.823442922  0.0687322761
-5 -0.05656485 -0.260060826 -0.50788023 -0.006633962 -0.0005129994
-6  0.31751386 -0.612789909  0.25963204  0.005585329  0.0004129581
-7 -0.34014861  0.160933689 -0.10681653 -0.454820388  0.6716281809
-8 -0.23696110 -0.254256787  0.59723635 -0.022741250 -0.0012259968
-
-$xyFall2018
-       PCNM1       PCNM2        PCNM3      PCNM4         PCNM5         PCNM6
-1  0.1858734 -0.60061286  0.254702521  0.5206736 -1.679965e-03  7.546770e-04
-2  0.2915126 -0.51713244 -0.308414722 -0.3382262 -9.855083e-04  9.214056e-07
-3 -0.4132689 -0.01710091  0.098889493 -0.1203348 -3.462235e-01  7.381927e-01
-4  0.3613814  0.19921330 -0.418920357 -0.3418418  3.255076e-05  3.286199e-07
-5 -0.4060805 -0.02070909  0.118731773 -0.1406930  8.146179e-01 -6.861421e-02
-6 -0.2252468  0.24259216 -0.474489514  0.3181231  2.134327e-03  4.282208e-07
-7  0.2759801  0.41662120 -0.005512313  0.5126480  2.102348e-02 -3.019380e-04
-8 -0.4124486 -0.01706189  0.097929552 -0.1180882 -4.641818e-01 -6.710900e-01
-9  0.3422973  0.31419054  0.637083568 -0.2922606 -2.473751e-02  1.057118e-03
-
-$xyFall2020
-         PCNM1       PCNM2       PCNM3       PCNM4         PCNM5         PCNM6
-1  -0.33312622  0.29899679 -0.31373941 -0.25597928  2.286283e-03  4.318775e-04
-2  -0.33312622  0.29899679 -0.31373941 -0.25597928  2.286283e-03  4.318775e-04
-3  -0.37910718  0.14278649  0.14952790  0.30419267  5.494098e-05 -3.267519e-06
-4  -0.37910718  0.14278649  0.14952790  0.30419267  5.494098e-05 -3.267519e-06
-5   0.05442208 -0.47142093 -0.46245743  0.18457801  1.078307e-02  2.596081e-03
-6   0.19670085  0.18937790  0.41618720 -0.22220013  8.869233e-03 -1.337732e-01
-7   0.19659792  0.18934899  0.41643071 -0.22257498 -1.016102e-02  1.217450e-01
-8   0.20454962  0.02519456 -0.08089354  0.08031727 -5.973831e-01 -4.012125e-01
-9   0.20615026  0.02618141 -0.07435884  0.07586685  2.047802e-01 -2.492128e-01
-10 -0.17272091 -0.53658151  0.08421290 -0.65368159 -6.417976e-03 -1.770843e-03
-11  0.20609279  0.02608480 -0.07432205  0.07564783  2.657320e-01 -3.104899e-01
-12  0.20615971  0.02767238 -0.06884913  0.07211159  2.256473e-01  4.524170e-01
-13  0.20615971  0.02767238 -0.06884913  0.07211159  2.256473e-01  4.524170e-01
-14  0.20462542  0.02683965 -0.07500426  0.07642374 -5.981541e-01  3.768606e-01
-15  0.20609279  0.02608480 -0.07432205  0.07564783  2.657320e-01 -3.104899e-01
-16 -0.29036343 -0.44002101  0.39064866  0.28932523  2.428100e-04  5.628910e-05
-
-$xySpring2020
-         PCNM1       PCNM2      PCNM3       PCNM4         PCNM5
-1   0.32557357 -0.22779982  0.1104617 -0.31571688  4.166332e-04
-2  -0.37746715  0.01717233  0.1813098 -0.04452321 -4.077314e-01
-3   0.10634688  0.60290310 -0.2966280 -0.54046198 -7.351431e-04
-4   0.24552095 -0.25204884 -0.5864528  0.18648709  6.682523e-04
-5  -0.06385327 -0.23059562  0.1032843 -0.02186508 -1.148845e-03
-6  -0.37746715  0.01717233  0.1813098 -0.04452321 -4.077314e-01
-7  -0.31769924 -0.06825995 -0.5500358  0.28780772  2.759293e-05
-8   0.37353315 -0.01516461  0.3162869  0.46037488 -4.772344e-05
-9   0.20112916  0.59754552  0.1453247  0.41480453  3.704438e-06
-10 -0.06385327 -0.23059562  0.1032843 -0.02186508 -1.148845e-03
-11 -0.37733720  0.01747098  0.1813933 -0.04480190  8.170105e-01
-12  0.32557357 -0.22779982  0.1104617 -0.31571688  4.166332e-04
-
-[1] "Acessing PCNM scores"
-[1] "Testing spatial variables with RDA"
-[1] "ANOVA on spatial variables"
-$xyFall2017
-Permutation test for rda under reduced model
-Permutation: free
-Number of permutations: 999
-
-Model: rda(formula = x ~ PCNM1 + PCNM2 + PCNM3 + PCNM4 + PCNM5, data = data)
-         Df Variance      F Pr(>F)
-Model     5   485.85 1.0642   0.41
-Residual  2   182.61              
-
-$xyFall2018
-Permutation test for rda under reduced model
-Permutation: free
-Number of permutations: 999
-
-Model: rda(formula = x ~ PCNM1 + PCNM2 + PCNM3 + PCNM4 + PCNM5 + PCNM6, data = data)
-         Df Variance      F Pr(>F)
-Model     6  211.549 0.9985  0.482
-Residual  2   70.623              
-
-$xyFall2020
-Permutation test for rda under reduced model
-Permutation: free
-Number of permutations: 999
-
-Model: rda(formula = x ~ PCNM1 + PCNM2 + PCNM3 + PCNM4 + PCNM5 + PCNM6, data = data)
-         Df Variance      F Pr(>F)
-Model     6   516.49 0.8941  0.766
-Residual  9   866.46              
-
-$xySpring2020
-Permutation test for rda under reduced model
-Permutation: free
-Number of permutations: 999
-
-Model: rda(formula = x ~ PCNM1 + PCNM2 + PCNM3 + PCNM4 + PCNM5, data = data)
-         Df Variance      F Pr(>F)
-Model     5   427.14 0.7395  0.852
-Residual  6   693.09              
-
-[1] "Prediction 1B - territory quality"
+[1] "6 - territory quality"
 [1] "Read in the Data"
 [1] "Building phyloseq object"
 [1] "Extract the metadata"
@@ -2457,7 +2133,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df SumOfSqs      F Pr(>F)
-Model     3   3.9115 1.2803  0.337
+Model     3   3.9115 1.2803   0.33
 Residual  4   4.0733              
 
 $capseaFall2018
@@ -2467,7 +2143,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df SumOfSqs      F Pr(>F)
-Model     3   1.5343 0.4241  0.769
+Model     3   1.5343 0.4241  0.766
 Residual  4   4.8234              
 
 $capseaFall2020
@@ -2477,7 +2153,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df Variance      F Pr(>F)
-Model     3   0.7780 0.8441  0.567
+Model     3   0.7780 0.8441   0.56
 Residual 12   3.6871              
 
 $capseaSpring2020
@@ -2487,7 +2163,7 @@ Number of permutations: 999
 
 Model: capscale(formula = dmYear[[i]] ~ ProportionSpruceOnTerritory + TerritoryQuality, data = sea_list[[i]], comm = commFull[[i]])
          Df SumOfSqs      F Pr(>F)
-Model     3   2.5972 0.6361  0.766
+Model     3   2.5972 0.6361  0.759
 Residual  8  10.8882              
 
 $capseaFall2017

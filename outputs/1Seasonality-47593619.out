@@ -50,7 +50,7 @@ Number of permutations: 999
 
 Model: rda(formula = OTU ~ CollectionYear, data = data)
          Df  Variance      F Pr(>F)  
-Model     1  19038022 3.0128  0.021 *
+Model     1  19038022 3.0128  0.024 *
 Residual 86 543443576                
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
@@ -78,7 +78,7 @@ Number of permutations: 999
 
 Model: rda(formula = OTU ~ CollectionSeason, data = data)
          Df  Variance      F Pr(>F)  
-Model     2  33643336 2.7037  0.034 *
+Model     2  33643336 2.7037  0.032 *
 Residual 85 528838264                
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
@@ -107,7 +107,7 @@ Number of permutations: 999
 
 Model: rda(formula = OTU ~ CollectionYear * CollectionSeason, data = data)
          Df  Variance      F Pr(>F)   
-Model     5 111692536 4.0634  0.005 **
+Model     5 111692536 4.0634  0.003 **
 Residual 82 450789066                 
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

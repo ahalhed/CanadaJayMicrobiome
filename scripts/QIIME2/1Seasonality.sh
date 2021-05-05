@@ -2,22 +2,10 @@
 # Species: Canada (Grey) Jay
 # Sample: Oral Swabs
 # 16S rRNA
-# working with qiime2-2020.11
+# working with qiime2-2021.2 (this file only)
 
 # script starts here
 # ________________________________________
-
-# working in a SHARCNET folder for the jays (P1A only)
-cd /home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome
-# request interactive session for testing
-# salloc --mem-per-cpu=4G --account=def-cottenie --time=0-01:00:00
-# data transfer to graham (not github - for large files)
-# rsync -avz --no-g --no-p <source> <destination>
-# load miniconda
-module load nixpkgs/16.09 miniconda3
-# Activate QIIME2
-conda activate qiime2-2020.11
-
 
 # local for 1B
 # Activate QIIME2
@@ -28,16 +16,16 @@ qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionSeason] IN ('Fall')" \
-  --o-filtered-table P3B-filtered-table-fall.qza
+  --o-filtered-table 1B-filtered-table-fall.qza
 
 qiime feature-table filter-features \
-  --i-table P3B-filtered-table-fall.qza \
+  --i-table 1B-filtered-table-fall.qza \
   --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
   --p-no-filter-empty-samples \
-  --o-filtered-table P3B-filtered-table.qza
+  --o-filtered-table 1B-filtered-table.qza
 
 qiime picrust2 full-pipeline \
-   --i-table P3B-filtered-table.qza \
+   --i-table 1B-filtered-table.qza \
    --i-seq rep-seqs-cr-99.qza \
    --output-dir q2-picrust2_output \
    --p-placement-tool sepp \

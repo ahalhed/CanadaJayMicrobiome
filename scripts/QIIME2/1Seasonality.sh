@@ -11,14 +11,8 @@
 # Activate QIIME2
 conda activate qiime2-2021.2
 # filtering
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason] IN ('Fall')" \
-  --o-filtered-table 1B-filtered-table-fall.qza
-
 qiime feature-table filter-features \
-  --i-table 1B-filtered-table-fall.qza \
+  --i-table filtered-table-no-blanks.qza \
   --m-metadata-file CanadaJayMicrobiome/data/coreFeatures.tsv \
   --p-no-filter-empty-samples \
   --o-filtered-table 1B-filtered-table.qza

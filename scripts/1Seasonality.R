@@ -7,6 +7,9 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 # load packages
 library(qiime2R)
 library(phyloseq)
+library(zCompositions)
+# devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
+library(CoDaSeq)
 library(ALDEx2)
 library(tidyverse)
 # set theme 
@@ -58,6 +61,12 @@ gj_ps <- qza_to_phyloseq(features = "filtered-table-no-blanks.qza",
 # extract the metadata from the phyloseq object
 gj_meta <- as(sample_data(gj_ps), "data.frame")
 rownames(gj_meta) <- sample_names(gj_ps)
+
+# impute the OTU table
+OTUclr <- cmultRepl(otu_table(gj_ps), label=0, method="CZM") %>% # all OTUs
+  codaSeq.clr # compute the CLR values
+# update phyloseq object
+up_ps <- phyloseq(otu_table(OTUclr, taxa_are_rows = F), sample_data(gj_ps), tax_table(gj_ps))
 # confirmation that year/season was the right way to go
 print("Collection Year Ordination")
 (orY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear))
@@ -69,7 +78,7 @@ print("Collection Year*Season Ordination")
 (orSY <- ordinate(gj_ps, method = "RDA", formula = . ~ CollectionYear * CollectionSeason))
 anova(orSY)
 # clean up
-rm(gj_meta, gj_ps, orS, orSY, orY)
+rm(gj_meta, gj_ps, up_ps, orS, orSY, orY)
 
 print("prediction 1B - functional?")
 print("Core figure")

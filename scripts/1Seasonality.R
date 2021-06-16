@@ -80,7 +80,6 @@ anova(orSY)
 # clean up
 rm(gj_meta, gj_ps, up_ps, orS, orSY, orY)
 
-print("prediction 1B - functional?")
 print("Core figure")
 # read in core data
 coreTable <- read.csv("CanadaJayMicrobiome/data/coreJay.csv")
@@ -95,7 +94,7 @@ corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) +
        y = "Occupancy (Proportion of Samples)",
        color = "OTU Type")
 # save core plot
-pdf("CanadaJayMicrobiome/plots/P1B.pdf")
+pdf("CanadaJayMicrobiome/plots/core.pdf")
 corePlot    # without labels
 corePlot +  # with text labels
   geom_text(data=coreTable[which(coreTable$fill == "Core"),],
@@ -118,11 +117,12 @@ dev.off()
 # clean up
 rm(coreTable, corePlot)
 
+print("prediction 1B - functional?")
 print("differential abundance")
 meta <- read_q2metadata("input/jay-met.tsv") %>%
   .[which(.$JayID != "BLANK"),] %>%
   remove_rownames() %>% column_to_rownames(var = "SampleID")
-pathAbun <- read_qza("q2-picrust2_output/pathway_abundance.qza")$data
+pathAbun <- read_qza("1B-picrust2_output/pathway_abundance.qza")$data
 pathAbunI <- pathAbun %>% as.data.frame %>% mutate_all(~as.integer(.))
 
 #can only have 2 levels (fall)

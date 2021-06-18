@@ -8,7 +8,6 @@ setwd("/home/ahalhed/projects/def-cottenie/Microbiome/GreyJayMicrobiome/")
 library(qiime2R)
 library(phyloseq)
 library(zCompositions)
-# devtools::install_github('ggloor/CoDaSeq/CoDaSeq')
 library(CoDaSeq)
 library(ALDEx2)
 library(tidyverse)
@@ -125,7 +124,30 @@ meta <- read_q2metadata("input/jay-met.tsv") %>%
 pathAbun <- read_qza("1B-picrust2_output/pathway_abundance.qza")$data
 pathAbunI <- pathAbun %>% as.data.frame %>% mutate_all(~as.integer(.))
 
-#can only have 2 levels (fall)
+# Season (main analysis)
+springFall <- meta[which(meta$CollectionSeason %in% c("Spring", "Fall")),]
+conds <- springFall %>%
+  select(CollectionSeason) %>% t %>% as.data.frame %>%
+  .[ , order(names(.))] %>% unlist
+orderPathAbun <- pathAbunI %>% select(names(conds))
+# log-ratio transformation and statistical testing 
+Ald <- aldex(orderPathAbun, conds, test="t", effect=TRUE,
+             include.sample.summary=FALSE, denom="all", verbose=FALSE)
+# save results to file
+write.csv(Ald, file = "CanadaJayMicrobiome/data/diffAbun.csv")
+# check the "explaining the outputs" section of the vignette
+# https://rdrr.io/bioc/ALDEx2/f/vignettes/ALDEx2_vignette.Rmd
+
+pdf("CanadaJayMicrobiome/plots/volcanoes/seasons.pdf")
+# create aldex plot
+par(mfrow=c(1,2))
+aldex.plot(Ald, type="MA", test="wilcox", xlab="Log-ratio abundance",
+           ylab="Difference", cutoff.pval=0.05)
+aldex.plot(Ald, type="MW", test="wilcox", xlab="Dispersion",
+           ylab="Difference", cutoff.pval=0.05)
+dev.off()
+
+# comparing years (fall only)
 fall <- meta[which(meta$CollectionSeason == "Fall"),]
 # year - 2017 vs 2018 
 aldAn(fall, c(2017, 2018), "CollectionYear")
@@ -135,22 +157,5 @@ aldAn(fall, c(2020, 2017), "CollectionYear")
 
 # year - 2018 vs 2020 (fall)
 aldAn(fall,  c(2018, 2020), "CollectionYear")
-
-# Season
-springFall <- meta[which(meta$CollectionSeason %in% c("Spring", "Fall")),]
-conds <- springFall %>%
-  select(CollectionSeason) %>% t %>% as.data.frame %>%
-  .[ , order(names(.))] %>% unlist
-orderPathAbun <- pathAbunI %>% select(names(conds))
-Ald <- aldex(orderPathAbun, conds, test="t", effect=TRUE,
-             include.sample.summary=FALSE, denom="all", verbose=FALSE)
-
-pdf("CanadaJayMicrobiome/plots/volcanoes/seasons.pdf")
-par(mfrow=c(1,2))
-aldex.plot(Ald, type="MA", test="wilcox", xlab="Log-ratio abundance",
-           ylab="Difference")
-aldex.plot(Ald, type="MW", test="wilcox", xlab="Dispersion",
-           ylab="Difference")
-dev.off()
 # clean up
 rm(Ald, conds, orderPathAbun, springFall)

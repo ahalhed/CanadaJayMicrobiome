@@ -99,7 +99,7 @@ orderPathAbun <- pathAbunI %>% select(names(conds))
 Ald <- aldex(orderPathAbun, conds, test="t", effect=TRUE,
              include.sample.summary=FALSE, denom="all", verbose=FALSE)
 # save results to file
-write.csv(Ald, file = "CanadaJayMicrobiome/data/diffAbun.csv")
+write.csv(Ald, file = "CanadaJayMicrobiome/data/diffAbun.csv", row.names = TRUE)
 # check the "explaining the outputs" section of the vignette
 # https://rdrr.io/bioc/ALDEx2/f/vignettes/ALDEx2_vignette.Rmd
 
@@ -116,7 +116,7 @@ dev.off()
 # we.eBH is the Expected Benjamini-Hochberg corrected P value of Welch's t test
 # associated with spring (positive diff)
 spring <- Ald[which(Ald$we.eBH<0.05 & Ald$effect>0),]
-write.csv(spring, file = "CanadaJayMicrobiome/data/diffAbunSpring.csv")
+write.csv(spring, file = "CanadaJayMicrobiome/data/diffAbunSpring.csv", row.names = TRUE)
 # associated with fall
 fall <- Ald[which(Ald$we.eBH<0.05 & Ald$effect<0),]
-write.csv(fall, file = "CanadaJayMicrobiome/data/diffAbunFall.csv")
+write.csv(fall, file = "CanadaJayMicrobiome/data/diffAbunFall.csv", row.names = TRUE)

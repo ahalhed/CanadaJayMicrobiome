@@ -88,6 +88,7 @@ meta <- read_q2metadata("input/jay-met.tsv") %>%
   remove_rownames() %>% column_to_rownames(var = "SampleID")
 pathAbun <- read_qza("1B-picrust2_output/pathway_abundance.qza")$data
 pathAbunI <- pathAbun %>% as.data.frame %>% mutate_all(~as.integer(.))
+row.names(pathAbunI) <- rownames(pathAbun)
 
 # Season (main analysis)
 springFall <- meta[which(meta$CollectionSeason %in% c("Spring", "Fall")),]

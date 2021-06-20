@@ -157,5 +157,3 @@ core <- occ_abunT[occ_abunT$fill == "Core",] %>%
 # save information to file
 write.table(seasons, file = "CanadaJayMicrobiome/data/coreJay.csv", sep = ",", quote = F, row.names = F)
 write.table(core, file = "CanadaJayMicrobiome/data/coreFeatures.tsv", sep = "\t", quote = F, row.names = F)
-
-# feed these results into q2-picrust2

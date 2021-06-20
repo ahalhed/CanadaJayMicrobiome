@@ -13,41 +13,6 @@ library(ALDEx2)
 library(tidyverse)
 # set theme 
 theme_set(theme_bw())
-aldAn <- function(met, year, group, lev, v = FALSE) {
-  # met is the sample metadata
-  # year is the year(s) of interest
-  # group is the column to select
-  # lev is a level(s) of group to select (optional)
-  # v is whether or not to view aldex output
-  df1 <- met[which(met$CollectionYear %in% year),]
-  if(missing(lev)){
-    df <- df1
-  } else {
-    df <- df1[which(df1[,group] %in% lev),]
-  }
-  conds <- df %>%
-    select(group) %>% t %>% as.data.frame %>%
-    .[ , order(names(.))] %>% unlist
-  orderPathAbun <- pathAbunI %>% select(names(conds))
-  Ald <- aldex(orderPathAbun, conds, test="t", effect=TRUE,
-               include.sample.summary=FALSE, denom="all", verbose=FALSE)
-  # volcano plots
-  if(missing(lev)){
-    pa <- paste0("CanadaJayMicrobiome/plots/volcanoes/", year, group, ".pdf")
-  } else {
-    pa <- paste0("CanadaJayMicrobiome/plots/volcanoes/", year, group, lev, ".pdf")
-  }
-  pdf(pa)
-  par(mfrow=c(1,2))
-  aldex.plot(Ald, type="MA", test="wilcox", xlab="Log-ratio abundance",
-             ylab="Difference")
-  aldex.plot(Ald, type="MW", test="wilcox", xlab="Dispersion",
-             ylab="Difference")
-  dev.off()
-  # clean up
-  rm(Ald, conds, orderPathAbun)
-}
-
 
 print("prediction 1A - by season?")
 ## Load in the required data
@@ -93,7 +58,7 @@ corePlot <- ggplot(coreTable, aes(y = otu_occ, x = otu_rel, color = fill)) +
        y = "Occupancy (Proportion of Samples)",
        color = "OTU Type")
 # save core plot
-pdf("CanadaJayMicrobiome/plots/core.pdf")
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/core.pdf")
 corePlot    # without labels
 corePlot +  # with text labels
   geom_text(data=coreTable[which(coreTable$fill == "Core"),],
@@ -138,24 +103,20 @@ write.csv(Ald, file = "CanadaJayMicrobiome/data/diffAbun.csv")
 # check the "explaining the outputs" section of the vignette
 # https://rdrr.io/bioc/ALDEx2/f/vignettes/ALDEx2_vignette.Rmd
 
-pdf("CanadaJayMicrobiome/plots/volcanoes/seasons.pdf")
+pdf("CanadaJayMicrobiome/plots/1B.pdf")
 # create aldex plot
 par(mfrow=c(1,2))
-aldex.plot(Ald, type="MA", test="wilcox", xlab="Log-ratio abundance",
+aldex.plot(Ald, type="MA", test="welch", xlab="Log-ratio abundance",
            ylab="Difference", cutoff.pval=0.05)
-aldex.plot(Ald, type="MW", test="wilcox", xlab="Dispersion",
+aldex.plot(Ald, type="MW", test="welch", xlab="Dispersion",
            ylab="Difference", cutoff.pval=0.05)
 dev.off()
 
-# comparing years (fall only)
-fall <- meta[which(meta$CollectionSeason == "Fall"),]
-# year - 2017 vs 2018 
-aldAn(fall, c(2017, 2018), "CollectionYear")
-
-# year - 2017 vs 2020 
-aldAn(fall, c(2020, 2017), "CollectionYear")
-
-# year - 2018 vs 2020 (fall)
-aldAn(fall,  c(2018, 2020), "CollectionYear")
-# clean up
-rm(Ald, conds, orderPathAbun, springFall)
+# save significantly associated pathways to file
+# we.eBH is the Expected Benjamini-Hochberg corrected P value of Welch's t test
+# associated with spring (positive diff)
+spring <- Ald[which(Ald$we.eBH<0.05 & Ald$effect>0),]
+write.csv(spring, file = "CanadaJayMicrobiome/data/diffAbunSpring.csv")
+# associated with fall
+fall <- Ald[which(Ald$we.eBH<0.05 & Ald$effect<0),]
+write.csv(fall, file = "CanadaJayMicrobiome/data/diffAbunFall.csv")

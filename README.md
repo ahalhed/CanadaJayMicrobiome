@@ -15,4 +15,4 @@ In addition to STDOUT, discussed below, some scripts output figures correspondin
 Files labelled with the ".out" extension are text files containing the STDOUT from all SHARCNET batch jobs. These files are named according to the analyses the STDOUT is associated with, and for the SHARCNET job number.
 
 ### data
-These files are neither plots nor STDOUT, but contain data/information relevant to the analyses. These are small data files only. Large data files are stored a directory above this GitHub repository, stored locally (backed up to OneDrive) and in a projects directory on Graham.
+Data will be added to this directory in the future. These files are neither plots nor STDOUT, but contain data/information relevant to the analyses. These are small data files only. Large data files are stored locally (backed up to OneDrive) and in a projects directory on Graham.

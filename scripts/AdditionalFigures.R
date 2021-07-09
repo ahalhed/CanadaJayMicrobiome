@@ -104,7 +104,7 @@ tt <- table(gj_meta2$SeasonYear)
 gj_meta3 <- subset(gj_meta2, SeasonYear %in% names(tt[tt > 2]))
 # export map (increase width/height)
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapSamples.pdf")
-ggmap(map_gj) + facet_grid(~SeasonYear) +
+ggmap(map_gj) + #facet_grid(~SeasonYear) +
   geom_count(data = gj_meta3, 
              aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD)) + #, color = SeasonYear
   #geom_text(hjust = 0, aes(label = 1))+
@@ -118,6 +118,41 @@ ggmap(map_gj) + facet_grid(~SeasonYear) +
   labs(shape = "Collection Year", size = "Number of Samples")
 dev.off()
 
+# samples
+samples <- ggmap(map_gj) + #facet_grid(~SeasonYear) +
+  geom_jitter(data = gj_meta3, 
+             aes(y = LatitudeSamplingDD, x = LongitudeSamplingDD)) +
+  ggsn::scalebar(x.min = -79.4, x.max = -78, 
+                 y.min = 45.3, y.max = 46.1,
+                 location = "bottomleft",
+                 dist = 10, dist_unit = "km",
+                 transform = TRUE, model = "WGS84",
+                 st.size = 2, border.size = 0.1)
+# canada
+map_ca <- get_map(
+  location = c(left = -141, bottom = 42, right = -53, top = 83),
+  source = "osm", color = "bw",
+  force = TRUE)
+
+Canada <- ggmap(map_ca) + 
+  annotate("text", x = -78.3791, y = 45.8372, label = "o", colour = "black") +
+  ggsn::scalebar(x.min = -139, x.max = -53.1, 
+                 y.min = 44, y.max = 82.9,
+                 location = "bottomleft",
+                 dist = 1000, dist_unit = "km",
+                 transform = TRUE, model = "WGS84",
+                 st.size = 2, border.size = 0.1)
+# inset APP onto canada
+library(grid)
+pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapInsetSamples.pdf")
+Canada +
+  inset(grob = ggplotGrob(samples + theme_inset()),
+    xmin = -141, xmax = -90, ymin = 55, ymax = 86.9) +
+  annotate("segment", x = -141, xend = -79, y = 74.4, yend = 45,
+           colour = "black") +
+  annotate("segment", x = -90, xend = -79, y = 74.4, yend = 46,
+           colour = "black")
+dev.off()
 # clean up
 rm(map_gj)
 

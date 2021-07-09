@@ -99,7 +99,8 @@ plot4A <- aggregate(dm_meta$AitchisonDistance,
 figA <- ggplot(plot4A, aes(y = AitchisonDistance, x = Group)) +
   geom_boxplot() +
   geom_line(alpha = 0.3, aes(group = NonBreeder)) +
-  labs(x = "Territory of Breeder", y = "Mean Aitchison Distance")
+  labs(x = "Territory of Breeder", y = "Mean Aitchison Distance") +
+  theme(text = element_text(size = 20)) 
 
 # paired t-test
 # step 0 - check assumptions
@@ -174,7 +175,8 @@ figB <- ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   geom_line(stat = "smooth", method=loess, alpha = 0.25,
             se=FALSE, color = "black", aes(group = pair)) +
   scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
-  labs(x = "Sample(s)", y = "Number of OTUs Present")
+  labs(x = "Sample(s)", y = "Number of OTUs Present") +
+  theme(text = element_text(size = 20)) 
 
 print("Two sample t-test")
 # get data

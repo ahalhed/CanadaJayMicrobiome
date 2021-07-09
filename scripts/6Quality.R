@@ -127,7 +127,7 @@ lapply(cap_list, summary)
 lapply(cap_list, anova, step=200, perm.max=1000)
 
 # simple biplot
-pdf("CanadaJayMicrobiome/plots/H6.pdf", width = 17.5, height = 9)
+pdf("CanadaJayMicrobiome/plots/P5B.pdf", width = 17.5, height = 9)
 lapply(cap_list, plot, main = "Aitchison Distance-based RDA")
 dev.off()
 

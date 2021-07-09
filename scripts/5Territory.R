@@ -120,7 +120,8 @@ seaPlot <- function(samp, sea, y) {
   dat <- samp[which(samp$CollectionSeason == sea & samp$CollectionYear == y),]
   ggplot(dat, aes(y = AitchisonDistance, x = Group)) +
     geom_boxplot() + rremove("xylab") + ylim(0,8) +
-    geom_dotplot(binaxis = "y", binwidth = 0.05, stackdir = "center", fill = NA)
+    geom_dotplot(binaxis = "y", binwidth = 0.05, stackdir = "center", fill = NA) +
+    theme(text = element_text(size = 20))
 }
 
 # get the data
@@ -164,9 +165,9 @@ F20 <- seaPlot(dm_meta, "Fall", 2020)
 S20 <- seaPlot(dm_meta, "Spring", 2020)
 
 # save figure
-fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 10),
+fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 20),
                  labels = c("Fall 2017", "Fall 2018", "Fall 2020", "Spring 2020"))
-pdf("CanadaJayMicrobiome/plots/H5.pdf", width = 12, height = 6)
+pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 12, height = 6)
 annotate_figure(fig, bottom = text_grob("Territory Group"),
                 left = text_grob("Aitchison Distance", rot = 90))
 dev.off()

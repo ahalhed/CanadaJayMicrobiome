@@ -19,16 +19,9 @@ module load nixpkgs/16.09 miniconda3
 conda activate qiime2-2020.11
 
 # Hypothesis 3
-# Prediction 3A  - food caching (winter and spring only)
-qiime feature-table filter-samples \
-  --i-table filtered-table-no-blanks.qza \
-  --m-metadata-file input/jay-met.tsv \
-  --p-where "[CollectionSeason] IN ('Winter', 'Spring')" \
-  --o-filtered-table 3A-filtered-table.qza
-
-# Prediction 3B - food supplementation
+# Prediction 3 - food supplementation
 qiime feature-table filter-samples \
   --i-table filtered-table-no-blanks.qza \
   --m-metadata-file input/jay-met.tsv \
   --p-where "[CollectionYear] IN ('2017', '2018') AND [BreedingStatus]='Breeder'" \
-  --o-filtered-table 3B-filtered-table.qza
+  --o-filtered-table 3-filtered-table.qza

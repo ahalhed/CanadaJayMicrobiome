@@ -174,7 +174,7 @@ figB <- ggplot(plot4B, aes(y = as.numeric(NumberOfOTUs), x = Sharing)) +
   geom_boxplot() +
   geom_line(stat = "smooth", method=loess, alpha = 0.25,
             se=FALSE, color = "black", aes(group = pair)) +
-  scale_x_discrete(labels = c("Breeder Only", "Non-breeder Only", "Both")) +
+  scale_x_discrete(labels = c("Breeder", "Nestling", "Both")) +
   labs(x = "Sample(s)", y = "Number of OTUs Present") +
   theme(text = element_text(size = 20)) 
 

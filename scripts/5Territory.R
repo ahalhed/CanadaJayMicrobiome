@@ -168,8 +168,8 @@ S20 <- seaPlot(dm_meta, "Spring", 2020)
 fig <- ggarrange(F17, F18, F20, S20, nrow = 1, vjust = 2, font.label = list(size = 20),
                  labels = c("Fall 2017", "Fall 2018", "Fall 2020", "Spring 2020"))
 pdf("CanadaJayMicrobiome/plots/P5A.pdf", width = 12, height = 6)
-annotate_figure(fig, bottom = text_grob("Territory Group"),
-                left = text_grob("Aitchison Distance", rot = 90))
+annotate_figure(fig, bottom = text_grob("Territory Group", size = 20),
+                left = text_grob("Aitchison Distance", rot = 90, size = 20))
 dev.off()
 
 # ANOSIM

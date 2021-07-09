@@ -1,0 +1,113 @@
+Unloading StdEnv/2020
+
+The following have been reloaded with a version change:
+  1) gcccore/.9.3.0 => gcccore/.7.3.0     2) imkl/2020.1.217 => imkl/2018.3.222
+
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──
+✔ ggplot2 3.3.3     ✔ purrr   0.3.4
+✔ tibble  3.0.5     ✔ dplyr   1.0.2
+✔ tidyr   1.1.2     ✔ stringr 1.4.0
+✔ readr   1.4.0     ✔ forcats 0.5.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+[1] "Prediction 3 - Food supplementation (OTUs)"
+null device 
+          1 
+[1] "two sample t-test"
+[1] "H0 - Means are not different (u1-u2=D0)"
+[1] "HA - yes FS mean is less than no FS mean (u1-u2>D0)"
+[1] "all samples"
+
+	F test to compare two variances
+
+data:  yes$n and no$n
+F = 0.75653, num df = 4, denom df = 16, p-value = 0.8632
+alternative hypothesis: true ratio of variances is not equal to 1
+95 percent confidence interval:
+ 0.202856 6.530844
+sample estimates:
+ratio of variances 
+         0.7565344 
+
+[1] "summary of yes"
+       n       
+ Min.   : 9.0  
+ 1st Qu.:12.0  
+ Median :23.0  
+ Mean   :23.6  
+ 3rd Qu.:23.0  
+ Max.   :51.0  
+[1] "summary of no"
+       n        
+ Min.   : 3.00  
+ 1st Qu.: 9.00  
+ Median :20.00  
+ Mean   :24.12  
+ 3rd Qu.:28.00  
+ Max.   :66.00  
+
+	Welch Two Sample t-test
+
+data:  yes and no
+t = -0.059251, df = 7.4338, p-value = 0.4772
+alternative hypothesis: true difference in means is less than 0
+95 percent confidence interval:
+    -Inf 15.8902
+sample estimates:
+mean of x mean of y 
+ 23.60000  24.11765 
+
+[1] "2017 only"
+
+	F test to compare two variances
+
+data:  yes$n and no$n
+F = 0.12836, num df = 2, denom df = 7, p-value = 0.2369
+alternative hypothesis: true ratio of variances is not equal to 1
+95 percent confidence interval:
+ 0.01962247 5.05166396
+sample estimates:
+ratio of variances 
+         0.1283608 
+
+
+	Welch Two Sample t-test
+
+data:  yes and no
+t = -1.6818, df = 8.9444, p-value = 0.06356
+alternative hypothesis: true difference in means is less than 0
+95 percent confidence interval:
+     -Inf 1.410575
+sample estimates:
+mean of x mean of y 
+ 18.33333  33.87500 
+
+[1] "2018 only"
+
+	F test to compare two variances
+
+data:  yes$n and no$n
+F = 7.5091, num df = 1, denom df = 8, p-value = 0.05088
+alternative hypothesis: true ratio of variances is not equal to 1
+95 percent confidence interval:
+    0.991833 7183.580364
+sample estimates:
+ratio of variances 
+          7.509051 
+
+
+	Welch Two Sample t-test
+
+data:  yes and no
+t = 0.81144, df = 1.0599, p-value = 0.7201
+alternative hypothesis: true difference in means is less than 0
+95 percent confidence interval:
+     -Inf 129.6559
+sample estimates:
+mean of x mean of y 
+ 31.50000  15.44444 
+
+Warning messages:
+1: In rm(dates, gj_meta, gj_ps, otu_df, samp) : object 'dates' not found
+2: In rm(dates, gj_meta, gj_ps, otu_df, samp) : object 'samp' not found

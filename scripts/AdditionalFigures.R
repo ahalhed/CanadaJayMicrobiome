@@ -127,21 +127,21 @@ samples <- ggmap(map_gj) + #facet_grid(~SeasonYear) +
   ggsn::scalebar(x.min = -79.4, x.max = -78, 
                  y.min = 45.3, y.max = 46.1,
                  location = "bottomleft",
-                 dist = 10, dist_unit = "km",
+                 dist = 15, dist_unit = "km",
                  transform = TRUE, model = "WGS84",
                  st.size = 2, border.size = 0.1)
-# canada
-map_ca <- get_map(
-  location = c(left = -141, bottom = 42, right = -53, top = 83),
+# ontario
+map_on <- get_map(
+  location = c(left = -98, bottom = 41, right = -65, top = 60),
   source = "osm", color = "bw",
   force = TRUE)
 
-Canada <- ggmap(map_ca) + 
+ontario <- ggmap(map_on) + 
   annotate("text", x = -78.3791, y = 45.8372, label = "o", colour = "black") +
-  ggsn::scalebar(x.min = -139, x.max = -53.1, 
-                 y.min = 44, y.max = 82.9,
+  ggsn::scalebar(x.min = -97, x.max = -65.1, 
+                 y.min = 42, y.max = 59.9,
                  location = "bottomleft",
-                 dist = 1000, dist_unit = "km",
+                 dist = 150, dist_unit = "km",
                  transform = TRUE, model = "WGS84",
                  st.size = 2, border.size = 0.1) +
   theme(text = element_text(size = 20)) +
@@ -149,12 +149,11 @@ Canada <- ggmap(map_ca) +
 # inset APP onto canada
 library(grid)
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapInsetSamples.pdf")
-Canada +
-  inset(grob = ggplotGrob(samples + theme_inset()),
-    xmin = -141, xmax = -90, ymin = 55, ymax = 86.9) +
-  annotate("segment", x = -141, xend = -79, y = 74.4, yend = 45.5,
+ontario +
+  inset(grob = ggplotGrob(samples + theme_inset()), xmin = -80, xmax = -65, ymin = 50, ymax = 62) +
+  annotate("segment", x = -65, xend = -78, y = 52.6, yend = 45.8372,
            colour = "black") +
-  annotate("segment", x = -90, xend = -79, y = 74.4, yend = 46,
+  annotate("segment", x = -80, xend = -78.7, y = 52.6, yend = 45.8372,
            colour = "black") + theme(text = element_text(size = 20)) 
 dev.off()
 # clean up

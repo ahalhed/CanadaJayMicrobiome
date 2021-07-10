@@ -115,7 +115,9 @@ ggmap(map_gj) + #facet_grid(~SeasonYear) +
                  location = "bottomleft",
                  dist = 10, dist_unit = "km",
                  transform = TRUE, model = "WGS84") +
-  labs(shape = "Collection Year", size = "Number of Samples")
+  labs(shape = "Collection Year", size = "Number of Samples") +
+  theme(text = element_text(size = 20)) +
+  labs(y = "Lattitude", x = "Longitude")
 dev.off()
 
 # samples
@@ -141,17 +143,19 @@ Canada <- ggmap(map_ca) +
                  location = "bottomleft",
                  dist = 1000, dist_unit = "km",
                  transform = TRUE, model = "WGS84",
-                 st.size = 2, border.size = 0.1)
+                 st.size = 2, border.size = 0.1) +
+  theme(text = element_text(size = 20)) +
+  labs(y = "Lattitude", x = "Longitude")
 # inset APP onto canada
 library(grid)
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapInsetSamples.pdf")
 Canada +
   inset(grob = ggplotGrob(samples + theme_inset()),
     xmin = -141, xmax = -90, ymin = 55, ymax = 86.9) +
-  annotate("segment", x = -141, xend = -79, y = 74.4, yend = 45,
+  annotate("segment", x = -141, xend = -79, y = 74.4, yend = 45.5,
            colour = "black") +
   annotate("segment", x = -90, xend = -79, y = 74.4, yend = 46,
-           colour = "black")
+           colour = "black") + theme(text = element_text(size = 20)) 
 dev.off()
 # clean up
 rm(map_gj)

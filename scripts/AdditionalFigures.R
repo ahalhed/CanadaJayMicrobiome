@@ -137,7 +137,7 @@ map_on <- get_map(
   force = TRUE)
 
 ontario <- ggmap(map_on) + 
-  annotate("text", x = -78.3791, y = 45.8372, label = "o", colour = "black") +
+  annotate("text", x = -78.5, y = 45.3, label = "o", colour = "black") +
   ggsn::scalebar(x.min = -97, x.max = -65.1, 
                  y.min = 42, y.max = 59.9,
                  location = "bottomleft",
@@ -151,10 +151,10 @@ library(grid)
 pdf("CanadaJayMicrobiome/plots/AdditionalFigures/mapInsetSamples.pdf")
 ontario +
   inset(grob = ggplotGrob(samples + theme_inset()), xmin = -80, xmax = -65, ymin = 50, ymax = 62) +
-  annotate("segment", x = -65, xend = -78, y = 52.6, yend = 45.8372,
+  annotate("segment", x = -65, xend = -78.25, y = 52.6, yend = 45.3,
            colour = "black") +
-  annotate("segment", x = -80, xend = -78.7, y = 52.6, yend = 45.8372,
-           colour = "black") + theme(text = element_text(size = 20)) 
+  annotate("segment", x = -80, xend = -78.7, y = 52.6, yend = 45.3,
+           colour = "black") + theme(text = element_text(size = 20))
 dev.off()
 # clean up
 rm(map_gj)

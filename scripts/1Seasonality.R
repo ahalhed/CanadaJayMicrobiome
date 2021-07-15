@@ -117,7 +117,25 @@ dev.off()
 # we.eBH is the Expected Benjamini-Hochberg corrected P value of Welch's t test
 # associated with spring (positive diff)
 spring <- Ald[which(Ald$we.eBH<0.05 & Ald$effect>0),]
-write.csv(spring, file = "CanadaJayMicrobiome/data/diffAbunSpring.csv", row.names = TRUE)
+springR <- data.frame(predictedPathway = spring$X,
+                      medianCLRall = round(spring$rab.all, 2),
+                      medianCLRfall = round(spring$rab.win.Fall, 2),
+                      medianCLRspring = round(spring$rab.win.Spring, 2),
+                      medianCLRdifferenceBetweenFS = round(spring$diff.btw, 2),
+                      medianCLRdifferenceWithinFS = round(spring$diff.win, 2),
+                      medianEffectSize = round(spring$effect, 2),
+                      proportionEffectOverlap = round(spring$overlap, 2),
+                      expectedPvalueWelchsTtest = round(spring$we.ep, 2))
+write.csv(springR, file = "CanadaJayMicrobiome/data/diffAbunSpring.csv", row.names = F)
 # associated with fall
 fall <- Ald[which(Ald$we.eBH<0.05 & Ald$effect<0),]
-write.csv(fall, file = "CanadaJayMicrobiome/data/diffAbunFall.csv", row.names = TRUE)
+fallR <- data.frame(predictedPathway = fall$X,
+                    medianCLRall = round(fall$rab.all, 2),
+                      medianCLRfall = round(fall$rab.win.Fall, 2),
+                      medianCLRspring = round(fall$rab.win.Spring, 2),
+                      medianCLRdifferenceBetweenFS = round(fall$diff.btw, 2),
+                      medianCLRdifferenceWithinFS = round(fall$diff.win, 2),
+                      medianEffectSize = round(fall$effect, 2),
+                      proportionEffectOverlap = round(fall$overlap, 2),
+                      expectedPvalueWelchsTtest = round(fall$we.ep, 2))
+write.csv(fallR, file = "CanadaJayMicrobiome/data/diffAbunFall.csv", row.names = F)

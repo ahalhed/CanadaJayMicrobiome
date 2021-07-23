@@ -205,3 +205,7 @@ rm(br, nb, sh, otu_br, otu_nb, OTUs, plot4B, shareOTUs, pairedNames, OTUsamples,
 pdf("CanadaJayMicrobiome/plots/H4.pdf", width = 10)
 ggarrange(figA, figB, labels = c("A", "B"))
 dev.off()
+
+pdf("CanadaJayMicrobiome/plots/4b.pdf", width = 10)
+figB
+dev.off()
